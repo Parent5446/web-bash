@@ -1,0 +1,22 @@
+body {
+	background-color: black;
+	color: #94FFAD;
+	font-family: 'Ubuntu Mono', sans-serif;
+	word-wrap: break-word;
+	word-break: break-all;
+}
+
+body > ul {
+	padding: 0;
+	list-style: none;
+}
+
+#cursor {
+	display: inline;
+	background-color: white;
+	width: 10px;
+}
+
+.userinput {
+	display: inline;
+}
