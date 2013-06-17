@@ -1,5 +1,7 @@
 <?php
 
+namespace WebBash;
+
 class DI
 {
 	public function __construct( PDO $db ) {

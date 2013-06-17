@@ -27,7 +27,7 @@ function bcrypt( $password, $salt = false, $rounds = 12 ) {
 		$salt .= substr( strtr( base64_encode( urandom( 16 ) ), '+', '.' ), 0, 22 );
 	}
 
-	$hash = crypt( $password, $salt )
+	$hash = crypt( $password, $salt );
 	if ( strlen( $hash ) < 13 ) {
 		throw new RuntimeException( 'Error when hashing password.' );
 	}

@@ -1,5 +1,7 @@
 <?php
 
+namespace WebBash\ProcessCache;
+
 abstract class ProcessCache
 {
 	protected $cache = array();

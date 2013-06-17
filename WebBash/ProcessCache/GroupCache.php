@@ -1,5 +1,7 @@
 <?php
 
+namespace WebBash\ProcessCache;
+
 class GroupCache extends ProcessCache
 {
 	function getFactoryClass() {

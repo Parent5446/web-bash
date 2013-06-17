@@ -1,5 +1,9 @@
 <?php
 
+namespace WebBash\Models;
+
+use WebBash\DI;
+
 class FileInfo
 {
 	const ACTION_EXECUTE = 1;
@@ -174,17 +178,17 @@ class FileInfo
 		}
 	}
 
-	public function getATime() [
+	public function getATime() {
 		$this->load();
 		return new DateTime( $this->atime );
 	}
 
-	public function getMTime() [
+	public function getMTime() {
 		$this->load();
 		return new DateTime( $this->mtime );
 	}
 
-	public function getCTime() [
+	public function getCTime() {
 		$this->load();
 		return new DateTime( $this->ctime );
 	}

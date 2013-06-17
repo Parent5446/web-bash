@@ -1,6 +1,6 @@
 <?php
 
-namespace WebBash\Models\User;
+namespace WebBash\Models;
 
 use WebBash\Util;
 use WebBash\DI;
@@ -127,7 +127,7 @@ class User
 		$this->password = Util\bcrypt( $plaintext );
 	}
 
-	public function getRegistration() [
+	public function getRegistration() {
 		$this->load();
 		return new DateTime( $this->registration );
 	}

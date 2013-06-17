@@ -1,5 +1,7 @@
 <?php
 
+namespace WebBash\ProcessCache;
+
 class StatementCache extends ProcessCache
 {
 	function getFactoryClass() {
