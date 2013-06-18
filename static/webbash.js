@@ -11,11 +11,16 @@ function displayPrompt() {
 }
 
 function executeCommand( txt ) {
-	alert( txt );
+	//alert( txt );
 }
 
+ctrlDown = false;
+
 $( document ).keydown( function( e ) {
-	if ( e.keyCode > 31 && e.keyCode < 127 ) {
+	if ( ctrlDown && e.keyCode == 67 ) {
+		$( 'ul > li' ).last().append( '^C' );
+		displayPrompt();
+	} else if ( e.keyCode > 31 && e.keyCode < 127 ) {
 		var elem = $( '#cursor' ).prev();
 
 		if ( elem.length == 0 || !elem.hasClass( 'userinput' ) ) {
@@ -39,6 +44,16 @@ $( document ).keydown( function( e ) {
 		$( '#cursor' ).before( $( '<br>' ) );
 		executeCommand( cmd );
 		displayPrompt();
+	} else if ( e.keyCode == 17 ) {
+		ctrlDown = true;
+	}
+
+	$( window ).scrollTop( $( document ).height() );
+} );
+
+$( document ).keyup( function( e ) {
+	if ( e.keyCode == 17 ) {
+		ctrlDown = false;
 	}
 } );
 
