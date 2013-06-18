@@ -4,7 +4,7 @@ namespace WebBash\Models;
 
 use WebBash\DI;
 
-class FileInfo
+class FileInfo implements Model
 {
 	const ACTION_EXECUTE = 1;
 	const ACTION_WRITE = 2;
@@ -26,19 +26,19 @@ class FileInfo
 	private $mtime = null;
 	private $ctime = null;
 
-	public static function newFromId( $id ) {
-		$obj = new self;
+	public static function newFromId( DI $deps, $id ) {
+		$obj = new self( $deps );
 		$obj->id = $id;
 		return $obj;
 	}
 
-	public static function newFromPath( $path ) {
-		$obj = new self;
+	public static function newFromPath( DI $deps, $path ) {
+		$obj = new self( $deps );
 		$obj->path = $path;
 		return $path;
 	}
 
-	public function __construct( DI $deps ) {
+	private function __construct( DI $deps ) {
 		$this->deps = $deps;
 	}
 
@@ -46,7 +46,10 @@ class FileInfo
 		/** @TODO Load owner/group info simultaneously if request. */
 		if ( $this->size !== null ) {
 			return;
-		} elseif ( $this->id !== null ) {
+		}
+		
+		$this->size = false;
+		if ( $this->id !== null ) {
 			$this->loadFromId();
 		} elseif ( $this->path !== null ) {
 			$this->loadFromPath();

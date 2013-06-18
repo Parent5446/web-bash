@@ -2,10 +2,10 @@
 
 namespace WebBash\Models;
 
-use WebBash\Util;
-use WebBash\DI;
+use \WebBash\Util;
+use \WebBash\DI;
 
-class User
+class User implements Model
 {
 	private $id = null;
 	private $name = null;
@@ -14,26 +14,29 @@ class User
 	private $password = null;
 	private $token = null;
 
-	public static function newFromName( $name ) {
-		$obj = new self;
+	public static function newFromName( DI $deps, $name ) {
+		$obj = new self( $deps );
 		$obj->name = $name;
 		return $obj;
 	}
 
-	public static function newFromId( $id ) {
-		$obj = new self;
+	public static function newFromId( DI $deps, $id ) {
+		$obj = new self( $deps );
 		$obj->id = $id;
 		return $obj;
 	}
 
-	public function __construct( DI $deps ) {
+	private function __construct( DI $deps ) {
 		$this->deps = $deps;
 	}
 
 	public function load() {
 		if ( $this->homedir !== null ) {
 			return;
-		} elseif ( $this->name !== null ) {
+		}
+		
+		$this->homedir = false;
+		if ( $this->name !== null ) {
 			$this->loadFromField( 'name' );
 		} elseif ( $this->id !== null ) {
 			$this->loadFromField( 'id' );
@@ -66,7 +69,7 @@ class User
 		);
 
 		$stmt->bindParam( ":$field", $this->$field );
-		$stmt->setFetchMode( PDO::FETCH_INFO, $this );
+		$stmt->setFetchMode( PDO::FETCH_INTO, $this );
 		$stmt->execute();
 		$stmt->fetch();
 	}
@@ -150,7 +153,7 @@ class User
 		$stmt->execute();
 		while ( $grp = $stmt->fetchColumn() ) {
 			$this->groups[] = $grp;
-			$this->deps->groupCache->cache( $this->name, $grp );
+			$this->deps->groupCache->cacheMember( $this, $grp );
 		}
 
 		return $this->groups;

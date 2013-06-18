@@ -19,6 +19,9 @@ abstract class ProcessCache
 
 	public function update( $obj, $info ) {
 		foreach ( $info as $field => $value ) {
+			if ( isset( $this->cache[$field][$value] ) ) {
+				$obj->merge( $this->cache[$field][$value] );
+			}
 			$this->cache[$field][$value] = $obj;
 		}
 	}
@@ -27,6 +30,7 @@ abstract class ProcessCache
 		$class = $this->getFactoryClass();
 		$factories = $this->getFactoryFunctions();
 
+		assert( "is_subclass_of( '$class', 'WebBash\Models\Model' )", 'Factory class must be a model.' );
 		if ( !isset( $factories[$field] ) ) {
 			throw new RuntimeException( 'Invalid factory field.' );
 		}
