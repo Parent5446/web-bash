@@ -42,8 +42,14 @@
 					}
 					elem.append( String.fromCharCode( e.keyCode ) );
 				} else if ( e.keyCode == 8 ) {
-					var elem = $('#cursor').parent().children('.userinput:last-child');
-					elem.text( elem.text().slice(0, -2) );
+					//var elem = $('#cursor').parent().children('.userinput:last-child');
+					var elem = $('#cursor').parent().children('.userinput');
+					if(elem.length > 0)
+					{
+						$('#cursor').parent().children('.userinput').last().remove();
+						
+					}
+					//elem.text( elem.text().slice(0, -2) );
 				}
 			} );
 
