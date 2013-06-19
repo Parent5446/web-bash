@@ -52,12 +52,7 @@ $( document ).keydown( function( e )
 		{
 			// previous elements so move cursor left
 			if(elem.text() && elem.text().length > 1)
-<<<<<<< HEAD
-			{			
-=======
 			{
-				
->>>>>>> f768a49d00c12665bfcf09aa62908f32f24218a1
 				var elem2 = $( '<div class="userinput"></div>' );
 				elem.before(elem2);
 				var lastChar = elem.text().substring(elem.text().length-1);
@@ -107,11 +102,7 @@ $( document ).keydown( function( e )
 			}
 		}
 	}
-<<<<<<< HEAD
-	else if ( e.keyCode > 31 && e.keyCode < 96 )
-=======
 	else if ( e.keyCode > 31 && e.keyCode < 127 ) 
->>>>>>> f768a49d00c12665bfcf09aa62908f32f24218a1
 	{
 		var elem = $( '#cursor' ).prev();
 
@@ -128,18 +119,12 @@ $( document ).keydown( function( e )
 		var elem = $( '#cursor' ).prev();
 		if ( elem.length > 0 && elem.hasClass( 'userinput' ) ) 
 		{
-<<<<<<< HEAD
 			if(elem.text().length > 1) 
 			{
 				elem.text( elem.text().slice(0, -1) );	
-			} 
+			}	
 			else 
 			{
-=======
-			if(elem.text().length > 1) {
-				elem.text( elem.text().slice(0, -1) );	
-			} else {
->>>>>>> f768a49d00c12665bfcf09aa62908f32f24218a1
 				elem.remove();
 			}
 		}
@@ -183,7 +168,3 @@ $( document ).ready( displayPrompt )
 {
 	window.setInterval( blink, 500 );
 }
-<<<<<<< HEAD
-
-=======
->>>>>>> f768a49d00c12665bfcf09aa62908f32f24218a1
