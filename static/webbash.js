@@ -58,53 +58,53 @@ function getCommand()
 
 function moveCursorLeft( num ) 
 {
-	for( var i = 0; i < num; ++i)
-	{
-		var cursor = $( '#cursor' );	
 
-		var lastChar = '';
-		var leftElem = $( '#cursor' ).prev();
+	var cursor = $( '#cursor' );	
+
+	var lastChars = '';
+	var leftElem = $( '#cursor' ).prev();
 	
-		if( leftElem.length > 0 && leftElem.hasClass( 'userinput' ) ) 
-		{
-			var leftText = leftElem.text();
-			lastChar = leftText.substring( leftText.length - 1 );
-			leftElem.text( leftText.substring( 0, leftText.length - 1 ) );
-		}
+	if( leftElem.length > 0 && leftElem.hasClass( 'userinput' ) ) 
+	{
+		var leftText = leftElem.text();
+		var moveAmount = (leftText.length >= num)? num : leftText.length;
 
-		var rightElem = cursor.next();
+		lastChars = leftText.substring( leftText.length - moveAmount, leftText.length );
+		leftElem.text( leftText.substring( 0, leftText.length - moveAmount ) );
+	}
 
-		if( rightElem.length > 0 && rightElem.hasClass( 'userinput' ) )
-		{
-			var rightText = rightElem.text();
-			rightElem.text( lastChar + rightText );
-		}
+	var rightElem = cursor.next();
+
+	if( rightElem.length > 0 && rightElem.hasClass( 'userinput' ) )
+	{
+		var rightText = rightElem.text();
+		rightElem.text( lastChars + rightText );
 	}
 }
 
 function moveCursorRight( num ) 
 {
-	for( var i = 0; i < num; ++i)
+
+	var cursor = $( '#cursor' );	
+
+	var firstChars = '';
+	var rightElem = cursor.next();
+
+	if( rightElem.length > 0 && rightElem.hasClass( 'userinput' ) )
 	{
-		var cursor = $( '#cursor' );	
+		var rightText = rightElem.text();
+		var moveAmount = (rightText.length >= num)? num : rightText.length;
 
-		var firstChar = '';
-		var rightElem = cursor.next();
-
-		if( rightElem.length > 0 && rightElem.hasClass( 'userinput' ) )
-		{
-			var rightText = rightElem.text();
-			firstChar = rightText.substring( 0, 1 ); 
-			rightElem.text( rightText.substring( 1, rightText.length ) );
-		}
-	
-		var leftElem = $( '#cursor' ).prev();
-	
-		if( leftElem.length > 0 && leftElem.hasClass( 'userinput' ) ) 
-		{
-			leftElem.text( leftElem.text() + firstChar );
-		}	
+		firstChar = rightText.substring( 0, moveAmount ); 
+		rightElem.text( rightText.substring( moveAmount, rightText.length ) );
 	}
+	
+	var leftElem = $( '#cursor' ).prev();
+	
+	if( leftElem.length > 0 && leftElem.hasClass( 'userinput' ) ) 
+	{
+		leftElem.text( leftElem.text() + firstChar );
+	}	
 }
 
 function cycleHistory( num )
@@ -117,7 +117,7 @@ function cycleHistory( num )
 		$( '#cursor' ).next().text( '' );
 		$( '#cursor' ).prev().text( history[currHistoryPos] );
 	}	
-	else if( newPos === history.length || newPos === -1 )
+	else
 	{
 		currHistoryPos = history.length;
 		$( '#cursor' ).next().text( '' );
