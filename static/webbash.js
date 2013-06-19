@@ -2,9 +2,8 @@ var prompt = "root@ubuntu> "
 var ctrlDown = false;
 var blinkState = false;
 
-
 var history = new Array();
-var index = 0;
+var currHistoryPos;
 
 function resetCursor()
  {
@@ -20,7 +19,7 @@ function displayPrompt()
 
 function executeCommand( txt ) 
 {
-	history[index++] = txt;
+
 }
 
 function blink() 
@@ -87,14 +86,27 @@ function moveCursorRight( num )
 	}
 }
 
+function cycleHistory( num )
+{
+	var newPos = currHistoryPos + num;
+	if( newPos < history.length && newPos >= 0 )
+	{
+		currHistoryPos = newPos;
+		var elem = $( '#cursor' ).nextAll();
+		if ( elem.length > 0 && elem.hasClass( 'userinput' ) ) 
+		{
+			moveCursorRight( elem.text().length );
+		}
+		$( '#cursor' ).prevAll().remove();
+		$( '#cursor' ).before( '<div class="userinput">' + history[currHistoryPos] 
+			+ '</div>' );
+	}	
+}
+
 $( document ).keydown( function( e ) 
 {
-	if ( ctrlDown && e.keyCode == 67 ) 
-	{
-		$( 'ul > li' ).last().append( '^C' );
-		displayPrompt();
-	} 
-	else if( e.keyCode == 37 )
+
+	if( e.keyCode == 37 )
 	{
 		moveCursorLeft( 1 );
 	}
@@ -102,6 +114,19 @@ $( document ).keydown( function( e )
 	{
 		moveCursorRight( 1 );
 	}
+	else if( e.keyCode == 38 )
+	{
+		cycleHistory( -1 );
+	}
+	else if( e.keyCode == 40 )
+	{
+		cycleHistory( 1 );
+	}
+	else if ( ctrlDown && e.keyCode == 67 ) 
+	{
+		$( 'ul > li' ).last().append( '^C' );
+		displayPrompt();
+	} 
 	else if(e.keyCode == 46)
 	{
 		var elem = $( '#cursor' ).next();
@@ -163,7 +188,8 @@ $( document ).keydown( function( e )
 
 		elem = $( '#cursor' ).prev();
 		elem.after( $( '<br>' ) );
-		alert(cmd);
+		history[history.length] = cmd;
+		currHistoryPos = history.length;
 		executeCommand( cmd );
 		displayPrompt();
 	} 
@@ -171,6 +197,7 @@ $( document ).keydown( function( e )
 	{
 		ctrlDown = true;
 	}
+
 
 	$( window ).scrollTop( $( document ).height() );
 } );
