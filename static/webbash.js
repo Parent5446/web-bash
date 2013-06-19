@@ -30,9 +30,10 @@ $( document ).keydown( function( e ) {
 
 		elem.append( String.fromCharCode( e.keyCode ) );
 	} else if ( e.keyCode == 8 ) {
+		e.preventDefault();
 		var elem = $( '#cursor' ).prev();
 		if ( elem.length > 0 && elem.hasClass( 'userinput' ) ) {
-			elem.text( elem.text().slice(0, -1) );
+			elem.text( elem.text().slice(0, -1) );	
 		}
 	} else if ( e.keyCode == 13 ) {
 		var elem = $( '#cursor' ).prev();
