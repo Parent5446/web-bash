@@ -16,7 +16,7 @@ function displayPrompt()
 
 function executeCommand( txt ) 
 {
-	//alert( txt );
+	alert( txt );
 }
 
 
@@ -28,7 +28,10 @@ $( document ).keydown( function( e )
 		$( 'ul > li' ).last().append( '^C' );
 		displayPrompt();
 	} 
-	else if ( e.keyCode > 31 && e.keyCode < 127 ) 
+	else if ( (e.keyCode > 31 && 
+		e.keyCode < 97) &&
+		e.keyCode != 38 && 
+		e.keyCode != 40 )
 	{
 		var elem = $( '#cursor' ).prev();
 
@@ -83,14 +86,13 @@ $( document ).ready( displayPrompt )
 		if( blink )
 		{
 			$( '#cursor' ).css( "opacity", 0 );
-			blink = !blink;
 		}
 		else 
 		{
 			$( '#cursor' ).css( "opacity", 1 ); 
-			blink = !blink;			
 		}
+		blink = !blink;		
 	}
-
 	window.setInterval( blink, 500 );
+
 }
