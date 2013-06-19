@@ -1,4 +1,4 @@
-var prompt = "root@ubuntu> "
+var prompt = "root@ubuntu> ";
 var ctrlDown = false;
 var blinkState = false;
 
@@ -19,12 +19,11 @@ function displayPrompt()
 
 function executeCommand( txt ) 
 {
-
 }
 
 function blink() 
 {
-	if( blinkState )
+	if( blinkState === true )
 	{
 		$( '#cursor' ).css( "opacity", 0 );
 	}
@@ -37,10 +36,10 @@ function blink()
 
 function moveCursorLeft( num ) 
 {
-	for( i = 0; i < num; ++i)
+	for( var i = 0; i < num; ++i)
 	{
 		var elem = $( '#cursor' ).prev();
-		if ( elem.length != 0 && elem.hasClass( 'userinput' ) ) 
+		if ( elem.length !== 0 && elem.hasClass( 'userinput' ) ) 
 		{
 			// previous elements so move cursor left
 			if(elem.text() && elem.text().length > 1)
@@ -62,11 +61,11 @@ function moveCursorLeft( num )
 
 function moveCursorRight( num ) 
 {
-	for( i = 0; i < num; ++i)
+	for( var i = 0; i < num; ++i)
 	{
 		var elem = $( '#cursor' ).next();
 
-		if ( elem.length != 0 && elem.hasClass( 'userinput' ) ) 
+		if ( elem.length !== 0 && elem.hasClass( 'userinput' ) ) 
 		{
 			// next elements so move cursor right
 			if(elem.text() && elem.text().length > 1)
@@ -98,41 +97,40 @@ function cycleHistory( num )
 			moveCursorRight( elem.text().length );
 		}
 		$( '#cursor' ).prevAll().remove();
-		$( '#cursor' ).before( '<div class="userinput">' + history[currHistoryPos] 
-			+ '</div>' );
+		$( '#cursor' ).before( '<div class="userinput">' + history[currHistoryPos] + '</div>' );
 	}	
 }
 
 $( document ).keydown( function( e ) 
 {
 
-	if( e.keyCode == 37 )
+	if( e.keyCode === 37 )
 	{
 		moveCursorLeft( 1 );
 	}
-	else if (e.keyCode == 39)
+	else if( e.keyCode === 39 )
 	{
 		moveCursorRight( 1 );
 	}
-	else if( e.keyCode == 38 )
+	else if( e.keyCode === 38 )
 	{
 		cycleHistory( -1 );
 	}
-	else if( e.keyCode == 40 )
+	else if( e.keyCode === 40 )
 	{
 		cycleHistory( 1 );
 	}
-	else if ( ctrlDown && e.keyCode == 67 ) 
+	else if( ctrlDown && e.keyCode === 67 ) 
 	{
 		$( 'ul > li' ).last().append( '^C' );
 		displayPrompt();
 	} 
-	else if(e.keyCode == 46)
+	else if( e.keyCode == 46 )
 	{
 		var elem = $( '#cursor' ).next();
 		if(elem.length != 0 && elem.hasClass('userinput'))
 		{
-			if(elem.text().length == 1)
+			if( elem.text().length === 1 )
 			{
 				elem.remove();
 			}
@@ -142,18 +140,18 @@ $( document ).keydown( function( e )
 			}
 		}
 	}
-	else if ( e.keyCode > 31 && e.keyCode < 97 ) 
+	else if( e.keyCode > 31 && e.keyCode < 97 ) 
 	{
 		var elem = $( '#cursor' ).prev();
 
-		if ( elem.length == 0 || !elem.hasClass( 'userinput' ) )
+		if ( elem.length === 0 || !elem.hasClass( 'userinput' ) )
 		{
 			elem = $( '<div class="userinput"></div>' );
 			$( '#cursor' ).before( elem );
 		}
 		elem.append( String.fromCharCode( e.keyCode ) );
 	} 
-	else if ( e.keyCode == 8 ) 
+	else if( e.keyCode === 8 ) 
 	{
 		e.preventDefault();
 		var elem = $( '#cursor' ).prev();
@@ -169,7 +167,7 @@ $( document ).keydown( function( e )
 			}
 		}
 	}
-	else if ( e.keyCode == 13 ) 
+	else if( e.keyCode === 13 ) 
 	{
 		var elem = $( '#cursor' ).prev();
 		var elem2 = $( '#cursor' ).nextAll();
@@ -193,7 +191,7 @@ $( document ).keydown( function( e )
 		executeCommand( cmd );
 		displayPrompt();
 	} 
-	else if ( e.keyCode == 17 ) 
+	else if( e.keyCode === 17 ) 
 	{
 		ctrlDown = true;
 	}
@@ -204,13 +202,13 @@ $( document ).keydown( function( e )
 
 $( document ).keyup( function( e ) 
 {
-	if ( e.keyCode == 17 ) 
+	if ( e.keyCode === 17 ) 
 	{
 		ctrlDown = false;
 	}
 } );
 
-$( document ).ready( displayPrompt )
-{
+$( document ).ready( function() {
+	displayPrompt();
 	window.setInterval( blink, 500 );
-}
+} );
