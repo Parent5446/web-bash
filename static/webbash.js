@@ -117,6 +117,12 @@ function cycleHistory( num )
 		$( '#cursor' ).next().text( '' );
 		$( '#cursor' ).prev().text( history[currHistoryPos] );
 	}	
+	else if( newPos === history.length || newPos === -1 )
+	{
+		currHistoryPos = history.length;
+		$( '#cursor' ).next().text( '' );
+		$( '#cursor' ).prev().text( '' );
+	}
 }
 
 $( document ).keydown( function( e ) 
