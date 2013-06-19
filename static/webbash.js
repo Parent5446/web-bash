@@ -36,18 +36,11 @@ function blink()
 	blinkState = !blinkState;		
 }
 
-$( document ).keydown( function( e ) 
+function moveCursorLeft( num ) 
 {
-	if ( ctrlDown && e.keyCode == 67 ) 
+	for( i = 0; i < num; ++i)
 	{
-		$( 'ul > li' ).last().append( '^C' );
-		displayPrompt();
-	} 
-	else if (e.keyCode == 37)
-	{
-		// left arrow
 		var elem = $( '#cursor' ).prev();
-
 		if ( elem.length != 0 && elem.hasClass( 'userinput' ) ) 
 		{
 			// previous elements so move cursor left
@@ -66,9 +59,12 @@ $( document ).keydown( function( e )
 			elem.before(cursor);
 		}
 	}
-	else if (e.keyCode == 39)
+}
+
+function moveCursorRight( num ) 
+{
+	for( i = 0; i < num; ++i)
 	{
-		// right arrow
 		var elem = $( '#cursor' ).next();
 
 		if ( elem.length != 0 && elem.hasClass( 'userinput' ) ) 
@@ -89,20 +85,39 @@ $( document ).keydown( function( e )
 			elem.after(cursor);
 		}
 	}
+}
+
+$( document ).keydown( function( e ) 
+{
+	if ( ctrlDown && e.keyCode == 67 ) 
+	{
+		$( 'ul > li' ).last().append( '^C' );
+		displayPrompt();
+	} 
+	else if( e.keyCode == 37 )
+	{
+		moveCursorLeft( 1 );
+	}
+	else if (e.keyCode == 39)
+	{
+		moveCursorRight( 1 );
+	}
 	else if(e.keyCode == 46)
 	{
 		var elem = $( '#cursor' ).next();
 		if(elem.length != 0 && elem.hasClass('userinput'))
 		{
 			if(elem.text().length == 1)
+			{
 				elem.remove();
+			}
 			else
 			{
 				elem.text( elem.text().substring(1) );
 			}
 		}
 	}
-	else if ( e.keyCode > 31 && e.keyCode < 127 ) 
+	else if ( e.keyCode > 31 && e.keyCode < 97 ) 
 	{
 		var elem = $( '#cursor' ).prev();
 
@@ -133,18 +148,22 @@ $( document ).keydown( function( e )
 	{
 		var elem = $( '#cursor' ).prev();
 		var elem2 = $( '#cursor' ).nextAll();
-		
+
 		var cmd = '';
 		if ( elem.length > 0 && elem.hasClass( 'userinput' ) ) 
 		{
 			cmd = elem.text();
-
 		}
-		if( elem2.length > 0 && elem.hasClass( 'userinput' ) )
+		if( elem2.length > 0 && elem2.hasClass( 'userinput' ) )
 		{
-			cmd += elem2.text();
+			var rest = elem2.text();
+			moveCursorRight( rest.length );
+			cmd += rest;
 		}
-		elem2.after( $( '<br>' ) );
+
+		elem = $( '#cursor' ).prev();
+		elem.after( $( '<br>' ) );
+		alert(cmd);
 		executeCommand( cmd );
 		displayPrompt();
 	} 
