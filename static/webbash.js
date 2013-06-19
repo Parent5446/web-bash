@@ -9,6 +9,8 @@ function resetCursor()
  {
 	$( '#cursor' ).remove();
 	$( "body > ul > li:last-child" ).append( $( '<div id="cursor">&nbsp;</div>' ) );
+	$( '#cursor' ).before( $( '<div class="userinput"></div>' ) );
+	$( '#cursor' ).after( $( '<div class="userinput"></div>' ) );
 }
 
 function displayPrompt() 
@@ -34,27 +36,48 @@ function blink()
 	blinkState = !blinkState;		
 }
 
+function getCommand()
+{
+	var cursor = $( '#cursor' );
+
+	var left = cursor.prev();
+	var right = cursor.next();
+	var cmd = '';
+
+	if ( left.length > 0 && left.hasClass( 'userinput' ) ) 
+	{
+		cmd = left.text();
+	}
+	if( right.length > 0 && right.hasClass( 'userinput' ) )
+	{
+		cmd += right.text();
+	}
+
+	return cmd;
+}
+
 function moveCursorLeft( num ) 
 {
 	for( var i = 0; i < num; ++i)
 	{
-		var elem = $( '#cursor' ).prev();
-		if ( elem.length !== 0 && elem.hasClass( 'userinput' ) ) 
-		{
-			// previous elements so move cursor left
-			if(elem.text() && elem.text().length > 1)
-			{
-				var elem2 = $( '<div class="userinput"></div>' );
-				elem.before(elem2);
-				var lastChar = elem.text().substring(elem.text().length-1);
-				var beginningOfString = elem.text().substring(0, elem.text().length-1);
+		var cursor = $( '#cursor' );	
 
-				elem2.text(beginningOfString);
-				elem.text(lastChar);
-			}
-			var cursor = $( '#cursor' );
-			cursor.remove();
-			elem.before(cursor);
+		var lastChar = '';
+		var leftElem = $( '#cursor' ).prev();
+	
+		if( leftElem.length > 0 && leftElem.hasClass( 'userinput' ) ) 
+		{
+			var leftText = leftElem.text();
+			lastChar = leftText.substring( leftText.length - 1 );
+			leftElem.text( leftText.substring( 0, leftText.length - 1 ) );
+		}
+
+		var rightElem = cursor.next();
+
+		if( rightElem.length > 0 && rightElem.hasClass( 'userinput' ) )
+		{
+			var rightText = rightElem.text();
+			rightElem.text( lastChar + rightText );
 		}
 	}
 }
@@ -63,25 +86,24 @@ function moveCursorRight( num )
 {
 	for( var i = 0; i < num; ++i)
 	{
-		var elem = $( '#cursor' ).next();
+		var cursor = $( '#cursor' );	
 
-		if ( elem.length !== 0 && elem.hasClass( 'userinput' ) ) 
+		var firstChar = '';
+		var rightElem = cursor.next();
+
+		if( rightElem.length > 0 && rightElem.hasClass( 'userinput' ) )
 		{
-			// next elements so move cursor right
-			if(elem.text() && elem.text().length > 1)
-			{
-				var elem2 = $( '<div class="userinput"></div>' );
-				elem.after(elem2);
-				var firstChar = elem.text().substring(0, 1);
-				var restOfString = elem.text().substring(1);
-
-				elem2.text(restOfString);
-				elem.text(firstChar);
-			}
-			var cursor = $( '#cursor' );
-			cursor.remove();
-			elem.after(cursor);
+			var rightText = rightElem.text();
+			firstChar = rightText.substring( 0, 1 ); 
+			rightElem.text( rightText.substring( 1, rightText.length ) );
 		}
+	
+		var leftElem = $( '#cursor' ).prev();
+	
+		if( leftElem.length > 0 && leftElem.hasClass( 'userinput' ) ) 
+		{
+			leftElem.text( leftElem.text() + firstChar );
+		}	
 	}
 }
 
@@ -91,19 +113,15 @@ function cycleHistory( num )
 	if( newPos < history.length && newPos >= 0 )
 	{
 		currHistoryPos = newPos;
-		var elem = $( '#cursor' ).nextAll();
-		if ( elem.length > 0 && elem.hasClass( 'userinput' ) ) 
-		{
-			moveCursorRight( elem.text().length );
-		}
-		$( '#cursor' ).prevAll().remove();
-		$( '#cursor' ).before( '<div class="userinput">' + history[currHistoryPos] + '</div>' );
+		
+		$( '#cursor' ).next().text( '' );
+		$( '#cursor' ).prev().text( history[currHistoryPos] );
 	}	
 }
 
 $( document ).keydown( function( e ) 
 {
-
+	var elem;
 	if( e.keyCode === 37 )
 	{
 		moveCursorLeft( 1 );
@@ -122,13 +140,13 @@ $( document ).keydown( function( e )
 	}
 	else if( ctrlDown && e.keyCode === 67 ) 
 	{
-		$( 'ul > li' ).last().append( '^C' );
+		$( '#cursor' ).next().append( '^C' );
 		displayPrompt();
 	} 
-	else if( e.keyCode == 46 )
+	else if( e.keyCode === 46 )
 	{
-		var elem = $( '#cursor' ).next();
-		if(elem.length != 0 && elem.hasClass('userinput'))
+		elem = $( '#cursor' ).next();
+		if(elem.length !== 0 && elem.hasClass('userinput'))
 		{
 			if( elem.text().length === 1 )
 			{
@@ -142,19 +160,14 @@ $( document ).keydown( function( e )
 	}
 	else if( e.keyCode > 31 && e.keyCode < 97 ) 
 	{
-		var elem = $( '#cursor' ).prev();
-
-		if ( elem.length === 0 || !elem.hasClass( 'userinput' ) )
-		{
-			elem = $( '<div class="userinput"></div>' );
-			$( '#cursor' ).before( elem );
-		}
+		elem = $( '#cursor' ).prev();
 		elem.append( String.fromCharCode( e.keyCode ) );
+		moveCursorRight( 1 );
 	} 
 	else if( e.keyCode === 8 ) 
 	{
 		e.preventDefault();
-		var elem = $( '#cursor' ).prev();
+		elem = $( '#cursor' ).prev();
 		if ( elem.length > 0 && elem.hasClass( 'userinput' ) ) 
 		{
 			if(elem.text().length > 1) 
@@ -169,25 +182,12 @@ $( document ).keydown( function( e )
 	}
 	else if( e.keyCode === 13 ) 
 	{
-		var elem = $( '#cursor' ).prev();
-		var elem2 = $( '#cursor' ).nextAll();
+		var cmd = getCommand();
+		$( 'cursor' ).next().after( $( ' <br> ') );
 
-		var cmd = '';
-		if ( elem.length > 0 && elem.hasClass( 'userinput' ) ) 
-		{
-			cmd = elem.text();
-		}
-		if( elem2.length > 0 && elem2.hasClass( 'userinput' ) )
-		{
-			var rest = elem2.text();
-			moveCursorRight( rest.length );
-			cmd += rest;
-		}
-
-		elem = $( '#cursor' ).prev();
-		elem.after( $( '<br>' ) );
 		history[history.length] = cmd;
 		currHistoryPos = history.length;
+
 		executeCommand( cmd );
 		displayPrompt();
 	} 
