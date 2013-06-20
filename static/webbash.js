@@ -169,7 +169,7 @@
 		firstChar = rightText[0];
 		cursorChar = cursor.text();
 
-		if ( leftElem.length === 0 ) {
+		if ( rightElem.length === 0 ) {
 			cursor.html( '&nbsp;' );
 		} else {
 			rightElem.text( rightText.substr( 1 ) );
@@ -180,7 +180,7 @@
 
 	function cycleHistory( num ) {
 		var cmd = $( '#cursor' ).parent().children( '.userinput' ).text();
-		cmdHistory[currHistoryPos] = cmd.substr( 0, cmd.length - 2 );
+		cmdHistory[currHistoryPos] = cmd.substr( 0, cmd.length - 1 );
 
 		var newPos = currHistoryPos + num;
 		if ( newPos < cmdHistory.length && newPos >= 0 ) {
@@ -227,13 +227,14 @@
 		} else if ( e.which === 13 ) {
 			// Enter key: submit command
 			var cmd = $( '#cursor' ).parent().children( '.userinput' ).text();
-			cmd = cmd.substr( 0, cmd.length - 2 );
+			cmd = cmd.substr( 0, cmd.length - 1 );
 
 			if ( cmd.length > 0 ) {
 				cmdHistory[cmdHistory.length] = cmd;
 				currHistoryPos = cmdHistory.length;
 			}
 
+			$( '#cursor' ).prev().append( $( '#cursor' ).text() );
 			$( '#cursor' ).next().after( $( ' <br> ') );
 			executeCommand( cmd );
 			displayPrompt();
