@@ -1,5 +1,6 @@
 var prompt = "root@ubuntu> ";
 var ctrlDown = false;
+var shiftDown = false;
 var blinkState = false;
 
 var history = new Array();
@@ -7,7 +8,7 @@ var currHistoryPos;
 
 function resetCursor() {
 	$( '#cursor' ).remove();
-	$( "body > ul > li:last-child" ).append( $( '<div id="cursor">&nbsp;</div>' ) );
+	$( "body > ul > li:last-child" ).append( $( '<div id="cursor" class="userinput">&nbsp;</div>' ) );
 	$( '#cursor' ).before( $( '<div class="userinput"></div>' ) );
 	$( '#cursor' ).after( $( '<div class="userinput"></div>' ) );
 }
@@ -22,11 +23,12 @@ function command_split( txt ) {
 	var arr = []
 	var inString = false;
 	var backslash = false;
+
 	for ( var i = 0; i < txt.length; i++ ) {
 		if ( txt[i] == ' ' && inString ) {
 			cmd += txt[i];
 		} else if ( txt[i] == ' ' && !inString ) {
-			if (cmd.length > 0) {
+			if ( cmd.length > 0 ) {
 				arr.push(cmd);
 				cmd = "";
 			}
@@ -64,26 +66,27 @@ var built_in_commands = ["DATE", "ALIAS", "CD", "ECHO", "EXIT", "FALSE", "TRUE",
 
 function executeCommand( txt ) {
 	txt = $.trim(txt);
-	$( "body > ul > li:last-child" ).append( $( '<div class="system_output">system output here</div>' ) );
+	$( "body > ul > li:last-child" ).append( $( '<div class="system_output"></div>' ) );
 	var last = $( '.system_output' ).last();
 	// insert system results inside last
 	var split_text = command_split(txt);
 
-	var debug_split_text_array = "[";
+	// Log the command to the console
+	var debugArray = "[";
 	for ( var v = 0; v < split_text.length; v++ ) {
-		debug_split_text_array += '\"' + split_text[v] + '\"';
+		debugArray += '\"' + split_text[v] + '\"';
 		if ( v != split_text.length - 1 ) {
-			debug_split_text_array += ", ";
+			debugArray += ", ";
 		}
 	}
-	debug_split_text_array += "]";
-	console.log( debug_split_text_array );
+	debugArray += "]";
+	console.log( debugArray );
 
+	// Process the command
 	if ( split_text.length == 0 ) {
+		// Empty command
 		return;
-	}
-
-	if ( split_text[0] == "DATE" ) {
+	} else if ( split_text[0] == "date" ) {
 		if ( split_text.length > 1 ) {
 			last.text("error: date takes no args");
 		} else {
@@ -108,135 +111,174 @@ function executeCommand( txt ) {
 
 function blink() {
 	if ( blinkState === true ) {
-		$( '#cursor' ).css( "opacity", 0 );
+		$( '#cursor' ).css( "background-color", 'transparent' );
 	} else {
-		$( '#cursor' ).css( "opacity", 1 );
+		$( '#cursor' ).css( "background-color", 'white' );
 	}
 	blinkState = !blinkState;
 }
 
-function moveCursorLeft( num ) {
+function moveCursorLeft() {
 	var cursor = $( '#cursor' );
 
-	var lastChars = '';
-	var leftElem = $( '#cursor' ).prev();
+	var lastChar, cursorChar,
+		leftElem = cursor.prev(),
+		rightElem = cursor.next();
 
-	if ( leftElem.length > 0 && leftElem.hasClass( 'userinput' ) ) {
-		var leftText = leftElem.text();
-		var moveAmount = (leftText.length >= num)? num : leftText.length;
-
-		lastChars = leftText.substring( leftText.length - moveAmount, leftText.length );
-		leftElem.text( leftText.substring( 0, leftText.length - moveAmount ) );
+	if ( leftElem.length == 0 || !leftElem.hasClass( 'userinput' ) ) {
+		return;
 	}
 
-	var rightElem = cursor.next();
+	var leftText = leftElem.text();
+	if ( leftText.length == 0 ) {
+		return;
+	}
 
-	if ( rightElem.length > 0 && rightElem.hasClass( 'userinput' ) ) {
-		var rightText = rightElem.text();
-		rightElem.text( lastChars + rightText );
+	lastChar = leftText.substr( leftText.length - 1 );
+	cursorChar = cursor.text();
+
+	if ( rightElem.length == 0 && cursorChar != '&nbsp;' ) {
+		rightElem = $( '<div class="userinput"></div>' );
+		cursor.after( rightElem );
+	}
+
+	leftElem.text( leftText.substring( 0, leftText.length - 1 ) );
+	cursor.text( lastChar );
+	if ( cursorChar != '&nbsp;' ) {
+		rightElem.prepend( cursorChar );
 	}
 }
 
-function moveCursorRight( num ) {
+function moveCursorRight() {
 	var cursor = $( '#cursor' );
 
-	var firstChars = '';
-	var rightElem = cursor.next();
+	var firstChar, cursorChar,
+		leftElem = cursor.prev(),
+		rightElem = cursor.next();
 
-	if ( rightElem.length > 0 && rightElem.hasClass( 'userinput' ) ) {
-		var rightText = rightElem.text();
-		var moveAmount = ( rightText.length >= num ) ? num : rightText.length;
-
-		firstChar = rightText.substring( 0, moveAmount );
-		rightElem.text( rightText.substring( moveAmount, rightText.length ) );
+	if ( rightElem.length == 0 || !rightElem.hasClass( 'userinput' ) ) {
+		return;
 	}
 
-	var leftElem = $( '#cursor' ).prev();
+	var rightText = rightElem.text();
+	if ( rightText.length == 0 ) {
+		return;
+	}
 
-	if ( leftElem.length > 0 && leftElem.hasClass( 'userinput' ) ) {
-		leftElem.text( leftElem.text() + firstChar );
+	firstChar = rightText[0];
+	cursorChar = cursor.text();
+
+	if ( leftElem.length == 0 ) {
+		cursor.html( '&nbsp;' );
+	} else {
+		rightElem.text( rightText.substr( 1 ) );
+		cursor.text( firstChar );
+		leftElem.append( cursorChar );
 	}
 }
 
 function cycleHistory( num ) {
+	var cmd = $( '#cursor' ).parent().children( '.userinput' ).text();
+	history[currHistoryPos] = cmd.substr( 0, cmd.length - 2 );
+
 	var newPos = currHistoryPos + num;
 	if ( newPos < history.length && newPos >= 0 ) {
 		currHistoryPos = newPos;
-
-		$( '#cursor' ).next().text( '' );
-		$( '#cursor' ).prev().text( history[currHistoryPos] );
-	} else {
-		currHistoryPos = history.length;
-
-		$( '#cursor' ).next().text( '' );
-		$( '#cursor' ).prev().text( '' );
+		var cursor = $( '#cursor' );
+		cursor.next().text( '' );
+		cursor.html( '&nbsp;' );
+		cursor.prev().text( history[currHistoryPos] );
 	}
 }
 
 $( document ).keydown( function( e ) {
 	var elem;
 
-	if ( e.keyCode === 37 ) {
+	if ( e.which === 37 ) {
 		// Left arrow key: move cursor
-		moveCursorLeft( 1 );
-	} else if ( e.keyCode === 39 ) {
+		moveCursorLeft();
+	} else if ( e.which === 39 ) {
 		// Right arrow key: move cursor
-		moveCursorRight( 1 );
-	} else if ( e.keyCode === 38 ) {
+		moveCursorRight();
+	} else if ( e.which === 38 ) {
 		// Up arrow key: scroll history
 		cycleHistory( -1 );
-	} else if ( e.keyCode === 40 ) {
+	} else if ( e.which === 40 ) {
 		// Down arrow key: scroll history
 		cycleHistory( 1 );
-	} else if ( ctrlDown && e.keyCode === 67 ) {
+	} else if ( ctrlDown && e.which === 67 ) {
 		// Ctrl-C: break input and reprompt
 		$( '#cursor' ).next().append( '^C' );
 		displayPrompt();
-	} else if ( e.keyCode === 46 ) {
+	} else if ( e.which === 46 ) {
 		// Delete key
 		elem = $( '#cursor' ).next();
 		if ( elem.length !== 0 && elem.hasClass( 'userinput' ) ) {
 			elem.text( elem.text().substring( 1 ) );
 		}
-	} else if ( e.keyCode === 8 ) {
+	} else if ( e.which === 8 ) {
 		// Backspace key
 		e.preventDefault();
 		elem = $( '#cursor' ).prev();
 		if ( elem.length > 0 && elem.hasClass( 'userinput' ) ) {
 			elem.text( elem.text().slice( 0, -1 ) );
 		}
-	} else if ( e.keyCode === 13 ) {
+	} else if ( e.which === 13 ) {
 		// Enter key: submit command
 		var cmd = $( '#cursor' ).parent().children( '.userinput' ).text();
+		cmd = cmd.substr( 0, cmd.length - 2 );
 
-		history[history.length] = cmd;
-		currHistoryPos = history.length;
+		if ( cmd.length > 0 ) {
+			history[history.length] = cmd;
+			currHistoryPos = history.length;
+		}
 
 		$( '#cursor' ).next().after( $( ' <br> ') );
 		executeCommand( cmd );
 		displayPrompt();
-	} else if ( e.keyCode === 17 ) {
+	} else if ( e.which === 17 ) {
 		// Ctrl: Set state to detect special chars
 		ctrlDown = true;
-	} else if ( e.keyCode == 222 ) {
+	} else if ( e.which == 16 ) {
+		// Shift: Set state to detect uppercase
+		shiftDown = true;
+	} else if ( e.which == 222 ) {
 		// Single quote: Needs special handling
 		e.preventDefault();
 		elem = $( '#cursor' ).prev();
 		elem.append( '\'' );
 		moveCursorRight( 1 );
-	} else if ( e.keyCode > 31 && e.keyCode < 97 ) {
+	} else if (
+		e.which >= 48 && e.which <= 90 ||
+		e.which >= 96 && e.which <= 105 ||
+		e.which >= 186 && e.which <= 191
+	) {
 		// Regular text: output to screen
+
+		// Normalize the key code to ASCII.
+		if ( e.which >= 96 && e.which <= 105 ) {
+			e.which -= 48;
+		} else if ( e.which == 186 ) {
+			e.which = 59;
+		} else if ( e.which == 187 ) {
+			e.which = 61;
+		} else if ( e.which >= 188 && e.which <= 191 ) {
+			e.which -= 144;
+		}
+
 		elem = $( '#cursor' ).prev();
-		elem.append( String.fromCharCode( e.keyCode ) );
-		moveCursorRight( 1 );
+		var key = String.fromCharCode( e.which );
+		elem.append( shiftDown ? key.toUpperCase() : key.toLowerCase() );
 	}
 
 	$( window ).scrollTop( $( document ).height() );
 } );
 
 $( document ).keyup( function( e ) {
-	if ( e.keyCode === 17 ) {
+	if ( e.which === 17 ) {
 		ctrlDown = false;
+	} else if ( e.which == 16 ) {
+		shiftDown = false;
 	}
 } );
 
