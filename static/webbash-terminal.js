@@ -1,25 +1,30 @@
 function Terminal() {
 	'use strict';
 
+	this.controller = null;
 	this.prompt = "root@ubuntu> ";
 	this.cmdHistory = [];
-	this.currHistoryPos;
+	this.currHistoryPos = 0;
 
 	this.resetCursor = function() {
 		$( '#cursor' ).remove();
 		$( "body > ul > li:last-child" ).append( $( '<div id="cursor" class="userinput">&nbsp;</div>' ) );
 		$( '#cursor' ).before( $( '<div class="userinput"></div>' ) );
 		$( '#cursor' ).after( $( '<div class="userinput"></div>' ) );
-	}
+	};
 
 	this.displayPrompt = function() {
 		$( "body > ul" ).append( '<li>' + this.prompt + '</li>' );
 		this.resetCursor();
-	}
+	};
 
-	this.command_split = function( txt ) {
+	this.executeCommand = function( txt ) {
+		txt = $.trim(txt);
+		$( "body > ul > li:last-child" ).append( $( '<div class="system_output"></div>' ) );
+
+		var last = $( '.system_output' ).last();
 		var cmd = "";
-		var arr = [];
+		var split_text = [];
 		var inString = false;
 		var backslash = false;
 
@@ -28,7 +33,7 @@ function Terminal() {
 				cmd += txt[i];
 			} else if ( txt[i] === ' ' && !inString ) {
 				if ( cmd.length > 0 ) {
-					arr.push(cmd);
+					split_text.push(cmd);
 					cmd = "";
 				}
 				continue;
@@ -39,7 +44,7 @@ function Terminal() {
 					backslash = true;
 					continue;
 				}
-			} else if (txt[i] === '\'') {
+			} else if ( txt[i] === '\'' ) {
 				if ( backslash ) {
 					cmd += '\'';
 				} else if ( !inString ) {
@@ -47,6 +52,8 @@ function Terminal() {
 				} else {
 					inString = false;
 				}
+			} else if ( txt[i] === '$' && inString ) {
+				cmd += '\\$';
 			} else {
 				cmd += txt[i];
 				backslash = false;
@@ -55,18 +62,8 @@ function Terminal() {
 
 		cmd = $.trim( cmd );
 		if ( cmd !== '' ) {
-			arr.push( cmd );
+			split_text.push( cmd );
 		}
-
-		return arr;
-	}
-
-	this.executeCommand = function( txt ) {
-		txt = $.trim(txt);
-		$( "body > ul > li:last-child" ).append( $( '<div class="system_output"></div>' ) );
-		var last = $( '.system_output' ).last();
-		// insert system results inside last
-		var split_text = this.command_split(txt);
 
 		// Log the command to the console
 		var debugArray = "[";
@@ -79,85 +76,12 @@ function Terminal() {
 		debugArray += "]";
 		console.log( debugArray );
 
-		// Process the command
-		if ( split_text.length === 0 ) {
-			// Empty command
-			return;
-		} else if ( split_text[0] === "date" ) {
-			if ( split_text.length > 1 ) {
-				last.text("error: date takes no args");
-			} else {
-				var temp = new Date();
-
-				var weekday = new Array(7);
-				weekday[0] = "Sun";
-				weekday[1] = "Mon";
-				weekday[2] = "Tue";
-				weekday[3] = "Wed";
-				weekday[4] = "Thu";
-				weekday[5] = "Fri";
-				weekday[6] = "Sat";
-				
-				var month = new Array(12);
-				month[0] = "Jan";
-				month[1] = "Feb";
-				month[2] = "Mar";
-				month[3] = "Apr";
-				month[4] = "May";
-				month[5] = "Jun";
-				month[6] = "Jul";
-				month[7] = "Aug";
-				month[8] = "Sep";
-				month[9] = "Oct";
-				month[10] = "Nov";
-				month[11] = "Dec";
-				
-				//Extremely rudimentary timezone detection
-				//TODO: make this actually work for zones other than EDT
-				var tzoffset = temp.getTimezoneOffset() / 60;
-				var tz = "UTC";
-				if ( tzoffset === 4 ) {
-					tz = "EDT";
-				}
-				
-				var dateStr = weekday[temp.getDay()].toString() + " " + 
-					month[temp.getMonth()].toString() + " " +
-					temp.getDate().toString() + " ";
-				var hours = temp.getHours();
-				var hourStr = hours.toString();
-				
-				//prepended zeroes for prettiness
-				if ( hours < 10 ) {
-					hourStr = "0" + hours.toString();
-				}
-				
-				var mins = temp.getMinutes();
-				var minString = mins.toString();
-				
-				if( mins < 10 ) {
-					minString = "0" + mins.toString();
-				}
-				
-				var sec = temp.getSeconds();
-				var secStr = sec.toString();
-				
-				if( sec < 10) {
-					secStr = "0" + sec.toString();
-				}
-				
-				dateStr += hourStr + ":" +
-					minString +  ":" + secStr + " " + tz + " " +
-					temp.getFullYear().toString() + " ";
-				last.text( dateStr );
-			}
-		} else {
-			last.text("error: invalid command " + split_text[0] );
-		}
-	}
+		last.text( this.controller.executeCommand( split_text ) );
+	};
 
 	this.blink = function() {
 		$( '#cursor' ).toggleClass( 'blink' );
-	}
+	};
 
 	this.moveCursorLeft = function() {
 		var cursor = $( '#cursor' );
@@ -191,7 +115,7 @@ function Terminal() {
 		} else {
 			return false;
 		}
-	}
+	};
 
 	this.moveCursorRight = function() {
 		var cursor = $( '#cursor' );
@@ -221,7 +145,7 @@ function Terminal() {
 			leftElem.append( cursorChar );
 			return true;
 		}
-	}
+	};
 
 	this.cycleHistory = function( num ) {
 		var cmd = $( '#cursor' ).parent().children( '.userinput' ).text();
@@ -235,7 +159,7 @@ function Terminal() {
 			cursor.html( '&nbsp;' );
 			cursor.prev().text( this.cmdHistory[this.currHistoryPos] );
 		}
-	}
+	};
 
 	this.processInput = function( e ) {
 		var elem;
@@ -314,7 +238,6 @@ function Terminal() {
 			elem = $( '#cursor' ).prev();
 
 			var ch = e.getChar();
-			console.log( ch );
 			if ( ch ) {
 				elem.append( ch );
 			}
@@ -323,7 +246,8 @@ function Terminal() {
 		$( window ).scrollTop( $( document ).height() );
 	};
 
-	this.bind = function( window ) {
+	this.bind = function( window, controller ) {
+		this.controller = controller;
 		var doc = $( window.document );
 		doc.keydown( $.proxy( this.processInput, this ) );
 
@@ -331,5 +255,5 @@ function Terminal() {
 			this.displayPrompt();
 			window.setInterval( this.blink, 500 );
 		}, this ) );
-	}
+	};
 }
