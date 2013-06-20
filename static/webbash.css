@@ -13,8 +13,12 @@ body > ul {
 
 #cursor {
 	display: inline;
-	background-color: white;
+	background-color: transparent;
 	width: 10px;
+}
+
+#cursor.blink {
+	background-color: white;
 }
 
 .userinput {

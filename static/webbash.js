@@ -1,11 +1,7 @@
-( function( $ ) {
+(function( $ ) {
 	'use strict';
 
 	var prompt = "root@ubuntu> ";
-	var ctrlDown = false;
-	var shiftDown = false;
-	var blinkState = false;
-
 	var cmdHistory = [];
 	var currHistoryPos;
 
@@ -160,12 +156,7 @@
 	}
 
 	function blink() {
-		if ( blinkState === true ) {
-			$( '#cursor' ).css( "background-color", 'transparent' );
-		} else {
-			$( '#cursor' ).css( "background-color", 'white' );
-		}
-		blinkState = !blinkState;
+		$( '#cursor' ).toggleClass( 'blink' );
 	}
 
 	function moveCursorLeft() {
@@ -271,8 +262,9 @@
 			while ( moveCursorLeft() ) {
 				continue;
 			}
-		} else if ( ctrlDown && e.which === 67 ) {
+		} else if ( e.ctrlKey && !e.metaKey && !e.shiftKey && e.which === 67 ) {
 			// Ctrl-C: break input and reprompt
+			e.preventDefault();
 			$( '#cursor' ).next().append( '^C' );
 			displayPrompt();
 		} else if ( e.which === 46 ) {
@@ -323,38 +315,18 @@
 			elem = $( '#cursor' ).prev();
 			elem.append( '\'' );
 			moveCursorRight( 1 );
-		} else if (
-			e.which >= 48 && e.which <= 90 ||
-			e.which >= 96 && e.which <= 105 ||
-			e.which >= 186 && e.which <= 191
-		) {
+		} else {
 			// Regular text: output to screen
-
-			// Normalize the key code to ASCII.
-			if ( e.which >= 96 && e.which <= 105 ) {
-				e.which -= 48;
-			} else if ( e.which === 186 ) {
-				e.which = 59;
-			} else if ( e.which === 187 ) {
-				e.which = 61;
-			} else if ( e.which >= 188 && e.which <= 191 ) {
-				e.which -= 144;
-			}
-
 			elem = $( '#cursor' ).prev();
-			var key = String.fromCharCode( e.which );
-			elem.append( shiftDown ? key.toUpperCase() : key.toLowerCase() );
+
+			var ch = e.getChar();
+			console.log( ch );
+			if ( ch ) {
+				elem.append( ch );
+			}
 		}
 
 		$( window ).scrollTop( $( document ).height() );
-	} );
-
-	$( document ).keyup( function( e ) {
-		if ( e.which === 17 ) {
-			ctrlDown = false;
-		} else if ( e.which === 16 ) {
-			shiftDown = false;
-		}
 	} );
 
 	$( document ).ready( function() {
