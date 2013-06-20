@@ -9,8 +9,9 @@ class User implements Model
 {
 	private $id = null;
 	private $name = null;
+	private $homedir = null;
 	private $email = null;
-	private $email_confirmed = false;
+	private $email_confirmed = null;
 	private $password = null;
 	private $token = null;
 
@@ -30,7 +31,7 @@ class User implements Model
 		$this->deps = $deps;
 	}
 
-	public function load() {
+	function load() {
 		if ( $this->homedir !== null ) {
 			return;
 		}
@@ -47,20 +48,49 @@ class User implements Model
 		$this->deps->userCache->update( $this, array( 'id' => $this->id, 'name' => $this->name ) );
 	}
 
-	public function save() {
+	function save() {
 		$this->load();
-	
+
 		$stmt = $this->deps->stmtCache->prepare(
 			'UPDATE user SET email = :email, email_confirmed = :email_confirmed, ' . 
-			' password = :password, token = :token WHERE id = :id'
+			' password = :password, token = :token, homedir = :homedir WHERE id = :id'
 		);
 
+		$stmt->bindParam( ':homedir', $this->homedir );
 		$stmt->bindParam( ':email', $this->email );
 		$stmt->bindParam( ':email_confirmed', $this->email_confirmed );
 		$stmt->bindParam( ':password', $this->password );
 		$stmt->bindParam( ':token', $this->token );
 		$stmt->bindParam( ':id', $this->id );
 		$stmt->execute();
+	}
+	
+	function merge( Model $other ) {
+		if ( !$other instanceof self ) {
+			throw new RuntimeException( 'Invalid object passed.' );
+		}
+
+		if ( $other->id !== null ) {
+			$this->id = $other->id;
+		}
+		if ( $other->name !== null ) {
+			$this->name = $other->name;
+		}
+		if ( $other->homedir !== null ) {
+			$this->homedir = $other->homedir;
+		}
+		if ( $other->email !== null ) {
+			$this->email = $other->name;
+		}
+		if ( $other->email_confirmed !== null ) {
+			$this->email_confirmed = false;
+		}
+		if ( $other->password !== null ) {
+			$this->password = null;
+		}
+		if ( $other->token !== null ) {
+			$this->token = null;
+		}
 	}
 
 	private function loadFromField( $field ) {
@@ -69,7 +99,7 @@ class User implements Model
 		);
 
 		$stmt->bindParam( ":$field", $this->$field );
-		$stmt->setFetchMode( PDO::FETCH_INTO, $this );
+		$stmt->setFetchMode( \PDO::FETCH_INTO, $this );
 		$stmt->execute();
 		$stmt->fetch();
 	}

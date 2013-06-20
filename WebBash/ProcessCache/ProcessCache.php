@@ -2,6 +2,8 @@
 
 namespace WebBash\ProcessCache;
 
+use \WebBash\DI;
+
 abstract class ProcessCache
 {
 	protected $cache = array();
@@ -9,7 +11,11 @@ abstract class ProcessCache
 	abstract protected function getFactoryClass();
 
 	abstract protected function getFactoryFunctions();
-	
+
+	public function __construct( DI $deps ) {
+		$this->deps = $deps;
+	}
+
 	public function get( $field, $value ) {
 		if ( !isset( $cache[$field][$value] ) ) {
 			$cache[$field][$value] = $this->create( $field, $value );
@@ -30,11 +36,11 @@ abstract class ProcessCache
 		$class = $this->getFactoryClass();
 		$factories = $this->getFactoryFunctions();
 
-		assert( "is_subclass_of( '$class', 'WebBash\Models\Model' )", 'Factory class must be a model.' );
 		if ( !isset( $factories[$field] ) ) {
 			throw new RuntimeException( 'Invalid factory field.' );
 		}
+		$function = $factories[$field];
 
-		return $class::{$factories[$field]}( $value );
+		return call_user_func( array( $class, $function ), $this->deps, $value );
 	}
 }

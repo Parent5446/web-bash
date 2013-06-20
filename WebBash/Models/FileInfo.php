@@ -21,7 +21,7 @@ class FileInfo implements Model
 	private $size = null;
 	private $owner = null;
 	private $grp = null;
-	private $perms = 0;
+	private $perms = null;
 	private $atime = null;
 	private $mtime = null;
 	private $ctime = null;
@@ -35,14 +35,14 @@ class FileInfo implements Model
 	public static function newFromPath( DI $deps, $path ) {
 		$obj = new self( $deps );
 		$obj->path = $path;
-		return $path;
+		return $obj;
 	}
 
 	private function __construct( DI $deps ) {
 		$this->deps = $deps;
 	}
 
-	public function load() {
+	function load() {
 		/** @TODO Load owner/group info simultaneously if request. */
 		if ( $this->size !== null ) {
 			return;
@@ -60,7 +60,7 @@ class FileInfo implements Model
 		$this->deps->fileCache->update( $this, array( 'id' => $this->id, 'path' => $this->path ) );
 	}
 
-	public function save() {
+	function save() {
 		$this->load();
 
 		$stmt = $this->deps->stmtCache->prepare(
@@ -80,12 +80,52 @@ class FileInfo implements Model
 		$stmt->execute();
 	}
 
+	function merge( Model $other ) {
+		if ( !$other instanceof self ) {
+			throw new RuntimeException( 'Invalid object passed.' );
+		}
+
+		if ( $other->id !== null ) {
+			$this->id = $other->id;
+		}
+		if ( $other->path !== null ) {
+			$this->path = $other->path;
+		}
+		if ( $other->name !== null ) {
+			$this->name = $other->name;
+		}
+		if ( $other->parent !== null ) {
+			$this->parent = $other->parent;
+		}
+		if ( $other->size !== null ) {
+			$this->size = $other->size;
+		}
+		if ( $other->owner !== null ) {
+			$this->owner = $other->owner;
+		}
+		if ( $other->group !== null ) {
+			$this->group = $other->group;
+		}
+		if ( $other->perms !== null ) {
+			$this->perms = $other->perms;
+		}
+		if ( $other->mtime !== null ) {
+			$this->mtime = $other->mtime;
+		}
+		if ( $other->ctime !== null ) {
+			$this->ctime = $other->ctime;
+		}
+		if ( $other->atime !== null ) {
+			$this->atime = $other->atime;
+		}
+	}
+
 	private function loadFromPath() {
 		$parts = explode( '/', $this->path );
 
 		$joinConds = array();
 		$whereConds = array();
-		for ( $key = 1; $key < count( $part ); $key++ ) {
+		for ( $key = 1; $key < count( $parts ); $key++ ) {
 			$curAlias = "file$key";
 			$lastAlias = 'file' . ( $key - 1 );
 			$joinConds[] = "INNER JOIN file AS {$curAlias} ON {$curAlias}.parent = {$lastAlias}.id";
@@ -93,7 +133,7 @@ class FileInfo implements Model
 		}
 		$joinConds = implode( ' ', $joinConds );
 		$whereConds = implode( ' AND ', $whereConds );
-		$finalAlias = "$file" . count( $part );
+		$finalAlias = "file" . count( $parts );
 
 		$stmt = $this->deps->stmtCache->prepare( "SELECT $finalAlias.* FROM file AS file0 $joinConds $whereConds" );
 
@@ -101,14 +141,14 @@ class FileInfo implements Model
 			$stmt->bindValue( ":file$key", $name );
 		}
 
-		$stmt->setFetchMode( PDO::FETCH_INTO, $this );
+		$stmt->setFetchMode( \PDO::FETCH_INTO, $this );
 		$stmt->execute();
 		$stmt->fetch();
 	}
 
 	private function loadFromId() {
 		$stmt = $this->deps->stmtCache->prepare( 'SELECT * FROM file WHERE id = :id' );
-		$stmt->setFetchMode( PDO::FETCH_INTO, $this );
+		$stmt->setFetchMode( \PDO::FETCH_INTO, $this );
 		$stmt->execute();
 		$stmt->fetch();
 	}
