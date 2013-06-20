@@ -94,35 +94,34 @@
 				var temp = new Date();
 
 				var weekday = new Array(7);
-				weekday[0]="Sun";
-				weekday[1]="Mon";
-				weekday[2]="Tue";
-				weekday[3]="Wed";
-				weekday[4]="Thu";
-				weekday[5]="Fri";
-				weekday[6]="Sat";
+				weekday[0] = "Sun";
+				weekday[1] = "Mon";
+				weekday[2] = "Tue";
+				weekday[3] = "Wed";
+				weekday[4] = "Thu";
+				weekday[5] = "Fri";
+				weekday[6] = "Sat";
 				
 				var month = new Array(12);
-				month[0]="Jan";
-				month[1]="Feb";
-				month[2]="Mar";
-				month[3]="Apr";
-				month[4]="May";
-				month[5]="Jun";
-				month[6]="Jul";
-				month[7]="Aug";
-				month[8]="Sep";
-				month[9]="Oct";
-				month[10]="Nov";
-				month[11]="Dec";
+				month[0] = "Jan";
+				month[1] = "Feb";
+				month[2] = "Mar";
+				month[3] = "Apr";
+				month[4] = "May";
+				month[5] = "Jun";
+				month[6] = "Jul";
+				month[7] = "Aug";
+				month[8] = "Sep";
+				month[9] = "Oct";
+				month[10] = "Nov";
+				month[11] = "Dec";
 				
 				//Extremely rudimentary timezone detection
 				//TODO: make this actually work for zones other than EDT
 				var tzoffset = temp.getTimezoneOffset() / 60;
 				var tz = "UTC";
-				if( tzoffset === 4)
-				{
-				  tz = "EDT";
+				if ( tzoffset === 4 ) {
+					tz = "EDT";
 				}
 				
 				var dateStr = weekday[temp.getDay()].toString() + " " + 
@@ -133,21 +132,21 @@
 				
 				//prepended zeroes for prettiness
 				if ( hours < 10 ) {
-				  hourStr = "0" + hours.toString();
+					hourStr = "0" + hours.toString();
 				}
 				
 				var mins = temp.getMinutes();
 				var minString = mins.toString();
 				
 				if( mins < 10 ) {
-				  minString = "0" + mins.toString();
+					minString = "0" + mins.toString();
 				}
 				
 				var sec = temp.getSeconds();
 				var secStr = sec.toString();
 				
 				if( sec < 10) {
-				  secStr = "0" + sec.toString();
+					secStr = "0" + sec.toString();
 				}
 				
 				dateStr += hourStr + ":" +
@@ -177,12 +176,12 @@
 			rightElem = cursor.next();
 
 		if ( leftElem.length === 0 || !leftElem.hasClass( 'userinput' ) ) {
-			return;
+			return false;
 		}
 
 		var leftText = leftElem.text();
 		if ( leftText.length === 0 ) {
-			return;
+			return false;
 		}
 
 		lastChar = leftText.substr( leftText.length - 1 );
@@ -197,6 +196,9 @@
 		cursor.text( lastChar );
 		if ( cursorChar !== '&nbsp;' ) {
 			rightElem.prepend( cursorChar );
+			return true;
+		} else {
+			return false;
 		}
 	}
 
@@ -208,12 +210,12 @@
 			rightElem = cursor.next();
 
 		if ( rightElem.length === 0 || !rightElem.hasClass( 'userinput' ) ) {
-			return;
+			return false;
 		}
 
 		var rightText = rightElem.text();
 		if ( rightText.length === 0 ) {
-			return;
+			return false;
 		}
 
 		firstChar = rightText[0];
@@ -221,10 +223,12 @@
 
 		if ( rightElem.length === 0 ) {
 			cursor.html( '&nbsp;' );
+			return false;
 		} else {
 			rightElem.text( rightText.substr( 1 ) );
 			cursor.text( firstChar );
 			leftElem.append( cursorChar );
+			return true;
 		}
 	}
 
@@ -257,15 +261,34 @@
 		} else if ( e.which === 40 ) {
 			// Down arrow key: scroll history
 			cycleHistory( 1 );
+		} else if ( e.which === 35 ) {
+			// End key: move to end of line
+			while ( moveCursorRight() ) {
+				continue;
+			}
+		} else if ( e.which === 36 ) {
+			// Home key: move to beginning of line
+			while ( moveCursorLeft() ) {
+				continue;
+			}
 		} else if ( ctrlDown && e.which === 67 ) {
 			// Ctrl-C: break input and reprompt
 			$( '#cursor' ).next().append( '^C' );
 			displayPrompt();
 		} else if ( e.which === 46 ) {
 			// Delete key
-			elem = $( '#cursor' ).next();
-			if ( elem.length !== 0 && elem.hasClass( 'userinput' ) ) {
-				elem.text( elem.text().substring( 1 ) );
+			elem = $( '#cursor' );
+			var next = elem.next();
+			if ( next.length !== 0 && next.hasClass( 'userinput' ) ) {
+				var nextText = next.text();
+				if ( nextText.length !== 0 ) {
+					elem.text( nextText.substr( 0, 1 ) );
+					next.text( nextText.substr( 1 ) );
+				} else {
+					elem.html( '&nbsp;' );
+				}
+			} else {
+				elem.html( '&nbsp;' );
 			}
 		} else if ( e.which === 8 ) {
 			// Backspace key
