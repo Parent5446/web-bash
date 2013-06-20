@@ -290,14 +290,7 @@ $( document ).keydown( function( e )
 		elem = $( '#cursor' ).prev();
 		if ( elem.length > 0 && elem.hasClass( 'userinput' ) ) 
 		{
-			if(elem.text().length > 1) 
-			{
-				elem.text( elem.text().slice(0, -1) );	
-			}	
-			else 
-			{
-				elem.remove();
-			}
+			elem.text( elem.text().slice(0, -1) );	
 		}
 	}
 	else if( e.keyCode === 13 ) 
