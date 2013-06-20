@@ -48,6 +48,7 @@ function getCommand()
 	{
 		cmd = left.text();
 	}
+
 	if( right.length > 0 && right.hasClass( 'userinput' ) )
 	{
 		cmd += right.text();
@@ -58,7 +59,6 @@ function getCommand()
 
 function moveCursorLeft( num ) 
 {
-
 	var cursor = $( '#cursor' );	
 
 	var lastChars = '';
@@ -84,7 +84,6 @@ function moveCursorLeft( num )
 
 function moveCursorRight( num ) 
 {
-
 	var cursor = $( '#cursor' );	
 
 	var firstChars = '';
@@ -120,6 +119,7 @@ function cycleHistory( num )
 	else
 	{
 		currHistoryPos = history.length;
+		
 		$( '#cursor' ).next().text( '' );
 		$( '#cursor' ).prev().text( '' );
 	}
