@@ -66,7 +66,7 @@ function Terminal() {
 		$( "body > ul > li:last-child" ).append( $( '<div class="system_output"></div>' ) );
 		var last = $( '.system_output' ).last();
 		// insert system results inside last
-		var split_text = command_split(txt);
+		var split_text = this.command_split(txt);
 
 		// Log the command to the console
 		var debugArray = "[";
@@ -303,12 +303,6 @@ function Terminal() {
 			$( '#cursor' ).next().after( $( ' <br> ') );
 			this.executeCommand( cmd );
 			this.displayPrompt();
-		} else if ( e.which === 17 ) {
-			// Ctrl: Set state to detect special chars
-			ctrlDown = true;
-		} else if ( e.which === 16 ) {
-			// Shift: Set state to detect uppercase
-			shiftDown = true;
 		} else if ( e.which === 222 ) {
 			// Single quote: Needs special handling
 			e.preventDefault();
