@@ -268,14 +268,7 @@ $( document ).keydown( function( e )
 		elem = $( '#cursor' ).next();
 		if(elem.length !== 0 && elem.hasClass('userinput'))
 		{
-			if( elem.text().length === 1 )
-			{
-				elem.remove();
-			}
-			else
-			{
-				elem.text( elem.text().substring(1) );
-			}
+			elem.text( elem.text().substring(1) );
 		}
 	}
 	else if( e.keyCode > 31 && e.keyCode < 97 ) 
