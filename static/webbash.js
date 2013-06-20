@@ -5,174 +5,123 @@ var blinkState = false;
 var history = new Array();
 var currHistoryPos;
 
-function resetCursor()
-{
+function resetCursor() {
 	$( '#cursor' ).remove();
 	$( "body > ul > li:last-child" ).append( $( '<div id="cursor">&nbsp;</div>' ) );
 	$( '#cursor' ).before( $( '<div class="userinput"></div>' ) );
 	$( '#cursor' ).after( $( '<div class="userinput"></div>' ) );
 }
 
-function displayPrompt() 
-{
+function displayPrompt() {
 	$( "body > ul" ).append( '<li>' + prompt + '</li>' );
 	resetCursor();
 }
 
-function command_split(txt)
-{
+function command_split( txt ) {
 	var cmd = "";
 	var arr = []
 	var inString = false;
 	var backslash = false;
-	for(var i = 0; i < txt.length; i++)
-	{
-		if(txt[i] == ' ' && inString)
+	for ( var i = 0; i < txt.length; i++ ) {
+		if ( txt[i] == ' ' && inString ) {
 			cmd += txt[i];
-		else if(txt[i] == ' ' && !inString)
-		{
-			if(cmd.length > 0)
-			{
+		} else if ( txt[i] == ' ' && !inString ) {
+			if (cmd.length > 0) {
 				arr.push(cmd);
 				cmd = "";
 			}
 			continue;
-		}
-		else if(txt[i] == '\\')
-		{
-			if(backslash)
-			{
+		} else if ( txt[i] == '\\' ) {
+			if ( backslash ) {
 				cmd += '\\';
-			}
-			else
-			{
+			} else {
 				backslash = true;
 				continue;
 			}
-		}
-		else if(txt[i] == '\'')
-		{
-			if(backslash)
-			{
+		} else if (txt[i] == '\'') {
+			if ( backslash ) {
 				cmd += '\'';
-			}
-			else if (!inString)
-			{
+			} else if ( !inString ) {
 				inString = true;
-			}
-			else
-			{
+			} else {
 				inString = false;
 			}
-		}
-		else
-		{
+		} else {
 			cmd += txt[i];
 			backslash = false;
 		}
 	}
-	
-	cmd = $.trim(cmd);
-	if(cmd != '')
-		arr.push(cmd);
+
+	cmd = $.trim( cmd );
+	if ( cmd != '' ) {
+		arr.push( cmd );
+	}
+
 	return arr;
 }
 
 var built_in_commands = ["DATE", "ALIAS", "CD", "ECHO", "EXIT", "FALSE", "TRUE", "HELP", "PRINTF", "EVAL", "PWD", "SET", "TEST", "UNSET", "WHOAMI", "SLEEP"];
-function executeCommand( txt ) 
-{
+
+function executeCommand( txt ) {
 	txt = $.trim(txt);
-	$( "body > ul > li:last-child" ).after( $( '<li><div class="system_output">system output here</div></li>' ) );
+	$( "body > ul > li:last-child" ).append( $( '<div class="system_output">system output here</div>' ) );
 	var last = $( '.system_output' ).last();
 	// insert system results inside last
 	var split_text = command_split(txt);
-	
+
 	var debug_split_text_array = "[";
-	for(var v = 0; v < split_text.length; v++)
-	{
-		debug_split_text_array += '\"'+split_text[v]+'\"';
-		if(v != split_text.length-1)
-		{
+	for ( var v = 0; v < split_text.length; v++ ) {
+		debug_split_text_array += '\"' + split_text[v] + '\"';
+		if ( v != split_text.length - 1 ) {
 			debug_split_text_array += ", ";
 		}
 	}
 	debug_split_text_array += "]";
-	console.log(debug_split_text_array);
-	
-	if(split_text.length == 0)
+	console.log( debug_split_text_array );
+
+	if ( split_text.length == 0 ) {
 		return;
-		
-	if(split_text[0] == "DATE")
-	{
-		if(split_text.length > 1)
-		{
+	}
+
+	if ( split_text[0] == "DATE" ) {
+		if ( split_text.length > 1 ) {
 			last.text("error: date takes no args");
-		}
-		else
-		{
+		} else {
 			var temp = new Date();
 			// fix formatting.
-			var dateStr = temp.getMonth().toString() + "-" + 
-                  temp.getDate().toString() + "-" + 
-				  temp.getFullYear().toString() + " ";
-				  var hours = temp.getHours();
-				  if(hours == 0)
-					hours = 12;
-                  dateStr += hours.toString() +  ":" +
-                  temp.getMinutes().toString() +  ":" +
-                  temp.getSeconds().toString();
-			last.text(dateStr);
+			var dateStr = temp.getMonth().toString() + "-" +
+				temp.getDate().toString() + "-" +
+				temp.getFullYear().toString() + " ";
+			var hours = temp.getHours();
+			if ( hours == 0 ) {
+				hours = 12;
+			}
+            dateStr += hours.toString() + ":" +
+				temp.getMinutes().toString() +  ":" +
+				temp.getSeconds().toString();
+			last.text( dateStr );
 		}
-	}
-	else
-	{
-		last.text("error: invalid command "+split_text[0]);
+	} else {
+		last.text("error: invalid command " + split_text[0] );
 	}
 }
 
-function blink() 
-{
-	if( blinkState === true )
-	{
+function blink() {
+	if ( blinkState === true ) {
 		$( '#cursor' ).css( "opacity", 0 );
+	} else {
+		$( '#cursor' ).css( "opacity", 1 );
 	}
-	else 
-	{
-		$( '#cursor' ).css( "opacity", 1 ); 
-	}
-	blinkState = !blinkState;		
+	blinkState = !blinkState;
 }
 
-function getCommand()
-{
+function moveCursorLeft( num ) {
 	var cursor = $( '#cursor' );
-
-	var left = cursor.prev();
-	var right = cursor.next();
-	var cmd = '';
-
-	if ( left.length > 0 && left.hasClass( 'userinput' ) ) 
-	{
-		cmd = left.text();
-	}
-
-	if( right.length > 0 && right.hasClass( 'userinput' ) )
-	{
-		cmd += right.text();
-	}
-
-	return cmd;
-}
-
-function moveCursorLeft( num ) 
-{
-	var cursor = $( '#cursor' );	
 
 	var lastChars = '';
 	var leftElem = $( '#cursor' ).prev();
-	
-	if( leftElem.length > 0 && leftElem.hasClass( 'userinput' ) ) 
-	{
+
+	if ( leftElem.length > 0 && leftElem.hasClass( 'userinput' ) ) {
 		var leftText = leftElem.text();
 		var moveAmount = (leftText.length >= num)? num : leftText.length;
 
@@ -182,134 +131,111 @@ function moveCursorLeft( num )
 
 	var rightElem = cursor.next();
 
-	if( rightElem.length > 0 && rightElem.hasClass( 'userinput' ) )
-	{
+	if ( rightElem.length > 0 && rightElem.hasClass( 'userinput' ) ) {
 		var rightText = rightElem.text();
 		rightElem.text( lastChars + rightText );
 	}
 }
 
-function moveCursorRight( num ) 
-{
-	var cursor = $( '#cursor' );	
+function moveCursorRight( num ) {
+	var cursor = $( '#cursor' );
 
 	var firstChars = '';
 	var rightElem = cursor.next();
 
-	if( rightElem.length > 0 && rightElem.hasClass( 'userinput' ) )
-	{
+	if ( rightElem.length > 0 && rightElem.hasClass( 'userinput' ) ) {
 		var rightText = rightElem.text();
-		var moveAmount = (rightText.length >= num)? num : rightText.length;
+		var moveAmount = ( rightText.length >= num ) ? num : rightText.length;
 
-		firstChar = rightText.substring( 0, moveAmount ); 
+		firstChar = rightText.substring( 0, moveAmount );
 		rightElem.text( rightText.substring( moveAmount, rightText.length ) );
 	}
-	
+
 	var leftElem = $( '#cursor' ).prev();
-	
-	if( leftElem.length > 0 && leftElem.hasClass( 'userinput' ) ) 
-	{
+
+	if ( leftElem.length > 0 && leftElem.hasClass( 'userinput' ) ) {
 		leftElem.text( leftElem.text() + firstChar );
-	}	
+	}
 }
 
-function cycleHistory( num )
-{
+function cycleHistory( num ) {
 	var newPos = currHistoryPos + num;
-	if( newPos < history.length && newPos >= 0 )
-	{
+	if ( newPos < history.length && newPos >= 0 ) {
 		currHistoryPos = newPos;
-		
+
 		$( '#cursor' ).next().text( '' );
 		$( '#cursor' ).prev().text( history[currHistoryPos] );
-	}	
-	else
-	{
+	} else {
 		currHistoryPos = history.length;
-		
+
 		$( '#cursor' ).next().text( '' );
 		$( '#cursor' ).prev().text( '' );
 	}
 }
 
-$( document ).keydown( function( e ) 
-{
+$( document ).keydown( function( e ) {
 	var elem;
-	if( e.keyCode === 37 )
-	{
+
+	if ( e.keyCode === 37 ) {
+		// Left arrow key: move cursor
 		moveCursorLeft( 1 );
-	}
-	else if( e.keyCode === 39 )
-	{
+	} else if ( e.keyCode === 39 ) {
+		// Right arrow key: move cursor
 		moveCursorRight( 1 );
-	}
-	else if( e.keyCode === 38 )
-	{
+	} else if ( e.keyCode === 38 ) {
+		// Up arrow key: scroll history
 		cycleHistory( -1 );
-	}
-	else if( e.keyCode === 40 )
-	{
+	} else if ( e.keyCode === 40 ) {
+		// Down arrow key: scroll history
 		cycleHistory( 1 );
-	}
-	else if( ctrlDown && e.keyCode === 67 ) 
-	{
+	} else if ( ctrlDown && e.keyCode === 67 ) {
+		// Ctrl-C: break input and reprompt
 		$( '#cursor' ).next().append( '^C' );
 		displayPrompt();
-	}
-	else if(e.keyCode == 222)
-	{
-		e.preventDefault();
-		elem = $( '#cursor' ).prev();
-		elem.append( '\'' );
-		moveCursorRight( 1 );
-	}
-	else if( e.keyCode === 46 )
-	{
+	} else if ( e.keyCode === 46 ) {
+		// Delete key
 		elem = $( '#cursor' ).next();
-		if(elem.length !== 0 && elem.hasClass('userinput'))
-		{
-			elem.text( elem.text().substring(1) );
+		if ( elem.length !== 0 && elem.hasClass( 'userinput' ) ) {
+			elem.text( elem.text().substring( 1 ) );
 		}
-	}
-	else if( e.keyCode > 31 && e.keyCode < 97 ) 
-	{
-		elem = $( '#cursor' ).prev();
-		elem.append( String.fromCharCode( e.keyCode ) );
-		moveCursorRight( 1 );
-	} 
-	else if( e.keyCode === 8 ) 
-	{
+	} else if ( e.keyCode === 8 ) {
+		// Backspace key
 		e.preventDefault();
 		elem = $( '#cursor' ).prev();
-		if ( elem.length > 0 && elem.hasClass( 'userinput' ) ) 
-		{
-			elem.text( elem.text().slice(0, -1) );	
+		if ( elem.length > 0 && elem.hasClass( 'userinput' ) ) {
+			elem.text( elem.text().slice( 0, -1 ) );
 		}
-	}
-	else if( e.keyCode === 13 ) 
-	{
-		var cmd = getCommand();
-		$( 'cursor' ).next().after( $( ' <br> ') );
+	} else if ( e.keyCode === 13 ) {
+		// Enter key: submit command
+		var cmd = $( '#cursor' ).parent().children( '.userinput' ).text();
 
 		history[history.length] = cmd;
 		currHistoryPos = history.length;
 
+		$( '#cursor' ).next().after( $( ' <br> ') );
 		executeCommand( cmd );
 		displayPrompt();
-	} 
-	else if( e.keyCode === 17 ) 
-	{
+	} else if ( e.keyCode === 17 ) {
+		// Ctrl: Set state to detect special chars
 		ctrlDown = true;
+	} else if ( e.keyCode == 222 ) {
+		// Single quote: Needs special handling
+		e.preventDefault();
+		elem = $( '#cursor' ).prev();
+		elem.append( '\'' );
+		moveCursorRight( 1 );
+	} else if ( e.keyCode > 31 && e.keyCode < 97 ) {
+		// Regular text: output to screen
+		elem = $( '#cursor' ).prev();
+		elem.append( String.fromCharCode( e.keyCode ) );
+		moveCursorRight( 1 );
 	}
-
 
 	$( window ).scrollTop( $( document ).height() );
 } );
 
-$( document ).keyup( function( e ) 
-{
-	if ( e.keyCode === 17 ) 
-	{
+$( document ).keyup( function( e ) {
+	if ( e.keyCode === 17 ) {
 		ctrlDown = false;
 	}
 } );
