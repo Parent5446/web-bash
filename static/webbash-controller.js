@@ -13,6 +13,13 @@ function WebBash() {
 
 		if ( argv.length <= 0 ) {
 			// No command given
+		} else if ( argv[0] === 'eval' ) {
+			argv.shift();
+			if ( argv.length > 0 ) {
+				this.environment['?'] = this.executeCommand( argv, output );
+			} else {
+				this.environment['?'] = 0;
+			}
 		} else if ( argv[0] === 'echo' ) {
 			argv.shift();
 			output.append( argv.join( ' ' ) );
