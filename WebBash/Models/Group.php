@@ -4,7 +4,6 @@ namespace WebBash\Models;
 
 use \WebBash\Util;
 use \WebBash\DI;
-use \WebBash\Models\User;
 
 class Group implements Model
 {
@@ -133,5 +132,21 @@ class Group implements Model
 			$objs[] = $this->userCache->get( 'name', $member );
 		}
 		return $objs;
+	}
+
+	public function addMember( User $user ) {
+		$name = $user->getName();
+		if ( !in_array( $name, $this->members ) ) {
+			$this->members[] = $name;
+		}
+		$this->membersToAdd[] = $name;
+	}
+
+	public function removeMember( User $user ) {
+		$index = array_search( $user->getName(), $this->members );
+		if ( $index !== false ) {
+			unset( $this->members[$index] );
+			$this->membersToRemove[] = $user->getName();
+		}
 	}
 }

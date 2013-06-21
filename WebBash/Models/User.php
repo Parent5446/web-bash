@@ -160,9 +160,14 @@ class User implements Model
 		$this->password = Util\bcrypt( $plaintext );
 	}
 
-	public function getRegistration() {
+	public function getHomeDirectory() {
 		$this->load();
-		return new DateTime( $this->registration );
+		return $this->deps->fileCache->get( 'id', $this->homedir );
+	}
+
+	public function setHomeDirectory( FileInfo $file ) {
+		$this->load();
+		$this->homedir = $file->getId();
 	}
 
 	public function getGroups() {
