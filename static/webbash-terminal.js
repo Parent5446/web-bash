@@ -76,7 +76,7 @@ function Terminal() {
 		debugArray += "]";
 		console.log( debugArray );
 
-		last.text( this.controller.executeCommand( split_text ) );
+		this.controller.executeCommand( split_text, last );
 	};
 
 	this.blink = function() {

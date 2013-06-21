@@ -1,9 +1,10 @@
 ( function( $, WebBash ) {
 	'use strict';
 
-	WebBash.commands.date = function( argc ) {
+	WebBash.commands.date = function( fds, argc ) {
 		if ( argc > 1 ) {
-			return "error: date takes no args";
+			fd[2].write( "error: date takes no args" );
+			return 1;
 		}
 
 		var temp = new Date();
@@ -68,6 +69,7 @@
 			minString +  ":" + secStr + " " + tz + " " +
 			temp.getFullYear().toString() + " ";
 
-		return dateStr;
+		fds[1].write( dateStr );
+		return 0;
 	};
 } )( jQuery, WebBash );
