@@ -1,0 +1,3 @@
+[submodule "lib/sjcl"]
+	path = lib/sjcl
+	url = https://github.com/bitwiseshiftleft/sjcl

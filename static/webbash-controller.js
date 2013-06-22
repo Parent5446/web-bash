@@ -2,7 +2,6 @@ function WebBash() {
 	'use strict';
 
 	this.environment = { '?': 0 };
-	this.api = null;
 	this.varPatt = /[\w\?\-\!]+/i;
 
 	this.executeCommand = function( argv, output ) {
