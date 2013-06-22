@@ -4,7 +4,6 @@
 	/**
 	 * Normalize the key code in keydown events into an ASCII value proper
 	 * @this {jQuery.Event}
-	 * @nosideeffects
 	 * @return {string} The character
 	 */
 	$.Event.prototype.getChar = function() {

@@ -68,7 +68,6 @@ function WebBash() {
 	/**
 	 * Replace variables in arguments using the environment
 	 * @private
-	 * @nosideeffects
 	 * @param {Array.<string>} argv Arguments to process
 	 * @return {Array.<string>} Arguments with variables replaced
 	 */
