@@ -1,11 +1,42 @@
+/**
+ * Terminal I/O interaction
+ * @constructor
+ */
 function Terminal() {
 	'use strict';
 
+	/**
+	 * Controller object to use to process commands
+	 * @private
+	 * @type {WebBash}
+	 */
 	this.controller = null;
+
+	/**
+	 * Prompt to display to the user
+	 * @private
+	 * @const
+	 * @type {string}
+	 */
 	this.prompt = "root@ubuntu> ";
+
+	/**
+	 * List of previous commands
+	 * @private
+	 * @type {Array.<string>}
+	 */
 	this.cmdHistory = [];
+
+	/**
+	 * Current position in the command history
+	 * @private
+	 * @type {number}
+	 */
 	this.currHistoryPos = 0;
 
+	/**
+	 * Reset the cursor position
+	 */
 	this.resetCursor = function() {
 		$( '#cursor' ).remove();
 		$( "body > ul > li:last-child" ).append( $( '<div id="cursor" class="userinput">&nbsp;</div>' ) );
@@ -13,20 +44,27 @@ function Terminal() {
 		$( '#cursor' ).after( $( '<div class="userinput"></div>' ) );
 	};
 
+	/**
+	 * Display a new prompt line and reset the cursor
+	 */
 	this.displayPrompt = function() {
 		$( "body > ul" ).append( '<li>' + this.prompt + '</li>' );
 		this.resetCursor();
 	};
 
+	/**
+	 * Process a string command and pass it to the controller for execution
+	 * @param {string} txt Command entered
+	 */
 	this.executeCommand = function( txt ) {
 		txt = $.trim(txt);
 		$( "body > ul > li:last-child" ).append( $( '<div class="system_output"></div>' ) );
 
-		var last = $( '.system_output' ).last();
-		var cmd = "";
-		var split_text = [];
-		var inString = false;
-		var backslash = false;
+		var last = $( '.system_output' ).last(),
+			cmd = "",
+			split_text = [],
+			inString = false,
+			backslash = false;
 
 		for ( var i = 0; i < txt.length; i++ ) {
 			if ( txt[i] === ' ' && inString ) {
@@ -65,24 +103,19 @@ function Terminal() {
 			split_text.push( cmd );
 		}
 
-		// Log the command to the console
-		var debugArray = "[";
-		for ( var v = 0; v < split_text.length; v++ ) {
-			debugArray += '\"' + split_text[v] + '\"';
-			if ( v !== split_text.length - 1 ) {
-				debugArray += ", ";
-			}
-		}
-		debugArray += "]";
-		console.log( debugArray );
-
 		this.controller.executeCommand( split_text, last );
 	};
 
+	/**
+	 * Toggle the cursor to blink on or off
+	 */
 	this.blink = function() {
 		$( '#cursor' ).toggleClass( 'blink' );
 	};
 
+	/**
+	 * Move the cursor one position to the left
+	 */
 	this.moveCursorLeft = function() {
 		var cursor = $( '#cursor' );
 
@@ -117,10 +150,12 @@ function Terminal() {
 		}
 	};
 
+	/**
+	 * Move the cursor one position to the right
+	 */
 	this.moveCursorRight = function() {
-		var cursor = $( '#cursor' );
-
-		var firstChar, cursorChar,
+		var cursor = $( '#cursor' ),
+			firstChar, cursorChar, rightText,
 			leftElem = cursor.prev(),
 			rightElem = cursor.next();
 
@@ -128,7 +163,7 @@ function Terminal() {
 			return false;
 		}
 
-		var rightText = rightElem.text();
+		rightText = rightElem.text();
 		if ( rightText.length === 0 ) {
 			return false;
 		}
@@ -147,6 +182,10 @@ function Terminal() {
 		}
 	};
 
+	/**
+	 * Cycle through the history and update the prompt
+	 * @param {number} num Number of spaces (and direction) to move in history
+	 */
 	this.cycleHistory = function( num ) {
 		var cmd = $( '#cursor' ).parent().children( '.userinput' ).text();
 		this.cmdHistory[this.currHistoryPos] = cmd.substr( 0, cmd.length - 1 );
@@ -161,6 +200,10 @@ function Terminal() {
 		}
 	};
 
+	/**
+	 * Process a single input character
+	 * @param {jQuery.Event} e Keydown event
+	 */
 	this.processInput = function( e ) {
 		var elem;
 
@@ -246,6 +289,11 @@ function Terminal() {
 		$( window ).scrollTop( $( document ).height() );
 	};
 
+	/**
+	 * Bind this terminal to a window and controller
+	 * @param {Window} window
+	 * @param {WebBash} controller
+	 */
 	this.bind = function( window, controller ) {
 		this.controller = controller;
 		var doc = $( window.document );

@@ -1,6 +1,12 @@
 ( function( $ ) {
 	'use strict';
 
+	/**
+	 * Normalize the key code in keydown events into an ASCII value proper
+	 * @this {jQuery.Event}
+	 * @nosideeffects
+	 * @return {string} The character
+	 */
 	$.Event.prototype.getChar = function() {
 		var specials = [ 16, 37, 38, 39, 40, 20, 17, 18, 91 ],
 			shiftChars = {
