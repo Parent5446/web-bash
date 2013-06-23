@@ -104,6 +104,28 @@
 	};
 
 	/**
+	 * Write out all available commands
+	 * @param {Array.<IoStream>} fds Input/output streams
+	 * @param {number} argc Number of arguments
+	 * @param {Array.<string>} Arguments passed to command
+	 * @param {Array.<string>} Environment variables
+	 * @return {number} Retcode, 0 for success
+	 */
+	WebBash.commands.commands = function( fds, argc, argv, env ) {
+		var commands = []
+		for(var cmd in WebBash.commands)
+		{
+			if ( $.inArray( cmd, commands ) == -1 )
+			{
+				commands.push(cmd);
+			}
+		}
+
+		fds[1].write(commands.join( '<br/>' ));
+		return 0;
+	};
+
+	/**
 	 * Change the group on one or more files
 	 * @param {Array.<IoStream>} fds Input/output streams
 	 * @param {number} argc Number of arguments

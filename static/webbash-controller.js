@@ -38,6 +38,10 @@ function WebBash() {
 			} else {
 				this.environment['?'] = '0';
 			}
+		} else if ( argv[0] === 'help' ) {
+			output.append( "Web-Bash implements a command line interface just like BASH on linux. Type a command like 'date' to test it out. " );
+			output.append( "To see a full list of commands, type 'commands' " );
+			this.environment['?'] = '0';
 		} else if ( argv[0] === 'echo' ) {
 			argv.shift();
 			output.append( argv.join( ' ' ) );
