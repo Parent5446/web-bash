@@ -2,6 +2,42 @@
 	'use strict';
 
 	/**
+	 * Do nothing, unsuccessfully
+	 * @return {number} Always returns 1
+	 */
+	WebBash.commands['false'] = function() {
+		return 1;
+	};
+
+	/**
+	 * Do nothing, successfully
+	 * @return {number} Always return 0
+	 */
+	WebBash.commands['true'] = function() {
+		return 0;
+	};
+
+	/**
+	 * Write out all available commands
+	 * @param {Array.<IoStream>} fds Input/output streams
+	 * @param {number} argc Number of arguments
+	 * @param {Array.<string>} Arguments passed to command
+	 * @param {Array.<string>} Environment variables
+	 * @return {number} Retcode, 0 for success
+	 */
+	WebBash.commands.commands = function( fds, argc, argv, env ) {
+		var commands = [];
+		for ( var cmd in WebBash.commands ) {
+			if ( WebBash.commands.hasOwnProperty( cmd ) ) {
+				commands.push(cmd);
+			}
+		}
+
+		fds[1].write( commands.join( '<br/>' ) );
+		return 0;
+	};
+
+	/**
 	 * Format a date and output it to the command line
 	 * @param {Array.<IoStream>} fds Input/output streams
 	 * @param {number} argc Number of arguments

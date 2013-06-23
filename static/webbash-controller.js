@@ -31,6 +31,8 @@ function WebBash() {
 
 		this.environment._ = argv[argv.length - 1];
 
+		// Built-in commands are handled here
+		// Other internal commands are handled with the WebBash.commands object
 		if ( argv[0] === 'eval' ) {
 			argv.shift();
 			if ( argv.length > 0 ) {
@@ -50,6 +52,11 @@ function WebBash() {
 			for ( var i = 1; i < argv.length; ++i ) {
 				var splt = argv[i].split( '=', 2 );
 				this.environment[splt[0]] = splt[1];
+			}
+			this.environment['?'] = '0';
+		} else if ( argv[0] === 'unset' ) {
+			for ( var i = 1; i < argv.length; ++i ) {
+				this.environment[argv[i]] = '';
 			}
 			this.environment['?'] = '0';
 		} else if ( typeof WebBash.commands[argv[0]] !== 'undefined' ) {
