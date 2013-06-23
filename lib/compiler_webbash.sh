@@ -8,8 +8,7 @@ java -jar compiler.jar \
     --js ../static/webbash-controller.js \
     --js ../static/webbash-stream.js \
     --js ../static/webbash-api.js \
-    --js ../static/webbash-cmd-date.js \
+    --js ../static/webbash-cmd-internal.js \
     --js ../static/webbash-cmd-api.js \
-    --js ../static/webbash-cmd-truefalse.js \
-    --compilation_level SIMPLE_OPTIMIZATIONS \
+    --compilation_level ADVANCED_OPTIMIZATIONS \
 	--js_output_file ../static/webbash-compiled.js

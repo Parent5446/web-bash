@@ -305,3 +305,5 @@ function Terminal() {
 		}, this ) );
 	};
 }
+
+window['Terminal'] = Terminal;

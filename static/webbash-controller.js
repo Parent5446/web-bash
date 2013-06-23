@@ -32,7 +32,7 @@ function WebBash() {
 		this.environment._ = argv[argv.length - 1];
 
 		// Built-in commands are handled here
-		// Other internal commands are handled with the WebBash.commands object
+		// Other internal commands are handled with the WebBash['commands'] object
 		if ( argv[0] === 'eval' ) {
 			argv.shift();
 			if ( argv.length > 0 ) {
@@ -59,7 +59,7 @@ function WebBash() {
 				this.environment[argv[i]] = '';
 			}
 			this.environment['?'] = '0';
-		} else if ( typeof WebBash.commands[argv[0]] !== 'undefined' ) {
+		} else if ( typeof WebBash['commands'][argv[0]] !== 'undefined' ) {
 			var fds = [ new IoStream(), new IoStream(), new IoStream() ];
 			fds[1].flush = function( text ) {
 				output.append( text );
@@ -69,7 +69,7 @@ function WebBash() {
 			};
 
 			var argc = argv.length;
-			this.environment['?'] = WebBash.commands[cmd]( fds, argc, argv, this.environment ).toString();
+			this.environment['?'] = WebBash['commands'][cmd]( fds, argc, argv, this.environment ).toString();
 		} else if ( argv[0] !== undefined && argv[0] !== '' ) {
 			output.append( "error: unknown command " + argv[0] );
 			this.environment['?'] = '127';
@@ -116,6 +116,9 @@ function WebBash() {
 /**
  * List of commands
  * @expose
- * @type {Array.<function(Array.<IoStream>, number, Array.<string>, Array.<string>): number>}
+ * @dict
+ * @type {Object.<string, function(Array.<IoStream>, number, Array.<string>, Array.<string>): number>}
  */
-WebBash.commands = {};
+WebBash['commands'] = {};
+
+window['WebBash'] = WebBash;

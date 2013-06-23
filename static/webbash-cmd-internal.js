@@ -5,7 +5,7 @@
 	 * Do nothing, unsuccessfully
 	 * @return {number} Always returns 1
 	 */
-	WebBash.commands['false'] = function() {
+	WebBash['commands']['false'] = function() {
 		return 1;
 	};
 
@@ -13,7 +13,7 @@
 	 * Do nothing, successfully
 	 * @return {number} Always return 0
 	 */
-	WebBash.commands['true'] = function() {
+	WebBash['commands']['true'] = function() {
 		return 0;
 	};
 
@@ -25,10 +25,10 @@
 	 * @param {Array.<string>} Environment variables
 	 * @return {number} Retcode, 0 for success
 	 */
-	WebBash.commands.commands = function( fds, argc, argv, env ) {
+	WebBash['commands']['commands'] = function( fds, argc, argv, env ) {
 		var commands = [];
-		for ( var cmd in WebBash.commands ) {
-			if ( WebBash.commands.hasOwnProperty( cmd ) ) {
+		for ( var cmd in WebBash['commands'] ) {
+			if ( WebBash['commands'].hasOwnProperty( cmd ) ) {
 				commands.push(cmd);
 			}
 		}
@@ -43,7 +43,7 @@
 	 * @param {number} argc Number of arguments
 	 * @return {number} Retcode, 0 for success
 	 */
-	WebBash.commands.date = function( fds, argc ) {
+	WebBash['commands']['date'] = function( fds, argc ) {
 		if ( argc > 1 ) {
 			fds[2].write( "error: date takes no args" );
 			return 1;
