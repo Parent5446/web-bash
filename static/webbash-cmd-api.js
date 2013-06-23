@@ -115,7 +115,7 @@
 		var commands = []
 		for(var cmd in WebBash.commands)
 		{
-			if ( $.inArray( cmd, commands ) == -1 )
+			if ( $.inArray( cmd, commands ) === -1 )
 			{
 				commands.push(cmd);
 			}
@@ -138,13 +138,13 @@
 		argc--;
 		var errorMessage = "error: incorrect usage. ex: set hello=5";
 
-		if(argc != 1)
+		if(argc !== 1)
 		{
 			fds[2].write(errorMessage);
 			return 1;
 		}
 		var index = argv[0].indexOf('=');
-		if(index == -1)
+		if(index === -1)
 		{
 			fds[2].write(errorMessage);
 			return 1;
@@ -168,7 +168,7 @@
 		argc--;
 		var errorMessage = "error: incorrect usage. ex: unset hello";
 
-		if(argc != 1)
+		if(argc !== 1)
 		{
 			fds[2].write(errorMessage);
 			return 1;
