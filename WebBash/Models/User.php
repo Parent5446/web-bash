@@ -14,7 +14,7 @@ class User implements Model
 	private $email_confirmed = null;
 	private $password = null;
 	private $token = null;
-	private $exists_flag = false;
+	private $exists = null;
 
 	public static function newFromName( DI $deps, $name ) {
 		$obj = new self( $deps );
@@ -33,15 +33,14 @@ class User implements Model
 	}
 
 	function load() {
-		if ( $this->homedir !== null ) {
+		if ( $this->exists !== null ) {
 			return;
 		}
-		
-		$this->homedir = false;
+
 		if ( $this->name !== null ) {
-			$this->loadFromField( 'name' );
+			$this->exists = $this->loadFromField( 'name' );
 		} elseif ( $this->id !== null ) {
-			$this->loadFromField( 'id' );
+			$this->exists = $this->loadFromField( 'id' );
 		} else {
 			throw new RuntimeException( 'Cannot fetch info for unknown user.' );
 		}
@@ -49,48 +48,43 @@ class User implements Model
 		$this->deps->userCache->update( $this, array( 'id' => $this->id, 'name' => $this->name ) );
 	}
 
-	function create($name, $email, $email_confirmed, $password, $token, $homedir) {
-		$stmt = $this->deps->stmtCache->prepare(
-			'INSERT into user (name, email, email_confirmed, password, token, homedir) VALUES (:name, :email, :email_confirmed, :password, :token, :homedir)'.
-			'WHERE NOT EXISTS (SELECT * from user where name = :name)'
-		);
-
-		$this->name = $name;
-		$this->email = $email;
-		$this->email_confirmed = $email_confirmed;
-		$this->password = $password;
-		$this->token = $token;
-		$this->homedir = $homedir;
-
-		$stmt->bindParam( ':name', $name );
-		$stmt->bindParam( ':homedir', $homedir );
-		$stmt->bindParam( ':email', $email );
-		$stmt->bindParam( ':email_confirmed', $email_confirmed );
-		$stmt->bindParam( ':password', $password );
-		$stmt->bindParam( ':token', $token );
-		$stmt->execute();
-
-		// TODO: turn homedir into actually directory number
-		// TODO: check if row actually inserted. if so, then fetch id to update cache
-		$this->deps->userCache->update( $this, array( 'id' => $this->id, 'name' => $this->name ) );
-		return true;
-	}
-
 	function save() {
 		$this->load();
+		
+		if ( !$this->exists ) {
+			/** @TODO Add a ON DUPLICATE KEY UPDATE clause here. */
+			$stmt = $this->deps->stmtCache->prepare(
+				'INSERT into user (name, email, email_confirmed, password, token, homedir) ' .
+				'VALUES (:name, :email, :email_confirmed, :password, :token, :homedir)'
+			);
+		} else {
+			$stmt = $this->deps->stmtCache->prepare(
+				'UPDATE user SET email = :email, email_confirmed = :email_confirmed, ' . 
+				' password = :password, token = :token, homedir = :homedir WHERE id = :id'
+			);
+			$stmt->bindParam( ':id', $this->id );
+		}
 
-		$stmt = $this->deps->stmtCache->prepare(
-			'UPDATE user SET email = :email, email_confirmed = :email_confirmed, ' . 
-			' password = :password, token = :token, homedir = :homedir WHERE id = :id'
-		);
-
+		$stmt->bindParam( ':name', $this->name );
 		$stmt->bindParam( ':homedir', $this->homedir );
 		$stmt->bindParam( ':email', $this->email );
-		$stmt->bindParam( ':email_confirmed', $this->email_confirmed );
+		$stmt->bindParam( ':email_confirmed', (bool)$this->email_confirmed );
 		$stmt->bindParam( ':password', $this->password );
 		$stmt->bindParam( ':token', $this->token );
-		$stmt->bindParam( ':id', $this->id );
-		$stmt->execute();
+
+		if ( $stmt->execute() ) {
+			if ( !$this->exists() ) {
+				$this->exists = true;
+				$this->id = $this->deps->db->lastInsertId();
+				$this->deps->userCache->update(
+					$this,
+					array( 'id' => $this->id, 'name' => $this->name )
+				);
+			}
+		} else {
+			$this->exists = null;
+			$this->load();
+		}
 	}
 	
 	function merge( Model $other ) {
@@ -129,7 +123,7 @@ class User implements Model
 		$stmt->bindParam( ":$field", $this->$field );
 		$stmt->setFetchMode( \PDO::FETCH_INTO, $this );
 		$stmt->execute();
-		$this->exists_flag = $stmt->fetch();
+		return (bool)$stmt->fetch();
 	}
 
 	public function getName() {
