@@ -13,7 +13,7 @@ class Router
 	public function register( $pattern, $controller ) {
 		// Replace variables with regex capture patterns
 		$pattern = preg_replace( '/:(\w+)/', '(?P<$1>[^/]+)', $pattern );
-		$routes[$pattern] = $controller;
+		$this->routes[$pattern] = $controller;
 	}
 
 	public function execute( $method, $url, $data ) {
@@ -21,8 +21,8 @@ class Router
 		$matches = array();
 
 		foreach ( $this->routes as $pattern => $class ) {
-			if ( preg_match( "/^$pattern$/", $url, $matches ) ) {
-				$controller = new $class;
+			if ( preg_match( "!^{$pattern}$!", $url, $matches ) ) {
+				$controller = new $class( $this->deps );
 				break;
 			}
 		}
@@ -30,8 +30,6 @@ class Router
 		if ( $controller === null ) {
 			throw new HttpException( 404 );
 		}
-
-		$controller = new $controllerClass( $this->deps );
 
 		if ( !method_exists( $controller, $method ) ) {
 			$allowedMethods = array_map( 'strtoupper', get_class_methods( $controllerClass ) );
@@ -55,8 +53,8 @@ class Router
 			if (
 				strncmp( php_uname(), 'Windows', 7 ) === 0 &&
 				version_compare( PHP_VERSION, '5.3.3', '>=' ) &&
-				!ini_get( 'session.entropy_file' ) ||
-				(int)ini_get( 'session.entropy_length' ) < 32
+				!\ini_get( 'session.entropy_file' ) ||
+				(int)\ini_get( 'session.entropy_length' ) < 32
 			) {
 				session_id( bin2hex( Util\urandom( 32 ) ) );
 			}
@@ -87,7 +85,7 @@ class Router
 				}
 			}
 		}
-		
+
 		if ( isset( $_SESSION['userId'] ) ) {
 			$user = $this->deps->userCache->get( 'id', $_SESSION['userId'] );
 			if ( $user->exists() ) {
@@ -120,7 +118,7 @@ class Router
 					$data = $_POST;
 					break;
 				}
-				
+
 			case 'put':
 				;
 				if ( $headers['CONTENT-TYPE'] === 'application/json' ) {
@@ -149,7 +147,7 @@ class Router
 		} catch ( HttpException $e ) {
 			$code = $e->getHttpCode();
 
-			header( "HTTP/1.0 $e {$this->httpMsgs[$code]}" );
+			header( "HTTP/1.0 {$e->getHttpCode()} {$e->getHttpMsg()}" );
 			foreach ( $e->getHeaders() as $header => $value ) {
 				header( "$header: $value" );
 			}
@@ -162,25 +160,27 @@ class Router
 		if ( !isset( $_SERVER['HTTP_ACCEPT'] ) ) {
 			$_SERVER['HTTP_ACCEPT'] = 'application/json';
 		}
-		switch ( $_SERVER['HTTP_ACCEPT'] ) {
-			case 'application/json':
-				$data = json_encode( $data );
-				break;
-				
-			case 'application/x-www-urlencoded':
-				$data = http_build_query( $response );
-				break;
+		foreach ( array_map( 'trim', explode( ',', $_SERVER['HTTP_ACCEPT'] ) ) as $accept ) {
+			switch ( $accept ) {
+				case 'application/json':
+					$data = json_encode( $response );
+					break 2;
 
-			default:
-				header( 'HTTP/1.0 406 Not Acceptable' );
-				return false;
-				break;
+				case 'application/x-www-urlencoded':
+					$data = http_build_query( $response );
+					break 2;
+
+				default:
+					header( 'HTTP/1.0 406 Not Acceptable' );
+					return false;
+					break 2;
+			}
 		}
 
 		// If output compression isn't enabled in the PHP config, try doing it
 		// manually if the client wants it
 		if ( !in_array(
-			strtolower( init_get( 'zlib.output_compression' ) ),
+			strtolower( \ini_get( 'zlib.output_compression' ) ),
 			array( 'on', 'true', 'yes' )
 		) ) {
 			$encodings = explode( ',', $_SERVER['HTTP_ACCEPT'] );
@@ -188,14 +188,14 @@ class Router
 				switch ( trim( $encoding ) ) {
 					case 'deflate':
 					case 'gzip':
-						if ( extension_loaded( 'zlib' ) ) {
-							ob_start( 'ob_gzhandler' );
+						if ( \extension_loaded( 'zlib' ) ) {
+							\ob_start( 'ob_gzhandler' );
 							break 2;
 						}
-					
+
 					case 'bzip2':
-						if ( function_exists( 'bzcompress' ) ) {
-							$data = bzcompress( $data );
+						if ( \function_exists( 'bzcompress' ) ) {
+							$data = \bzcompress( $data );
 							header( 'Content-Encoding: bzip2' );
 							break 2;
 						}

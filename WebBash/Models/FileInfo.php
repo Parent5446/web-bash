@@ -16,15 +16,15 @@ class FileInfo implements Model
 
 	public $id = null;
 	public $path = null;
-	private $parent = null;
-	private $name = null;
-	private $size = null;
-	private $owner = null;
-	private $grp = null;
-	private $perms = null;
-	private $atime = null;
-	private $mtime = null;
-	private $ctime = null;
+	public $parent = null;
+	public $name = null;
+	public $size = null;
+	public $owner = null;
+	public $grp = null;
+	public $perms = null;
+	public $atime = null;
+	public $mtime = null;
+	public $ctime = null;
 
 	public static function newFromId( DI $deps, $id ) {
 		$obj = new self( $deps );
@@ -47,7 +47,7 @@ class FileInfo implements Model
 		if ( $this->size !== null ) {
 			return;
 		}
-		
+
 		$this->size = false;
 		if ( $this->id !== null ) {
 			$this->loadFromId();
@@ -148,9 +148,17 @@ class FileInfo implements Model
 
 	private function loadFromId() {
 		$stmt = $this->deps->stmtCache->prepare( 'SELECT * FROM file WHERE id = :id' );
+		$stmt->bindParam( ':id', $this->id );
 		$stmt->setFetchMode( \PDO::FETCH_INTO, $this );
 		$stmt->execute();
 		$stmt->fetch();
+	}
+
+	public function getPathname() {
+		if ( $this->path === null ) {
+			$this->load();
+		}
+		return $this->path;
 	}
 
 	public function getParent() {

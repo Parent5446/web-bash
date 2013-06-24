@@ -3,6 +3,7 @@
 namespace WebBash\Controllers;
 
 use \WebBash\DI;
+use \WebBash\HttpException;
 
 class UserController
 {

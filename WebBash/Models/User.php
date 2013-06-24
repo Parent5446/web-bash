@@ -7,14 +7,14 @@ use \WebBash\DI;
 
 class User implements Model
 {
-	private $id = null;
-	private $name = null;
-	private $homedir = null;
-	private $email = null;
-	private $email_confirmed = null;
-	private $password = null;
-	private $token = null;
-	private $exists = null;
+	public $id = null;
+	public $name = null;
+	public $homedir = null;
+	public $email = null;
+	public $email_confirmed = null;
+	public $password = null;
+	public $token = null;
+	public $exists = null;
 
 	public static function newFromName( DI $deps, $name ) {
 		$obj = new self( $deps );
@@ -50,7 +50,7 @@ class User implements Model
 
 	function save() {
 		$this->load();
-		
+
 		if ( !$this->exists ) {
 			/** @TODO Add a ON DUPLICATE KEY UPDATE clause here. */
 			$stmt = $this->deps->stmtCache->prepare(
@@ -86,7 +86,7 @@ class User implements Model
 			$this->load();
 		}
 	}
-	
+
 	function merge( Model $other ) {
 		if ( !$other instanceof self ) {
 			throw new RuntimeException( 'Invalid object passed.' );
@@ -217,6 +217,7 @@ class User implements Model
 	}
 
 	public function exists() {
-		return $this->existsFlag;
+		$this->load();
+		return $this->exists;
 	}
 }
