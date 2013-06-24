@@ -9,7 +9,6 @@ class HttpException extends Exception {
 	public function __construct( $httpCode, $message ) {}
 }
 */
-// /users
 // /users/:name
 class UserController
 {
@@ -20,6 +19,12 @@ class UserController
 	}
 
 	public function get( array $params ) {
+		if ( !is_array($data) ) {
+			throw new HttpException(400, "Expecting an array as input");
+		} else if ( !isset ( $data["name"] ) {
+			throw new HttpException(400, "Expecting entry for name");
+		}
+
 		$user = this->deps->userCache->get("name", $params["name"]);
 		if ( !$user->exists() ) {
 			throw new HttpException(404, "User not found");
@@ -42,11 +47,10 @@ class UserController
 		$user = this->deps->userCache->get("name", $params["name"]);
 		if ( $user->exists() ) {
 			throw new HttpException(400, "User already exists");
-		}
-		else {
+		} else {
 			$user->setEmail( $data["email"] );
-			$user->setPassword();
-			$user->setHomeDirectory();
+			$user->setPassword( $data["password"] );
+			$user->setHomeDirectory( $data["home_directory"] );
 			$user->save();
 
 			$group = this->deps->userCache->get( "name", $params["usersGroup"] );
@@ -58,6 +62,23 @@ class UserController
 	}
 
 	public function delete( array $params ) {
-		
+		if ( !is_array($data) ) {
+			throw new HttpException(400, "Expecting an array as input");
+		}
+
+		$expected_keys = array("name");
+
+		if ( !isset ( $data["name"] ) {
+			throw new HttpException(400, "Expecting entry for name");
+		}
+
+		$user = this->deps->userCache->get("name", $params["name"]);
+		if ( !$user->exists() ) {
+			throw new HttpException(400, "User does not exist");
+		} else {
+			$user->delete();
+
+			return $user;
+		}
 	}
 }
