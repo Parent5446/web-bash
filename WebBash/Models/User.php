@@ -49,6 +49,33 @@ class User implements Model
 		$this->deps->userCache->update( $this, array( 'id' => $this->id, 'name' => $this->name ) );
 	}
 
+	function create($name, $email, $email_confirmed, $password, $token, $homedir) {
+		$stmt = $this->deps->stmtCache->prepare(
+			'INSERT into user (name, email, email_confirmed, password, token, homedir) VALUES (:name, :email, :email_confirmed, :password, :token, :homedir)'.
+			'WHERE NOT EXISTS (SELECT * from user where name = :name)'
+		);
+
+		$this->name = $name;
+		$this->email = $email;
+		$this->email_confirmed = $email_confirmed;
+		$this->password = $password;
+		$this->token = $token;
+		$this->homedir = $homedir;
+
+		$stmt->bindParam( ':name', $name );
+		$stmt->bindParam( ':homedir', $homedir );
+		$stmt->bindParam( ':email', $email );
+		$stmt->bindParam( ':email_confirmed', $email_confirmed );
+		$stmt->bindParam( ':password', $password );
+		$stmt->bindParam( ':token', $token );
+		$stmt->execute();
+
+		// TODO: turn homedir into actually directory number
+		// TODO: check if row actually inserted. if so, then fetch id to update cache
+		$this->deps->userCache->update( $this, array( 'id' => $this->id, 'name' => $this->name ) );
+		return true;
+	}
+
 	function save() {
 		$this->load();
 
@@ -64,8 +91,6 @@ class User implements Model
 		$stmt->bindParam( ':token', $this->token );
 		$stmt->bindParam( ':id', $this->id );
 		$stmt->execute();
-
-		$this->exists_flag = true;
 	}
 	
 	function merge( Model $other ) {

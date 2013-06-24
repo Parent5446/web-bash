@@ -48,16 +48,14 @@ class UserController
 		if ( $user->exists() ) {
 			throw new HttpException(400, "User already exists");
 		} else {
-			$user->setEmail( $data["email"] );
-			$user->setPassword( $data["password"] );
-			$user->setHomeDirectory( $data["home_directory"] );
-			$user->save();
+			$created = $user->create($params["name"], $params["email"], false, $params["password"], "", $params["home_directory"]);
 
-			$group = this->deps->userCache->get( "name", $params["usersGroup"] );
-			$group->addMember( $user );
-			$group.save();
-
-			return $user;
+			if( !$created ) {
+				// user already exists
+				throw new HttpException(400, "User already exists");
+			} else {
+				return $user;
+			}
 		}
 	}
 
