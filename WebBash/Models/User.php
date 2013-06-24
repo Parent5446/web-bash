@@ -14,6 +14,7 @@ class User implements Model
 	private $email_confirmed = null;
 	private $password = null;
 	private $token = null;
+	private $exists_flag = false;
 
 	public static function newFromName( DI $deps, $name ) {
 		$obj = new self( $deps );
@@ -63,6 +64,8 @@ class User implements Model
 		$stmt->bindParam( ':token', $this->token );
 		$stmt->bindParam( ':id', $this->id );
 		$stmt->execute();
+
+		$this->exists_flag = true;
 	}
 	
 	function merge( Model $other ) {
@@ -101,7 +104,7 @@ class User implements Model
 		$stmt->bindParam( ":$field", $this->$field );
 		$stmt->setFetchMode( \PDO::FETCH_INTO, $this );
 		$stmt->execute();
-		$stmt->fetch();
+		$this->exists_flag = $stmt->fetch();
 	}
 
 	public function getName() {
@@ -192,5 +195,9 @@ class User implements Model
 		}
 
 		return $this->groups;
+	}
+
+	public function exists() {
+		return $this->exists_flag;
 	}
 }
