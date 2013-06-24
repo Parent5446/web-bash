@@ -1,8 +1,7 @@
 #!/bin/bash
 
 java -jar compiler.jar \
-    --externs closure-compiler/contrib/externs/jquery-1.9.js \
-    --externs sjcl.externs.js \
+    --externs jquery-1.9-externs.js \
     --js ../static/jquery.eventChar.js \
     --js ../static/webbash-terminal.js \
     --js ../static/webbash-controller.js \

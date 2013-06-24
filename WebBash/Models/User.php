@@ -217,6 +217,6 @@ class User implements Model
 	}
 
 	public function exists() {
-		return $this->exists_flag;
+		return $this->existsFlag;
 	}
 }
