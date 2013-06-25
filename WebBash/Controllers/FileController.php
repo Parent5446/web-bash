@@ -14,7 +14,7 @@ clas FileController
 
 	public function get( array $params ) {
 		$file = $this->deps->fileCache->get( 'name', $params['name']);
-		if( !$user->exist() ) {
+		if( !$file->exist() ) {
 			throw new HttpException( 404, 'File not found' );
 		}
 
@@ -41,7 +41,7 @@ clas FileController
 			}
 		}
 
-		$user = $this->deps->userCache->get( 'name', $params['name'] );
+		$file = $this->deps->fileCache->get( 'name', $params['name'] );
 
 		$file->setName( $data['name'] );
 		$file->setOwner( $data['owner'] );
@@ -50,7 +50,7 @@ clas FileController
 	}
 
 	public function delete( array $params ) {
-		$file = $this->deps->userCache->get( 'name', $params['name'] );
+		$file = $this->deps->fileCache->get( 'name', $params['name'] );
 		if ( !$file->exists() ) {
 			throw new HttpException( 404, 'File does not exist' );
 		}
