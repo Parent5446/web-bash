@@ -5,6 +5,7 @@ error_reporting( E_ALL | E_STRICT );
 require "WebBash/DI.php";
 require "WebBash/Util.php";
 require "WebBash/Router.php";
+require "WebBash/Response.php";
 require "WebBash/HttpException.php";
 
 require "WebBash/Models/Model.php";
