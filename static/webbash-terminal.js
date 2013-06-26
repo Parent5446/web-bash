@@ -270,6 +270,12 @@ function Terminal() {
 			$( '#cursor' ).next().after( $( ' <br> ') );
 			this.executeCommand( cmd );
 			this.displayPrompt();
+		} else if ( e.which === 222 && e.shiftKey) {
+			// Single quote: Needs special handling
+			e.preventDefault();
+			elem = $( '#cursor' ).prev();
+			elem.append( '\"' );
+			this.moveCursorRight( 1 );
 		} else if ( e.which === 222 ) {
 			// Single quote: Needs special handling
 			e.preventDefault();
