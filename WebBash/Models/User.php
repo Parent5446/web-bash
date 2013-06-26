@@ -105,13 +105,13 @@ class User implements Model
 			$this->email = $other->name;
 		}
 		if ( $other->email_confirmed !== null ) {
-			$this->email_confirmed = false;
+			$this->email_confirmed = $other->email_confirmed;
 		}
 		if ( $other->password !== null ) {
-			$this->password = null;
+			$this->password = $other->password;
 		}
 		if ( $other->token !== null ) {
-			$this->token = null;
+			$this->token = $other->token;
 		}
 	}
 

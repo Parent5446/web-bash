@@ -25,7 +25,10 @@ abstract class ProcessCache
 
 	public function update( $obj, $info ) {
 		foreach ( $info as $field => $value ) {
-			if ( isset( $this->cache[$field][$value] ) ) {
+			if (
+				isset( $this->cache[$field][$value] ) &&
+				$obj !== $this->cache[$field][$value]
+			) {
 				$obj->merge( $this->cache[$field][$value] );
 			}
 			$this->cache[$field][$value] = $obj;
