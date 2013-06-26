@@ -31,7 +31,7 @@ class UserController
 			throw new HttpException( 400, 'Expecting an array as input' );
 		}
 
-		$expected_keys = array( 'email', 'name', 'password', 'home_directory' );
+		$expected_keys = array( 'email', 'password', 'home_directory' );
 		foreach ( $expected_keys as $key ) {
 			if ( !isset( $data[$key] ) ) {
 				throw new HttpException( 400, 'Expecting entry for ' . $key );
@@ -40,6 +40,14 @@ class UserController
 
 		$user = $this->deps->userCache->get( 'name', $params['name'] );
 		$homedir = $this->deps->fileCache->get( 'path', $data['home_directory'] );
+
+		$admins = $this->deps->groupCache->get( 'name', 'admin' );
+		if (
+			!$admins->isMember( $this->deps->currentUser ) &&
+			$user->getName() !== $this->deps->currentUser->getName()
+		) {
+			throw new HttpException( 403 );
+		}
 
 		$user->setEmail( $data['email'] );
 		$user->setPassword( $data['password'] );
@@ -51,9 +59,14 @@ class UserController
 
 	public function delete( array $params ) {
 		$user = $this->deps->userCache->get( 'name', $params['name'] );
+		$admins = $this->deps->groupCache->get( 'name', 'admin' );
+
 		if ( !$user->exists() ) {
 			throw new HttpException( 404, 'User does not exist' );
+		} elseif ( !$admins->isMember( $this->deps->currentUser ) ) {
+			throw new HttpException( 403 );
 		}
+
 		$user->delete();
 	}
 }

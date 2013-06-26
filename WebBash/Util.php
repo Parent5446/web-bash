@@ -5,12 +5,12 @@ namespace WebBash\Util;
 function secureCompare( $internal, $external ) {
 	$internal .= chr( 0 );
 	$external .= chr( 0 );
-	$intLen = strlen( $lhs );
-	$extLen = strlen( $rhs );
+	$intLen = strlen( $internal );
+	$extLen = strlen( $external );
 
 	$match = $intLen - $extLen;
 
-	for ( $i = 0; $i < $userLen; $i++ ) {
+	for ( $i = 0; $i < $extLen; $i++ ) {
 		$match |= ( ord( $internal[$i % $intLen] ) ^ ord( $external[$i] ) );
 	}
 
@@ -23,7 +23,7 @@ function bcrypt( $password, $salt = false, $rounds = 12 ) {
 	}
 
 	if ( $salt === false ) {
-		$salt = sprintf( '$2y$%02d$', $this->rounds );
+		$salt = sprintf( '$2y$%02d$', $rounds );
 		$salt .= substr( strtr( base64_encode( urandom( 16 ) ), '+', '.' ), 0, 22 );
 	}
 
@@ -41,7 +41,7 @@ function urandom( $len ) {
 	$remaining = $len - strlen( $buffer );
 
 	if ( $remaining > 0 && function_exists( 'mcrypt_create_iv' ) ) {
-		$iv .= mcrypt_create_iv( $remaining, MCRYPT_DEV_URANDOM );
+		$iv = \mcrypt_create_iv( $remaining, MCRYPT_DEV_URANDOM );
 		if ( $iv !== false ) {
 			$buffer .= $iv;
 			$remaining -= strlen( $iv );

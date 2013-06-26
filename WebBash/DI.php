@@ -10,6 +10,7 @@ class DI
 		$this->userCache = new ProcessCache\UserCache( $this );
 		$this->groupCache = new ProcessCache\GroupCache( $this );
 		$this->fileCache = new ProcessCache\FileInfoCache( $this );
+		$this->currentUser = $this->userCache->get( 'id', 0 );
 	}
 
 	public $db;
@@ -17,4 +18,5 @@ class DI
 	public $userCache;
 	public $groupCache;
 	public $fileCache;
+	public $currentUser;
 }

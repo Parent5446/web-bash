@@ -61,8 +61,6 @@ class Router
 		}
 
 		// Start the session and gather global info
-		session_set_cookie_params( 0, '/', '', false, true );
-		session_cache_limiter( 'public' );
 		session_start();
 
 		$url = $_SERVER['PATH_INFO'];
@@ -122,7 +120,7 @@ class Router
 			case 'put':
 				;
 				if ( $headers['CONTENT-TYPE'] === 'application/json' ) {
-					$rawData = json_decode( $data, true );
+					$data = json_decode( $rawData, true );
 				} elseif ( $headers['CONTENT-TYPE'] === 'application/x-www-urlencoded' ) {
 					parse_str( $rawData, $data );
 				} elseif ( $headers['CONTENT-TYPE'] === 'text/plain' ) {
@@ -162,6 +160,7 @@ class Router
 		}
 		foreach ( array_map( 'trim', explode( ',', $_SERVER['HTTP_ACCEPT'] ) ) as $accept ) {
 			switch ( $accept ) {
+				case 'text/html':
 				case 'application/json':
 					$data = json_encode( $response );
 					break 2;

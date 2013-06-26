@@ -12,7 +12,7 @@ class User implements Model
 	public $homedir = null;
 	public $email = null;
 	public $email_confirmed = null;
-	public $password = null;
+	public $password = '$2y$12$MTIzNDU2Nzg5MGFiY2RlZeZZskHZ2KTCr4MHqdn0WMEb4Iag4YEhq';
 	public $token = null;
 	public $exists = null;
 
@@ -42,7 +42,7 @@ class User implements Model
 		} elseif ( $this->id !== null ) {
 			$this->exists = $this->loadFromField( 'id' );
 		} else {
-			throw new RuntimeException( 'Cannot fetch info for unknown user.' );
+			throw new \RuntimeException( 'Cannot fetch info for unknown user.' );
 		}
 
 		$this->deps->userCache->update( $this, array( 'id' => $this->id, 'name' => $this->name ) );
@@ -57,6 +57,7 @@ class User implements Model
 				'INSERT into user (name, email, email_confirmed, password, token, homedir) ' .
 				'VALUES (:name, :email, :email_confirmed, :password, :token, :homedir)'
 			);
+			$stmt->bindParam( ':name', $this->name );
 		} else {
 			$stmt = $this->deps->stmtCache->prepare(
 				'UPDATE user SET email = :email, email_confirmed = :email_confirmed, ' . 
@@ -65,10 +66,9 @@ class User implements Model
 			$stmt->bindParam( ':id', $this->id );
 		}
 
-		$stmt->bindParam( ':name', $this->name );
 		$stmt->bindParam( ':homedir', $this->homedir );
 		$stmt->bindParam( ':email', $this->email );
-		$stmt->bindParam( ':email_confirmed', (bool)$this->email_confirmed );
+		$stmt->bindValue( ':email_confirmed', (bool)$this->email_confirmed );
 		$stmt->bindParam( ':password', $this->password );
 		$stmt->bindParam( ':token', $this->token );
 
@@ -89,7 +89,7 @@ class User implements Model
 
 	function merge( Model $other ) {
 		if ( !$other instanceof self ) {
-			throw new RuntimeException( 'Invalid object passed.' );
+			throw new \RuntimeException( 'Invalid object passed.' );
 		}
 
 		if ( $other->id !== null ) {
@@ -117,12 +117,13 @@ class User implements Model
 
 	private function loadFromField( $field ) {
 		$stmt = $this->deps->stmtCache->prepare(
-			"SELECT * FROM user WHERE user.$field = :$field"
+			"SELECT * FROM user WHERE $field = :$field"
 		);
 
 		$stmt->bindParam( ":$field", $this->$field );
 		$stmt->setFetchMode( \PDO::FETCH_INTO, $this );
 		$stmt->execute();
+
 		return (bool)$stmt->fetch();
 	}
 
@@ -172,6 +173,8 @@ class User implements Model
 	}
 
 	public function checkPassword( $plaintext ) {
+		$this->load();
+
 		return Util\secureCompare(
 			$this->password,
 			Util\bcrypt( $plaintext, $this->password )
@@ -184,12 +187,12 @@ class User implements Model
 
 	public function getHomeDirectory() {
 		$this->load();
-		return $this->deps->fileCache->get( 'id', $this->homedir );
+		return $this->deps->fileCache->get( 'id', (int)$this->homedir );
 	}
 
 	public function setHomeDirectory( FileInfo $file ) {
 		$this->load();
-		$this->homedir = $file->getId();
+		$this->homedir = $file->exists() ? $file->getId() : null;
 	}
 
 	public function getGroups() {
@@ -198,7 +201,7 @@ class User implements Model
 		}
 
 		if ( $this->name === null ) {
-			throw new RuntimeException( 'Cannot fetch groups for unknown user.' );
+			throw new \RuntimeException( 'Cannot fetch groups for unknown user.' );
 		}
 
 		$stmt = $this->deps->stmtCache->prepare(

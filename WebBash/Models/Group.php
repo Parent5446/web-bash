@@ -15,13 +15,13 @@ class Group implements Model
 	private $membersToRemove = array();
 	private $fullyLoaded = false;
 	
-	public function newFromId( DI $deps, $id ) {
+	public static function newFromId( DI $deps, $id ) {
 		$obj = new self( $deps );
 		$obj->id = $id;
 		return $obj;
 	}
 	
-	public function newFromName( DI $deps, $name ) {
+	public static function newFromName( DI $deps, $name ) {
 		$obj = new self( $deps );
 		$obj->name = $name;
 		return $obj;
@@ -92,21 +92,23 @@ class Group implements Model
 
 	private function loadFromField( $field ) {
 		$stmt = $this->deps->stmtCache->prepare(
-			"SELECT grp.id, grp.name, user.name FROM usergroupinfo WHERE grp.$field = :$field"
+			'SELECT grp.id AS grpid, grp.name AS grpname, user.name AS username FROM usergroup ' .
+			'INNER JOIN user ON user.id = usergroup.user ' .
+			'INNER JOIN grp ON grp.id = usergroup.grp ' .
+			"WHERE grp.$field = :$field"
 		);
 
+		$stmt->setFetchMode( \PDO::FETCH_ASSOC );
 		$stmt->bindParam( ":$field", $this->$field );
 		$stmt->execute();
 
-		$row = $stmt->fetch();
-		$first = true;
-		while ( $row = $stmt->fetch() ) {
+		for ( $row = $stmt->fetch(), $first = true; $row; $row = $stmt->fetch() ) {
 			if ( $first ) {
-				$this->id = $row['grp.id'];
-				$this->name = $row['grp.name'];
+				$this->id = $row['grpid'];
+				$this->name = $row['grpname'];
 				$first = false;
 			}
-			$this->members[] = $row['user.name'];
+			$this->members[] = $row['username'];
 		}
 	}
 

@@ -26,6 +26,8 @@ class FileInfo implements Model
 	public $mtime = null;
 	public $ctime = null;
 
+	private $exists = null;
+
 	public static function newFromId( DI $deps, $id ) {
 		$obj = new self( $deps );
 		$obj->id = $id;
@@ -44,17 +46,16 @@ class FileInfo implements Model
 
 	function load() {
 		/** @TODO Load owner/group info simultaneously if request. */
-		if ( $this->size !== null ) {
+		if ( $this->exists !== null ) {
 			return;
 		}
 
-		$this->size = false;
 		if ( $this->id !== null ) {
-			$this->loadFromId();
+			$this->exists = $this->loadFromId();
 		} elseif ( $this->path !== null ) {
-			$this->loadFromPath();
+			$this->exists = $this->loadFromPath();
 		} else {
-			throw new RuntimeException( 'Nothing to load from.' );
+			throw new \RuntimeException( 'Nothing to load from.' );
 		}
 
 		$this->deps->fileCache->update( $this, array( 'id' => $this->id, 'path' => $this->path ) );
@@ -82,7 +83,7 @@ class FileInfo implements Model
 
 	function merge( Model $other ) {
 		if ( !$other instanceof self ) {
-			throw new RuntimeException( 'Invalid object passed.' );
+			throw new \RuntimeException( 'Invalid object passed.' );
 		}
 
 		if ( $other->id !== null ) {
@@ -121,21 +122,24 @@ class FileInfo implements Model
 	}
 
 	private function loadFromPath() {
-		$parts = explode( '/', $this->path );
+		$parts = explode( '/', substr( $this->path, 1 ) );
 
 		$joinConds = array();
 		$whereConds = array();
-		for ( $key = 1; $key < count( $parts ); $key++ ) {
+		foreach ( $parts as $key => $val ) {
 			$curAlias = "file$key";
 			$lastAlias = 'file' . ( $key - 1 );
-			$joinConds[] = "INNER JOIN file AS {$curAlias} ON {$curAlias}.parent = {$lastAlias}.id";
+	
+			if ( $key > 0 ) {
+				$joinConds[] = "INNER JOIN file AS {$curAlias} ON {$curAlias}.parent = {$lastAlias}.id";
+			}
 			$whereConds[] = "{$curAlias}.name = :{$curAlias}";
 		}
 		$joinConds = implode( ' ', $joinConds );
 		$whereConds = implode( ' AND ', $whereConds );
-		$finalAlias = "file" . count( $parts );
+		$finalAlias = "file" . ( count( $parts ) - 1 );
 
-		$stmt = $this->deps->stmtCache->prepare( "SELECT $finalAlias.* FROM file AS file0 $joinConds $whereConds" );
+		$stmt = $this->deps->stmtCache->prepare( "SELECT $finalAlias.* FROM file AS file0 $joinConds WHERE $whereConds" );
 
 		foreach ( $parts as $key => $name ) {
 			$stmt->bindValue( ":file$key", $name );
@@ -143,7 +147,7 @@ class FileInfo implements Model
 
 		$stmt->setFetchMode( \PDO::FETCH_INTO, $this );
 		$stmt->execute();
-		$stmt->fetch();
+		return $stmt->fetch();
 	}
 
 	private function loadFromId() {
@@ -151,7 +155,7 @@ class FileInfo implements Model
 		$stmt->bindParam( ':id', $this->id );
 		$stmt->setFetchMode( \PDO::FETCH_INTO, $this );
 		$stmt->execute();
-		$stmt->fetch();
+		return $stmt->fetch();
 	}
 
 	public function getPathname() {
@@ -159,6 +163,13 @@ class FileInfo implements Model
 			$this->load();
 		}
 		return $this->path;
+	}
+
+	public function getId() {
+		if ( $this->id === null ) {
+			$this->load();
+		}
+		return $this->id;
 	}
 
 	public function getParent() {
@@ -242,5 +253,10 @@ class FileInfo implements Model
 	public function getCTime() {
 		$this->load();
 		return new DateTime( $this->ctime );
+	}
+
+	public function exists() {
+		$this->load();
+		return $this->exists;
 	}
 }

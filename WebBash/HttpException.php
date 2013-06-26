@@ -9,7 +9,7 @@ class HttpException extends \Exception
 	private $httpCode;
 	private $headers;
 
-	public function __construct( $code, $msg, $headers = array() ) {
+	public function __construct( $code, $msg = '', $headers = array() ) {
 		parent::__construct( $msg, $code );
 		$this->httpCode = $code;
 		$this->headers = $headers;
