@@ -64,12 +64,14 @@ function Terminal() {
 			cmd = "",
 			split_text = [],
 			inString = false,
+			inQuote = false,
+			inDoubleQuote = false,
 			backslash = false;
 
 		for ( var i = 0; i < txt.length; i++ ) {
-			if ( txt[i] === ' ' && inString ) {
+			if ( txt[i] === ' ' && (inQuote || inDoubleQuote) ) {
 				cmd += txt[i];
-			} else if ( txt[i] === ' ' && !inString ) {
+			} else if ( txt[i] === ' ' && !(inQuote || inDoubleQuote) ) {
 				if ( cmd.length > 0 ) {
 					split_text.push(cmd);
 					cmd = "";
@@ -85,12 +87,26 @@ function Terminal() {
 			} else if ( txt[i] === '\'' ) {
 				if ( backslash ) {
 					cmd += '\'';
-				} else if ( !inString ) {
-					inString = true;
+					backslash = false;
+				} else if( inDoubleQuote ) {
+					cmd += '\'';
+				} else if( inQuote ) {
+					inQuote = false;
 				} else {
-					inString = false;
+					inQuote = true;
 				}
-			} else if ( txt[i] === '$' && inString ) {
+			} else if ( txt[i] === '\"' ) {
+				if ( backslash ) {
+					cmd += '\"';
+					backslash = false;
+				} else if( inQuote ) {
+					cmd += '\"';
+				} else if( inDoubleQuote ) {
+					inDoubleQuote = false;
+				} else {
+					inDoubleQuote = true;
+				}
+			} else if ( txt[i] === '$' && (inQuote || inDoubleQuote) ) {
 				cmd += '\\$';
 			} else {
 				cmd += txt[i];
