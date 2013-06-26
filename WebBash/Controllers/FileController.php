@@ -18,32 +18,19 @@ clas FileController
 			throw new HttpException( 404, 'File not found' );
 		}
 
-		return array(
-			'name'      => $file->getFilename(),
-			'size'      => $file->getSize(),
-			'owner'     => $file->getParent(),
-			'grp'       => $file->getGroup(),
-			'atime'     => $file->getATime(),
-			'mtime'     => $file->getMTime(),
-			'ctime'     => $file->getCtime()
-		);
+		return new Response( '' )
+			->addHeader( 'Content-Length', $file->getSize() )
+			->addHeader( 'Content-Disposition', "attachment; filename=\"{$file->getName()}" )
+			->addHeader( 'Last-Modified', $file->getMTime() )
+			->addHeader( 'Last-Accessed', $file->getATime() )
+			->addHeader( 'Creation-Time', $file->getCTime() )
+			->addHeader( 'File-Owner', $file->getOwner()->getName() )
+			->addHeader( 'File-Group', $file->getGroup()->getName() );
 	}
 
 	public function put( array $params, $data ) {
-		if ( !is_array( $ data ) ) {
-			throw new HttpException( 400, 'Expecting an array as input' );
-		}
+		$file = $this->deps->fileCache->get( 'path', $params['path'] );
 
-		$expected_keys = array( 'name', 'owner', 'grp', 'perms BIT' );
-		foreach ( $expected_keys as $key ) {
-			if ( !isset( $data[$key] ) ) {
-				throw new HttpException( 400, 'Expecting etry for ' . $key );
-			}
-		}
-
-		$file = $this->deps->fileCache->get( 'name', $params['name'] );
-
-		$file->setName( $data['name'] );
 		$file->setOwner( $data['owner'] );
 		$file->setGroup( $data['grp'] );
 		$file->setPermissions( $data['perms BIT'] );
@@ -57,5 +44,3 @@ clas FileController
 		$file->delete();
 	}
 }
-
-?>
