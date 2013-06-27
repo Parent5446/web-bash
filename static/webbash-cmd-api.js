@@ -6,6 +6,34 @@
 	 * @type {WebBashApi}
 	 */
 	var api = new WebBashApi();
+	
+	/**
+	 * Change the current working directory
+	 * @param {Array.<IoStream>} fds Input/output streams
+	 * @param {number} argc Number of arguments
+	 * @param {Array.<string>} Arguments passed to command
+	 * @param {Array.<string>} Environment variables
+	 * @return {number} Retcode, 0 for success
+	 */
+	WebBash['commands']['cd'] = function( fds, argc, argv, env ) {
+		var newDir = '';
+		if ( argc <= 1 ) {
+			newDir = env['HOME'];
+		} else if ( argv[1][0] === '/' ) {
+			newDir = $.realpath( argv[1] );
+		} else {
+			newDir = $.realpath( env['PWD'] + '/' + argv[1] );
+		}
+		
+		var req = api.request( 'GET', '/files' + newDir, {}, false );
+		if ( req.status === 200 ) {
+			env['PWD'] = newDir;
+			return 0;
+		} else {
+			fds[2].write( 'cd: ' + newDir + ': No such file or directory' );
+			return 1;
+		}
+	};
 
 	/**
 	 * List the elements of a directory

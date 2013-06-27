@@ -71,7 +71,7 @@ function WebBash( username ) {
 			};
 
 			var argc = argv.length;
-			this.environment['?'] = WebBash['commands'][cmd]( fds, argc, argv, this.environment ).toString();
+			this.environment['?'] = WebBash['commands'][argv[0]]( fds, argc, argv, this.environment ).toString();
 		} else if ( argv[0] !== undefined && argv[0] !== '' ) {
 			deferred.notify( ["error: unknown command " + argv[0]] );
 			this.environment['?'] = '127';

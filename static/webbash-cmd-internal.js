@@ -61,26 +61,6 @@
 		return 0;
 	};
 	
-	
-	/**
-	 * Change the current working directory
-	 * @param {Array.<IoStream>} fds Input/output streams
-	 * @param {number} argc Number of arguments
-	 * @param {Array.<string>} Arguments passed to command
-	 * @param {Array.<string>} Environment variables
-	 * @return {number} Retcode, 0 for success
-	 */
-	WebBash['commands']['cd'] = function( fds, argc, argv, env ) {
-		if ( argc <= 1 ) {
-			env['PWD'] = this.environment['HOME'];
-		} else if ( argv[1][0] === '/' ) {
-			env['PWD'] = $.realpath( argv[1] );
-		} else {
-			env['PWD'] = $.realpath( this.environment['PWD'] + '/' + argv[1] );
-		}
-		return 0;
-	};
-	
 	/**
 	 * Print the current working directory
 	 * @param {Array.<IoStream>} fds Input/output streams
