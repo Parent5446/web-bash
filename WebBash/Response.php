@@ -23,7 +23,7 @@ class Response
 	public function getHeaders() {
 		return $this->headers;
 	}
-	
+
 	public function getContents() {
 		return $this->content;
 	}

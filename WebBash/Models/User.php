@@ -60,7 +60,7 @@ class User implements Model
 			$stmt->bindParam( ':name', $this->name );
 		} else {
 			$stmt = $this->deps->stmtCache->prepare(
-				'UPDATE user SET email = :email, email_confirmed = :email_confirmed, ' . 
+				'UPDATE user SET email = :email, email_confirmed = :email_confirmed, ' .
 				' password = :password, token = :token, homedir = :homedir WHERE id = :id'
 			);
 			$stmt->bindParam( ':id', $this->id );

@@ -29,7 +29,7 @@
 		fds[1].write( argv.join( ' ' ) );
 		return 0;
 	};
-	
+
 	/**
 	 * Change an environment variable
 	 * @param {Array.<IoStream>} fds Input/output streams
@@ -45,7 +45,7 @@
 		}
 		return 0;
 	};
-	
+
 	/**
 	 * Unset an environment variable
 	 * @param {Array.<IoStream>} fds Input/output streams
@@ -60,7 +60,7 @@
 		}
 		return 0;
 	};
-	
+
 	/**
 	 * Print the current working directory
 	 * @param {Array.<IoStream>} fds Input/output streams
@@ -73,7 +73,7 @@
 		fds[1].write( env['PWD'] );
 		return 0;
 	}
-	
+
 	/**
 	 * Print a brief help message
 	 * @param {Array.<IoStream>} fds Input/output streams

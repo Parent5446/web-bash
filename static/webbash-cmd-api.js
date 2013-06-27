@@ -6,7 +6,7 @@
 	 * @type {WebBashApi}
 	 */
 	var api = new WebBashApi();
-	
+
 	/**
 	 * Change the current working directory
 	 * @param {Array.<IoStream>} fds Input/output streams
@@ -24,7 +24,7 @@
 		} else {
 			newDir = $.realpath( env['PWD'] + '/' + argv[1] );
 		}
-		
+
 		var req = api.request( 'GET', '/files' + newDir, {}, false );
 		if ( req.status === 200 ) {
 			env['PWD'] = newDir;

@@ -41,7 +41,7 @@ function WebBash( username ) {
 		this.environment['PWD'] = homedir;
 		terminal.prompt = this.username + '@ubuntu ' + homedir + ' $ ';
 	};
-	
+
 	/**
 	 * Execute a command given an array of arguments
 	 * @param {string} argv Arguments typed
@@ -178,7 +178,7 @@ function WebBash( username ) {
 		if ( cmd !== '' ) {
 			split_text.push( cmd );
 		}
-		
+
 		return split_text;
 	};
 }
