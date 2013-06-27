@@ -61,48 +61,7 @@ function WebBash( username ) {
 	 * @param {jQuery.Deferred} deferred
 	 */
 	this.executeCommand = function( argv, terminal, deferred ) {
-		var cmd = argv[0];
-
-		this.environment._ = argv[argv.length - 1];
-
-		// Built-in commands are handled here
-		// Other internal commands are handled with the WebBash['commands'] object
-		if ( argv[0] === 'eval' ) {
-			argv.shift();
-			if ( argv.length > 0 ) {
-				this.executeCommand( argv, output );
-			} else {
-				this.environment['?'] = '0';
-			}
-		} else if ( argv[0] === 'help' ) {
-			deferred.notify( ["Web-Bash implements a command line interface just like BASH on linux. Type a command like 'date' to test it out. "] );
-			deferred.notify( ["To see a full list of commands, type 'commands' "] );
-			this.environment['?'] = '0';
-		} else if ( argv[0] === 'echo' ) {
-			argv.shift();
-			deferred.notify( [argv.join( ' ' )] );
-			this.environment['?'] = '0';
-		} else if ( argv[0] === 'export' ) {
-			for ( var i = 1; i < argv.length; ++i ) {
-				var splt = argv[i].split( '=', 2 );
-				this.environment[splt[0]] = splt[1];
-			}
-			this.environment['?'] = '0';
-		} else if ( argv[0] === 'unset' ) {
-			for ( var i = 1; i < argv.length; ++i ) {
-				this.environment[argv[i]] = '';
-			}
-			this.environment['?'] = '0';
-		} else if ( argv[0] === 'cd' ) {
-			if ( argv.length <= 1 ) {
-				this.environment['PWD'] = this.environment['HOME'];
-			} else if ( argv[1][0] === '/' ) {
-				this.environment['PWD'] = $.realpath( argv[1] );
-			} else {
-				this.environment['PWD'] = $.realpath( this.environment['PWD'] + '/' + argv[1] );
-			}
-			this.environment['?'] = '0';
-		} else if ( typeof WebBash['commands'][argv[0]] !== 'undefined' ) {
+		if ( typeof WebBash['commands'][argv[0]] !== 'undefined' ) {
 			var fds = [ new IoStream(), new IoStream(), new IoStream() ];
 			fds[1].flush = function( text ) {
 				deferred.notify( [text] );
@@ -118,6 +77,7 @@ function WebBash( username ) {
 			this.environment['?'] = '127';
 		}
 
+		this.environment._ = argv[argv.length - 1];
 		terminal.prompt = this.username + '@ubuntu ' + this.environment['PWD'] + ' $ ';
 		deferred.resolve();
 	};

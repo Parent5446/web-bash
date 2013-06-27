@@ -16,6 +16,70 @@
 	WebBash['commands']['true'] = function() {
 		return 0;
 	};
+
+	/**
+	 * Echo strings to the screen
+	 * @param {Array.<IoStream>} fds Input/output streams
+	 * @param {number} argc Number of arguments
+	 * @param {Array.<string>} Arguments passed to command
+	 * @return {number} Retcode, 0 for success
+	 */
+	WebBash['commands']['echo'] = function( fds, argc, argv ) {
+		argv.shift();
+		fds[1].write( argv.join( ' ' ) );
+		return 0;
+	};
+	
+	/**
+	 * Change an environment variable
+	 * @param {Array.<IoStream>} fds Input/output streams
+	 * @param {number} argc Number of arguments
+	 * @param {Array.<string>} Arguments passed to command
+	 * @param {Array.<string>} Environment variables
+	 * @return {number} Retcode, 0 for success
+	 */
+	WebBash['commands']['export'] = function( fds, argc, argv, env ) {
+		for ( var i = 1; i < argc; ++i ) {
+			var splt = argv[i].split( '=', 2 );
+			env[splt[0]] = splt[1];
+		}
+		return 0;
+	};
+	
+	/**
+	 * Unset an environment variable
+	 * @param {Array.<IoStream>} fds Input/output streams
+	 * @param {number} argc Number of arguments
+	 * @param {Array.<string>} Arguments passed to command
+	 * @param {Array.<string>} Environment variables
+	 * @return {number} Retcode, 0 for success
+	 */
+	WebBash['commands']['unset'] = function( fds, argc, argv, env ) {
+		for ( var i = 1; i < argc; ++i ) {
+			env[argv[i]] = '';
+		}
+		return 0;
+	};
+	
+	
+	/**
+	 * Change the current working directory
+	 * @param {Array.<IoStream>} fds Input/output streams
+	 * @param {number} argc Number of arguments
+	 * @param {Array.<string>} Arguments passed to command
+	 * @param {Array.<string>} Environment variables
+	 * @return {number} Retcode, 0 for success
+	 */
+	WebBash['commands']['cd'] = function( fds, argc, argv, env ) {
+		if ( argc <= 1 ) {
+			env['PWD'] = this.environment['HOME'];
+		} else if ( argv[1][0] === '/' ) {
+			env['PWD'] = $.realpath( argv[1] );
+		} else {
+			env['PWD'] = $.realpath( this.environment['PWD'] + '/' + argv[1] );
+		}
+		return 0;
+	};
 	
 	/**
 	 * Print the current working directory
@@ -29,6 +93,20 @@
 		fds[1].write( env['PWD'] );
 		return 0;
 	}
+	
+	/**
+	 * Print a brief help message
+	 * @param {Array.<IoStream>} fds Input/output streams
+	 * @param {number} argc Number of arguments
+	 * @param {Array.<string>} Arguments passed to command
+	 * @param {Array.<string>} Environment variables
+	 * @return {number} Retcode, 0 for success
+	 */
+	WebBash['commands']['help'] = function( fds ) {
+		fds[2].write( "Web-Bash implements a command line interface just like BASH on linux. Type a command like 'date' to test it out. " );
+		fds[2].write( "To see a full list of commands, type 'commands' " );
+		return 0;
+	};
 
 	/**
 	 * Write out all available commands
@@ -46,7 +124,7 @@
 			}
 		}
 
-		fds[1].write( commands.join( '<br/>' ) );
+		fds[1].write( commands.join( "\n" ) );
 		return 0;
 	};
 
