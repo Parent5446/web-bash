@@ -261,23 +261,27 @@ class FileInfo implements Model
 	}
 
 	public function getContents( $offset, $length ) {
-		isAllowed( $this->deps->currentUser, ( ACTION_READ + ACTION_EXECUTE ) ) {
-			$fp = fopen( $this->path, 'r' );
-
-			$fileLength = fseek( $fp, 0, SEEK_END );
-
-			if ( $fileLength < ($offset + $length) ) {
-				throw new HttpException( 403, 'Accessing memory outside of file' );
+		if( this->isAllowed( $this->deps->currentUser, (ACTION_READ + ACTION_EXECUTE) ) ) {
+			
+			if ( !is_readable ) {
+				$contents = null;
 			}
+			else if ( is_directory( $this->path ) )
+			{
+				foreach( new DirectoryIterator( $this->path ) as $info ) {
+					$contents[$info->getFilename] = $info->getPath();
+				}
+			}
+			else {
+				fp = fopen( $this->path, 'rb' );
 
-			rewind( $fp );
-			fseek( $fp, $offset );
+				fseek( $fp, $offset );
 
-			$contents = fread( $fp, $length );
-			fclose( $fp );
+				$contents = fread( $fp, $length );
+				fclose( $fp );
+			}
 
 			return $contents;
 		}
-		throw new HttpException( 403, 'Insufficient permissions to access file contents' );
 	}
 }
