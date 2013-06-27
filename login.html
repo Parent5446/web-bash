@@ -3,10 +3,6 @@
 	<head>
 		<style>
 			form {
-				border-width: 1px;
-				border-style: solid;
-				border-color: black;
-				border-radius: 5px;
 				width: 300px;
 				margin: auto;
 				background-color: #F5F5F5;
@@ -23,6 +19,12 @@
 				margin-right:auto;
 				text-align: center;
 				color: black;
+
+				border-width: 1px;
+				border-style: solid;
+				border-color: black;
+				border-radius: 5px;
+				
 			}
 
 			.img_center {
@@ -62,19 +64,19 @@
 		<section id="main_login_section">
 			<p>Welcome to Web-Bash. Please enter your credentials</p>
 
-			<form action="login.php" method="POST">
-				<section id="form_contents">
+			<form action="" method="POST">
+				<fieldset id="form_contents">
 					<br />
-					Username: <input type="text" name="username" />
+					<label for="username">Username: </label><input type="text" id="username" name="username" />
 					<br />
 					<br />
-					Password: <input type="password" name="password" />
+					<label for="password">Password: </label><input type="password" id="password" name="password" />
 					<br />
 					<br />
 					<button type="submit">Submit</button>
 					<br />
 					<br />
-				</section>
+				</fieldset>
 			</form>
 		</section>
 	</body>
