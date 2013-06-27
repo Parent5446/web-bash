@@ -35,6 +35,20 @@
 		}
 	};
 
+	printFile( fd, responseJSON, opts )
+	{
+		const $showAll = 1;
+		const
+
+
+
+		if( )
+
+
+
+		fd.wrte( responseJSON + "\n" );
+	}
+
 	/**
 	 * List the elements of a directory
 	 * @param {Array.<IoStream>} fds Input/output streams
@@ -48,11 +62,30 @@
 			argv[argc] = env['HOME'];
 			argc++;
 		}
+		else {
+			var optPattern = /-[\w]+/;
+			var opts = [];
+			var newArgv = [];
+
+
+			for ( var arg in argv ) {
+				if( optPattern.( $arg ) {
+					opts[opts.length] = arg
+				}
+				else {
+					newArgv[newArgv.length] = arg;
+				}
+			}
+		}
+
+		argc = newArgv.length;
 
 		for ( var i = 1; i < argc; i++ ) {
-			var req = api.request( 'GET', '/files' + argv[1], {}, false );
+			var req = api.request( 'GET', '/files' + newArgv[1], {}, false );
 			for ( var j = 0; j < req['responseJSON'].length; j++ ) {
-				fds[1].write( req['responseJSON'][j] + "\n" );
+
+				opts = $.normalizeopts( opts );
+				$.printFile( fds[1], req['responseJSON'][j], opts);
 			}
 		}
 
