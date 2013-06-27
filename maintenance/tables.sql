@@ -91,7 +91,7 @@ CREATE TABLE history (
 INSERT INTO file SET id = 1, name = 'root', filetype = 'd';
 INSERT INTO user SET
 	id = 0, name = 'root', email = 'root@localhost', email_confirmed = 1, homedir = 1,
-	password = '';
+	password = '$2y$12$0123456789abcdef$$$$$.sMqsjwio4LlHArw/x3le5iiIC7NQhP2';
 INSERT INTO grp SET id = 0, name = 'root';
 INSERT INTO grp SET id = 1, name = 'admin';
 UPDATE file SET owner = 0, grp = 0;
