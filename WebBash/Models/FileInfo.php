@@ -263,7 +263,7 @@ class FileInfo implements Model
 	public function getContents( $offset, $length ) {
 		if( this->isAllowed( $this->deps->currentUser, (ACTION_READ + ACTION_EXECUTE) ) ) {
 			
-			if ( !is_readable ) {
+			if ( !is_readable( $this->path ) ) {
 				$contents = null;
 			}
 			else if ( is_directory( $this->path ) )
