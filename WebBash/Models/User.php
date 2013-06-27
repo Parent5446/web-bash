@@ -182,7 +182,11 @@ class User implements Model
 	}
 
 	public function setPassword( $plaintext ) {
-		$this->password = Util\bcrypt( $plaintext );
+		$this->password = Util\bcrypt(
+			$plaintext,
+			false,
+			$this->deps->config['webbash']['bcryptrounts']
+		);
 	}
 
 	public function getHomeDirectory() {

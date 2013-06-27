@@ -380,10 +380,11 @@ class FileInfo implements Model
 	}
 
 	public function getContents( $offset = 0, $length = -1 ) {
-		$finalPath = realpath( WEBBASH_ROOT . $this->path );
+		$webRoot = $this->deps->config['webbash']['fileroot'];
+		$finalPath = realpath( $webRoot . $this->path );
 
 		if (
-			strpos( $finalPath, WEBBASH_ROOT ) !== 0 ||
+			strpos( $finalPath, $webRoot ) !== 0 ||
 			!is_file( $finalPath ) ||
 			!is_readable( $finalPath )
 		) {
