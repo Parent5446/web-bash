@@ -52,9 +52,9 @@ function WebBashLogin() {
 			}
 			deferred.resolve();
 		} else {
-			this.api.login( this.username, text ).done( function() {
-				terminal.bind( new WebBash() );
-			} ).fail( function( e ) {
+			this.api.login( this.username, text ).done( $.proxy( function() {
+				terminal.bind( new WebBash( this.username ) );
+			}, this ) ).fail( function( e ) {
 				deferred.notify( e.responseText );
 				this.username = null;
 				terminal.prompt = 'Username: ';

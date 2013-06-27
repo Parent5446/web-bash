@@ -17,7 +17,7 @@
 	 */
 	WebBash['commands']['ls'] = function( fds, argc, argv, env ) {
 		if ( argc === 1 ) {
-			argv[argc] = '~';
+			argv[argc] = env['HOME'];
 			argc++;
 		}
 

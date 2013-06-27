@@ -3,6 +3,7 @@
 java -jar ../lib/compiler.jar \
     --externs ../lib/jquery-1.9-externs.js \
     --js ../static/jquery.eventChar.js \
+    --js ../static/jquery.realpath.js \
     --js ../static/webbash-terminal.js \
     --js ../static/webbash-controller.js \
     --js ../static/webbash-controller-login.js \

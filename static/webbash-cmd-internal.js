@@ -16,6 +16,19 @@
 	WebBash['commands']['true'] = function() {
 		return 0;
 	};
+	
+	/**
+	 * Print the current working directory
+	 * @param {Array.<IoStream>} fds Input/output streams
+	 * @param {number} argc Number of arguments
+	 * @param {Array.<string>} Arguments passed to command
+	 * @param {Array.<string>} Environment variables
+	 * @return {number} Retcode, 0 for success
+	 */
+	WebBash['commands']['pwd'] = function( fds, argc, argv, env ) {
+		fds[1].write( env['PWD'] );
+		return 0;
+	}
 
 	/**
 	 * Write out all available commands

@@ -257,7 +257,7 @@ function Terminal() {
 	 */
 	this.bind = function( controller ) {
 		this.controller = controller
-		this.controller.startup( this );
+		$.proxy( this.controller.startup, this.controller )( this );
 		this.displayPrompt();
 	};
 

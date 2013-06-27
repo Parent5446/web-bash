@@ -187,7 +187,33 @@ class FileInfo implements Model
 		$stmt->bindParam( ':id', $this->id );
 		$stmt->setFetchMode( \PDO::FETCH_INTO, $this );
 		$stmt->execute();
-		return $stmt->fetch();
+		$exists = $stmt->fetch();
+
+		if ( !$exists ) {
+			return false;
+		}
+		
+		$joinConds = array();
+		$selectFields = array( 'file0.name AS file0name' );
+		for ( $i = 0; $i < 10; $i++ ) {
+			$curAlias = "file$i";
+			$lastAlias = 'file' . ( $i - 1 );
+	
+			if ( $i > 0 ) {
+				$joinConds[] = "LEFT JOIN file AS {$curAlias} ON {$curAlias}.id = {$lastAlias}.parent";
+				$selectFields[] = "{$curAlias}.name AS {$curAlias}name";
+			}
+		}
+		$selectFields = implode( ', ', $selectFields );
+		$joinConds = implode( ' ', $joinConds );
+		$finalAlias = "file9";
+
+		$stmt = $this->deps->stmtCache->prepare( "SELECT $selectFields FROM file AS file0 $joinConds WHERE file0.id = :id" );
+		$stmt->bindParam( ':id', $this->id );
+		$stmt->execute();
+
+		$this->path = '/' . implode( '/',
+			array_filter( array_reverse( $stmt->fetch( \PDO::FETCH_NUM ) ) ) );
 	}
 
 	public function getPathname() {

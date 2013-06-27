@@ -2,7 +2,7 @@
  * Controller class to handle execution of commands
  * @constructor
  */
-function WebBash() {
+function WebBash( username ) {
 	'use strict';
 
 	/**
@@ -21,11 +21,25 @@ function WebBash() {
 	this.varPatt = /[\w\?\-\!]+/i;
 
 	/**
+	 * The username of the current user
+	 * @private
+	 * @const
+	 * @type {string}
+	 */
+	this.username = username;
+
+	/**
 	 * Startup function (does nothing here)
 	 * @param {Terminal} terminal
 	 */
 	this.startup = function( terminal ) {
-		terminal.prompt = 'root@ubuntu> ';
+		var api = new WebBashApi();
+		var info = api.request( 'GET', '/users/' + this.username, {}, false );
+
+		var homedir = info['responseJSON']['homedir'];
+		this.environment['HOME'] = homedir;
+		this.environment['PWD'] = homedir;
+		terminal.prompt = this.username + '@ubuntu ' + homedir + ' $ ';
 	};
 	
 	/**
@@ -79,6 +93,15 @@ function WebBash() {
 				this.environment[argv[i]] = '';
 			}
 			this.environment['?'] = '0';
+		} else if ( argv[0] === 'cd' ) {
+			if ( argv.length <= 1 ) {
+				this.environment['PWD'] = this.environment['HOME'];
+			} else if ( argv[1][0] === '/' ) {
+				this.environment['PWD'] = $.realpath( argv[1] );
+			} else {
+				this.environment['PWD'] = $.realpath( this.environment['PWD'] + '/' + argv[1] );
+			}
+			this.environment['?'] = '0';
 		} else if ( typeof WebBash['commands'][argv[0]] !== 'undefined' ) {
 			var fds = [ new IoStream(), new IoStream(), new IoStream() ];
 			fds[1].flush = function( text ) {
@@ -95,6 +118,7 @@ function WebBash() {
 			this.environment['?'] = '127';
 		}
 
+		terminal.prompt = this.username + '@ubuntu ' + this.environment['PWD'] + ' $ ';
 		deferred.resolve();
 	};
 
