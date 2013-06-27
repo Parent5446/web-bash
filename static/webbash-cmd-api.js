@@ -69,16 +69,15 @@
 
 
 			for ( var arg in argv ) {
-				if( optPattern.( $arg ) {
+				if () optPattern.test( $arg ) ) {
 					opts[opts.length] = arg
 				}
 				else {
 					newArgv[newArgv.length] = arg;
 				}
 			}
+			argc = newArgv.length;
 		}
-
-		argc = newArgv.length;
 
 		for ( var i = 1; i < argc; i++ ) {
 			var req = api.request( 'GET', '/files' + newArgv[1], {}, false );

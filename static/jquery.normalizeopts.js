@@ -7,15 +7,14 @@
 	 * @return {Array.<string>}
 	 */
 	 $.realoptions = function( opts ) {
-	 	var newOpts;
+	 	var newOpts = [];
 	 	
-	 	for ( var option in opts ) 
-	 	{
+	 	for ( var option in opts ) {
 	 		for( var j = 1; j < option.length; ++j ) {
 	 			newOpts[newOpts.length] = option[j];
 	 		}
 	 	}
 
 	 	return newOpts;
-	 }
-}
+	};
+} )( jQuery );
