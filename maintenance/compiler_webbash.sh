@@ -1,7 +1,7 @@
 #!/bin/bash
 
 java -jar ../lib/compiler.jar \
-    --externs jquery-1.9-externs.js \
+    --externs ../lib/jquery-1.9-externs.js \
     --js ../static/jquery.eventChar.js \
     --js ../static/webbash-terminal.js \
     --js ../static/webbash-controller.js \

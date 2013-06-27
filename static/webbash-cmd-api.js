@@ -5,7 +5,7 @@
 	 * API object to use for calls
 	 * @type {WebBashApi}
 	 */
-	var api = null;
+	var api = new WebBashApi();
 
 	/**
 	 * List the elements of a directory
@@ -16,6 +16,18 @@
 	 * @return {number} Retcode, 0 for success
 	 */
 	WebBash['commands']['ls'] = function( fds, argc, argv, env ) {
+		if ( argc === 1 ) {
+			argv[argc] = '~';
+			argc++;
+		}
+
+		for ( var i = 1; i < argc; i++ ) {
+			var req = api.request( 'GET', '/files' + argv[1], {}, false );
+			for ( var j = 0; j < req['responseJSON'].length; j++ ) {
+				fds[1].write( req['responseJSON'][j] + "\n" );
+			}
+		}
+
 		return 0;
 	};
 

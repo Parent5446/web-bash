@@ -25,6 +25,9 @@ class FileInfo implements Model
 	public $atime = null;
 	public $mtime = null;
 	public $ctime = null;
+	public $linkid = null;
+	public $linkpath = null;
+	public $filetype = null;
 
 	private $exists = null;
 	private $fp = null;
@@ -74,7 +77,8 @@ class FileInfo implements Model
 
 		$stmt = $this->deps->stmtCache->prepare(
 			'UPDATE file SET parent = :parent, name = :name, size = :size, owner = :owner, ' .
-			'grp = :group, perms = :perms, mtime = :mtime, ctime = :ctime WHERE id = :id'
+			'grp = :group, perms = :perms, mtime = :mtime, ctime = :ctime, filetype = :filetype ' .
+			'linktarget = :linktarget, linkid = :linkid WHERE id = :id'
 		);
 
 		$stmt->bindParam( 'parent', $this->parent );
@@ -85,6 +89,9 @@ class FileInfo implements Model
 		$stmt->bindParam( 'perms', $this->perms );
 		$stmt->bindParam( 'mtime', $this->mtime );
 		$stmt->bindParam( 'ctime', $this->ctime );
+		$stmt->bindParam( 'linktarget', $this->linktarget );
+		$stmt->bindParam( 'linkid', $this->linkid );
+		$stmt->bindParam( 'filetype', $this->filetype );
 		$stmt->bindParam( 'id', $this->id );
 		$stmt->execute();
 	}
@@ -127,9 +134,25 @@ class FileInfo implements Model
 		if ( $other->atime !== null ) {
 			$this->atime = $other->atime;
 		}
+		if ( $other->linkid !== null ) {
+			$this->linkid = $other->linkid;
+		}
+		if ( $other->linkpath !== null ) {
+			$this->linkpath = $other->linkpath;
+		}
+		if ( $other->filetype !== null ) {
+			$this->filetype = $other->filetype;
+		}
 	}
 
 	private function loadFromPath() {
+		if ( $this->path === '/' ) {
+			$this->name = '';
+			$this->filetype = 'd';
+			$this->owner = $this->grp = 1;
+			return true;
+		}
+	
 		$parts = explode( '/', substr( $this->path, 1 ) );
 
 		$joinConds = array();
@@ -266,7 +289,41 @@ class FileInfo implements Model
 
 	public function exists() {
 		$this->load();
-		return !$this->path || $this->exists;
+		return $this->exists;
+	}
+
+	public function isDir() {
+		$this->load();
+		return $this->filetype === 'd';
+	}
+
+	public function isFile() {
+		$this->load();
+		return $this->filetype === 'f';
+	}
+
+	public function isLink() {
+		$this->load();
+		return $this->filetype === 'l';
+	}
+
+	public function getLinkTarget() {
+		$this->load();
+		return $this->deps->fileCache->get( 'id', $this->linkid );
+	}
+
+	public function getLinkPath() {
+		$this->load();
+		return $this->linkpath;
+	}
+
+	public function setFiletype( $type ) {
+		$this->filetype = $type;
+	}
+
+	public function setLinkTarget( FileInfo $target ) {
+		$this->linkpath = $target->getPathname();
+		$this->linkid = $target->getId();
 	}
 
 	public function getChildren() {
@@ -299,10 +356,12 @@ class FileInfo implements Model
 	public function getContents( $offset = 0, $length = -1 ) {
 		$finalPath = realpath( WEBBASH_ROOT . $this->path );
 
-		if ( strpos( $finalPath, WEBBASH_ROOT ) !== 0 || !is_readable( $finalPath ) ) {
+		if (
+			strpos( $finalPath, WEBBASH_ROOT ) !== 0 ||
+			!is_file( $finalPath ) ||
+			!is_readable( $finalPath )
+		) {
 			$contents = null;
-		} elseif ( is_dir( $finalPath ) ) {
-			$contents = $this->getChildren();
 		} elseif ( $length === -1 ) {
 			$contents = file_get_contents( $finalPath );
 		} else {

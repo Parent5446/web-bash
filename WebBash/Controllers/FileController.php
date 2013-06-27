@@ -20,7 +20,16 @@ class FileController
 			throw new HttpException( 404, 'File not found' );
 		}
 
-		$response = new Response( $file->getContents() );
+		if ( $file->isDir() ) {
+			$response = new Response( $file->getChildren() );
+		} elseif ( $file->isLink() ) {
+			$target = $file->getLinkTarget();
+			$response = new Response( $target->getContents() );
+			$response->addHeader( 'Content-Location', '/files' . $file->getLinkPath() );
+		} else {
+			$response = new Response( $file->getContents() );
+		}
+
 		return $response
 			->addHeader( 'Content-Length', $file->getSize() )
 			->addHeader( 'Content-Disposition', "attachment; filename=\"{$file->getFilename()}" )

@@ -54,6 +54,7 @@ class LoginController
 		}
 		
 		$_SESSION['userId'] = $user->getId();
+		unset( $_SESSION['loginCount'] );
 
 		$userController = new UserController( $this->deps );
 		return $userController->get( array( 'name' => $user->getName() ) );

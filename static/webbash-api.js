@@ -47,8 +47,10 @@ function WebBashApi() {
 	 * @param {*} Data to pass to the server
 	 * @return {jQuery.jqXHR} jQuery AJAX object
 	 */
-	this.request = function( method, url, data ) {
+	this.request = function( method, url, data, async ) {
+		async = async === undefined ? true : async;
 		return $.ajax( {
+			async: async,
 			data: data,
 			dataType: 'json',
 			type: method,
