@@ -7,15 +7,12 @@ function Terminal() {
 
 	/**
 	 * Controller object to use to process commands
-	 * @private
 	 * @type {WebBash}
 	 */
 	this.controller = null;
 
 	/**
 	 * Prompt to display to the user
-	 * @private
-	 * @const
 	 * @type {string}
 	 */
 	this.prompt = "root@ubuntu> ";
@@ -226,7 +223,7 @@ function Terminal() {
 			$( '#cursor' ).prev().append( $( '#cursor' ).text() );
 			$( '#cursor' ).next().after( $( ' <br> ') );
 
-			this.controller.execute( $.trim( cmd ) )
+			this.controller.execute( $.trim( cmd ), this )
 				.progress( $.proxy( this.appendOutput, this ) )
 				.always( $.proxy( this.displayPrompt, this ) );
 		} else if ( e.which === 222 && e.shiftKey) {
@@ -256,19 +253,16 @@ function Terminal() {
 
 	/**
 	 * Bind this terminal to a window and controller
-	 * @param {Window} window
 	 * @param {WebBash} controller
 	 */
-	this.bind = function( window, controller ) {
-		this.controller = controller;
-		var doc = $( window.document );
-		doc.keydown( $.proxy( this.processInput, this ) );
-
-		doc.ready( $.proxy( function() {
-			this.displayPrompt();
-			window.setInterval( this.blink, 500 );
-		}, this ) );
+	this.bind = function( controller ) {
+		this.controller = controller
+		this.controller.startup( this );
+		this.displayPrompt();
 	};
+
+	$( window.document ).keydown( $.proxy( this.processInput, this ) );
+	window.setInterval( this.blink, 500 );
 }
 
 window['Terminal'] = Terminal;

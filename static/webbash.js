@@ -1,7 +1,9 @@
 ( function() {
 	'use strict';
 
-	var controller = new WebBash();
-	var terminal = new Terminal();
-	terminal.bind( window, controller );
+	$( document ).ready( function() {
+		var controller = new WebBashLogin();
+		var terminal = new Terminal();
+		terminal.bind( controller );
+	} );
 } )();

@@ -21,6 +21,14 @@ function WebBash() {
 	this.varPatt = /[\w\?\-\!]+/i;
 
 	/**
+	 * Startup function (does nothing here)
+	 * @param {Terminal} terminal
+	 */
+	this.startup = function( terminal ) {
+		terminal.prompt = 'root@ubuntu> ';
+	};
+	
+	/**
 	 * Execute a command given an array of arguments
 	 * @param {string} argv Arguments typed
 	 * @param {Object} jQuery node to output to
@@ -30,8 +38,14 @@ function WebBash() {
 		var argv = this.replaceVariables( this.splitText( text ) );
 		setTimeout( $.proxy( function() { this.executeCommand( argv, terminal, deferred ); }, this ), 0 );
 		return deferred.promise();
-	}
+	};
 
+	/**
+	 * Actually execute the command (this should be called asynchronously)
+	 * @param {string} text The command
+	 * @param {Terminal} terminal
+	 * @param {jQuery.Deferred} deferred
+	 */
 	this.executeCommand = function( argv, terminal, deferred ) {
 		var cmd = argv[0];
 

@@ -261,27 +261,19 @@ class FileInfo implements Model
 	}
 
 	public function getContents( $offset, $length ) {
-		if( this->isAllowed( $this->deps->currentUser, (ACTION_READ + ACTION_EXECUTE) ) ) {
-			
-			if ( !is_readable( $this->path ) ) {
-				$contents = null;
+		if ( !is_readable( $this->path ) ) {
+			$contents = null;
+		} else if ( is_dir( $this->path ) ) {
+			foreach( new DirectoryIterator( $this->path ) as $info ) {
+				$contents[$info->getFilename] = $info->getPath();
 			}
-			else if ( is_directory( $this->path ) )
-			{
-				foreach( new DirectoryIterator( $this->path ) as $info ) {
-					$contents[$info->getFilename] = $info->getPath();
-				}
-			}
-			else {
-				fp = fopen( $this->path, 'rb' );
-
-				fseek( $fp, $offset );
-
-				$contents = fread( $fp, $length );
-				fclose( $fp );
-			}
-
-			return $contents;
+		} else {
+			$fp = fopen( $this->path, 'rb' );
+			fseek( $fp, $offset );
+			$contents = fread( $fp, $length );
+			fclose( $fp );
 		}
+
+		return $contents;
 	}
 }

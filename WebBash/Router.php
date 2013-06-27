@@ -96,34 +96,39 @@ class Router
 
 		// Use the method and Content-Type headers to extract the final representation
 		// of the request body
-		switch ( $method ) {
-			case 'get':
-			case 'head':
-			case 'delete':
-				$data = array();
-				break;
+		if ( isset( $headers['CONTENT-TYPE'] ) ) {
+			$contentType = substr( $headers['CONTENT-TYPE'], 0, strpos( $headers['CONTENT-TYPE'], ';' ) );
 
-			case 'post':
-				if ( $headers['CONTENT-TYPE'] === 'application/x-www-urlencoded' ) {
-					$data = $_POST;
+			switch ( $method ) {
+				case 'get':
+				case 'head':
+				case 'delete':
+					$data = array();
 					break;
-				}
 
-			case 'put':
-				;
-				if ( $headers['CONTENT-TYPE'] === 'application/json' ) {
-					$data = json_decode( $rawData, true );
-				} elseif ( $headers['CONTENT-TYPE'] === 'application/x-www-urlencoded' ) {
-					parse_str( $rawData, $data );
-				} elseif ( $headers['CONTENT-TYPE'] === 'text/plain' ) {
-					$data = $rawData;
-				} else {
-					throw new HttpException( 415 );
-				}
-				break;
+				case 'post':
+					if ( $contentType === 'application/x-www-form-urlencoded' ) {
+						$data = $_POST;
+						break;
+					}
 
-			default:
-				throw new HttpException( 415 );
+				case 'put':
+					if ( $contentType === 'application/json' ) {
+						$data = json_decode( $rawData, true );
+					} elseif ( $contentType === 'application/x-www-form-urlencoded' ) {
+						parse_str( $rawData, $data );
+					} elseif ( $contentType === 'text/plain' ) {
+						$data = $rawData;
+					} else {
+						throw new HttpException( 415 );
+					}
+					break;
+
+				default:
+					throw new HttpException( 405 );
+			}
+		} else {
+			$data = null;
 		}
 
 		// Execute the request
@@ -144,9 +149,15 @@ class Router
 					$responseData = json_encode( $response->getContents() );
 					break 2;
 
-				case 'application/x-www-urlencoded':
+				case 'application/x-www-form-urlencoded':
 					$responseData = http_build_query( $response->getContents() );
 					break 2;
+
+				case '':
+				case null:
+				case 'undefined':
+					$responseData = $response->getContents();
+					break;
 
 				default:
 					throw new HttpException( 406 );

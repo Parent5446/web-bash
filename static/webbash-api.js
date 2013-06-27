@@ -6,16 +6,38 @@ function WebBashApi() {
 	'use strict';
 
 	/**
+	 * Stored username
+	 * @private
+	 * @type {string}
+	 */
+	this.username = '';
+
+	/**
+	 * Stored password
+	 * @private
+	 * @type {string}
+	 */
+	this.password = '';
+
+	/**
 	 * Login to the API
 	 * @param {string} username Username to log in with
 	 * @param {string} password Password to log in with
 	 * @return {jQuery.jqXHR} jQuery AJAX object
 	 */
 	this.login = function( username, password ) {
-		return this.request( 'POST', '/login', {
-			username: username,
-			password: password
-		} );
+		this.username = username;
+		this.password = password;
+
+		return this.request( 'GET', '/login' ).then(
+			$.proxy( function( data ) {
+				return this.request( 'POST', '/login', {
+					'username': this.username,
+					'password': this.password,
+					'token': data['token']
+				} );
+			}, this )
+		);
 	};
 
 	/**
@@ -27,11 +49,10 @@ function WebBashApi() {
 	 */
 	this.request = function( method, url, data ) {
 		return $.ajax( {
-			accepts: 'application/json',
 			data: data,
 			dataType: 'json',
 			type: method,
-			url: url
+			url: 'api.php' + url
 		} );
 	};
 }
