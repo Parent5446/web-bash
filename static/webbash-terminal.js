@@ -56,70 +56,11 @@ function Terminal() {
 	 * Process a string command and pass it to the controller for execution
 	 * @param {string} txt Command entered
 	 */
-	this.executeCommand = function( txt ) {
-		txt = $.trim(txt);
-		$( "body > ul > li:last-child" ).append( $( '<div class="system_output"></div>' ) );
-
-		var last = $( '.system_output' ).last(),
-			cmd = "",
-			split_text = [],
-			inString = false,
-			inQuote = false,
-			inDoubleQuote = false,
-			backslash = false;
-
-		for ( var i = 0; i < txt.length; i++ ) {
-			if ( txt[i] === ' ' && (inQuote || inDoubleQuote) ) {
-				cmd += txt[i];
-			} else if ( txt[i] === ' ' && !(inQuote || inDoubleQuote) ) {
-				if ( cmd.length > 0 ) {
-					split_text.push(cmd);
-					cmd = "";
-				}
-				continue;
-			} else if ( txt[i] === '\\' ) {
-				if ( backslash ) {
-					cmd += '\\';
-				} else {
-					backslash = true;
-					continue;
-				}
-			} else if ( txt[i] === '\'' ) {
-				if ( backslash ) {
-					cmd += '\'';
-					backslash = false;
-				} else if( inDoubleQuote ) {
-					cmd += '\'';
-				} else if( inQuote ) {
-					inQuote = false;
-				} else {
-					inQuote = true;
-				}
-			} else if ( txt[i] === '\"' ) {
-				if ( backslash ) {
-					cmd += '\"';
-					backslash = false;
-				} else if( inQuote ) {
-					cmd += '\"';
-				} else if( inDoubleQuote ) {
-					inDoubleQuote = false;
-				} else {
-					inDoubleQuote = true;
-				}
-			} else if ( txt[i] === '$' && (inQuote || inDoubleQuote) ) {
-				cmd += '\\$';
-			} else {
-				cmd += txt[i];
-				backslash = false;
-			}
-		}
-
-		cmd = $.trim( cmd );
-		if ( cmd !== '' ) {
-			split_text.push( cmd );
-		}
-
-		this.controller.executeCommand( split_text, last );
+	this.appendOutput = function( txt ) {
+		var output = $( '<div class="system_output"></div>' );
+		output.text( txt );
+		$( "body > ul > li:last-child" ).append( output );
+		this.resetCursor();
 	};
 
 	/**
@@ -284,8 +225,10 @@ function Terminal() {
 
 			$( '#cursor' ).prev().append( $( '#cursor' ).text() );
 			$( '#cursor' ).next().after( $( ' <br> ') );
-			this.executeCommand( cmd );
-			this.displayPrompt();
+
+			this.controller.execute( $.trim( cmd ) )
+				.progress( $.proxy( this.appendOutput, this ) )
+				.always( $.proxy( this.displayPrompt, this ) );
 		} else if ( e.which === 222 && e.shiftKey) {
 			// Single quote: Needs special handling
 			e.preventDefault();

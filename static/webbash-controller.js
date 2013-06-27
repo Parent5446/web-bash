@@ -22,12 +22,18 @@ function WebBash() {
 
 	/**
 	 * Execute a command given an array of arguments
-	 * @param {Array.<string>} argv Arguments typed
+	 * @param {string} argv Arguments typed
 	 * @param {Object} jQuery node to output to
 	 */
-	this.executeCommand = function( argv, output ) {
+	this.execute = function( text, terminal ) {
+		var deferred = $.Deferred();
+		var argv = this.replaceVariables( this.splitText( text ) );
+		setTimeout( $.proxy( function() { this.executeCommand( argv, terminal, deferred ); }, this ), 0 );
+		return deferred.promise();
+	}
+
+	this.executeCommand = function( argv, terminal, deferred ) {
 		var cmd = argv[0];
-		argv = this.replaceVariables( argv );
 
 		this.environment._ = argv[argv.length - 1];
 
@@ -41,12 +47,12 @@ function WebBash() {
 				this.environment['?'] = '0';
 			}
 		} else if ( argv[0] === 'help' ) {
-			output.append( "Web-Bash implements a command line interface just like BASH on linux. Type a command like 'date' to test it out. " );
-			output.append( "To see a full list of commands, type 'commands' " );
+			deferred.notify( ["Web-Bash implements a command line interface just like BASH on linux. Type a command like 'date' to test it out. "] );
+			deferred.notify( ["To see a full list of commands, type 'commands' "] );
 			this.environment['?'] = '0';
 		} else if ( argv[0] === 'echo' ) {
 			argv.shift();
-			output.append( argv.join( ' ' ) );
+			deferred.notify( [argv.join( ' ' )] );
 			this.environment['?'] = '0';
 		} else if ( argv[0] === 'export' ) {
 			for ( var i = 1; i < argv.length; ++i ) {
@@ -62,18 +68,20 @@ function WebBash() {
 		} else if ( typeof WebBash['commands'][argv[0]] !== 'undefined' ) {
 			var fds = [ new IoStream(), new IoStream(), new IoStream() ];
 			fds[1].flush = function( text ) {
-				output.append( text );
+				deferred.notify( [text] );
 			};
 			fds[2].flush = function( text ) {
-				output.append( text );
+				deferred.notify( [text] );
 			};
 
 			var argc = argv.length;
 			this.environment['?'] = WebBash['commands'][cmd]( fds, argc, argv, this.environment ).toString();
 		} else if ( argv[0] !== undefined && argv[0] !== '' ) {
-			output.append( "error: unknown command " + argv[0] );
+			deferred.notify( ["error: unknown command " + argv[0]] );
 			this.environment['?'] = '127';
 		}
+
+		deferred.resolve();
 	};
 
 	/**
@@ -110,6 +118,70 @@ function WebBash() {
 		}
 
 		return argv;
+	};
+
+	/**
+	 * Split a command into an argument array
+	 * @private
+	 * @param {string} txt
+	 * @return {Array.<string>}
+	 */
+	this.splitText = function( txt ) {
+		var cmd = "",
+			split_text = [],
+			inString = false,
+			inQuote = false,
+			inDoubleQuote = false,
+			backslash = false;
+
+		for ( var i = 0; i < txt.length; i++ ) {
+			if ( txt[i] === ' ' && ( inQuote || inDoubleQuote ) ) {
+				cmd += txt[i];
+			} else if ( txt[i] === ' ' && !( inQuote || inDoubleQuote ) ) {
+				if ( cmd.length > 0 ) {
+					split_text.push(cmd);
+					cmd = "";
+				}
+				continue;
+			} else if ( txt[i] === '\\' ) {
+				if ( backslash || inQuote ) {
+					cmd += '\\';
+					backslash = false;
+				} else {
+					backslash = true;
+				}
+			} else if ( txt[i] === '\'' ) {
+				if ( backslash ) {
+					cmd += '\'';
+					backslash = false;
+				} else if ( inDoubleQuote ) {
+					cmd += '\'';
+				} else {
+					inQuote = !inQuote;
+				}
+			} else if ( txt[i] === '\"' ) {
+				if ( backslash ) {
+					cmd += '\"';
+					backslash = false;
+				} else if ( inQuote ) {
+					cmd += '\"';
+				} else {
+					inDoubleQuote = !inDoubleQuote;
+				}
+			} else if ( txt[i] === '$' && inQuote ) {
+				cmd += '\\$';
+			} else {
+				cmd += txt[i];
+				backslash = false;
+			}
+		}
+
+		cmd = $.trim( cmd );
+		if ( cmd !== '' ) {
+			split_text.push( cmd );
+		}
+		
+		return split_text;
 	};
 }
 
