@@ -3,8 +3,10 @@
 namespace WebBash\Controllers;
 
 use \WebBash\DI;
+use \WebBash\HttpException;
+use \WebBash\Response;
 
-clas FileController
+class FileController
 {
 	private $deps;
 
@@ -13,14 +15,15 @@ clas FileController
 	}
 
 	public function get( array $params ) {
-		$file = $this->deps->fileCache->get( 'name', $params['name']);
-		if( !$file->exist() ) {
+		$file = $this->deps->fileCache->get( 'path', "/{$params['path']}" );
+		if( !$file->exists() ) {
 			throw new HttpException( 404, 'File not found' );
 		}
 
-		return new Response( '' )
+		$response = new Response( $file->getContents() );
+		return $response
 			->addHeader( 'Content-Length', $file->getSize() )
-			->addHeader( 'Content-Disposition', "attachment; filename=\"{$file->getName()}" )
+			->addHeader( 'Content-Disposition', "attachment; filename=\"{$file->getFilename()}" )
 			->addHeader( 'Last-Modified', $file->getMTime() )
 			->addHeader( 'Last-Accessed', $file->getATime() )
 			->addHeader( 'Creation-Time', $file->getCTime() )
@@ -29,7 +32,7 @@ clas FileController
 	}
 
 	public function put( array $params, $data ) {
-		$file = $this->deps->fileCache->get( 'path', $params['path'] );
+		$file = $this->deps->fileCache->get( 'path', "/{$params['path']}" );
 
 		$file->setOwner( $data['owner'] );
 		$file->setGroup( $data['grp'] );
@@ -37,7 +40,7 @@ clas FileController
 	}
 
 	public function delete( array $params ) {
-		$file = $this->deps->fileCache->get( 'name', $params['name'] );
+		$file = $this->deps->fileCache->get( 'path', "/{$params['path']}" );
 		if ( !$file->exists() ) {
 			throw new HttpException( 404, 'File does not exist' );
 		}

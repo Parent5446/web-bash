@@ -27,6 +27,8 @@ class FileInfo implements Model
 	public $ctime = null;
 
 	private $exists = null;
+	private $fp = null;
+	private $children = null;
 
 	public static function newFromId( DI $deps, $id ) {
 		$obj = new self( $deps );
@@ -42,6 +44,12 @@ class FileInfo implements Model
 
 	private function __construct( DI $deps ) {
 		$this->deps = $deps;
+	}
+
+	public function __destruct() {
+		if ( $this->fp ) {
+			fclose( $this->fp );
+		}
 	}
 
 	function load() {
@@ -73,7 +81,7 @@ class FileInfo implements Model
 		$stmt->bindParam( 'name', $this->name );
 		$stmt->bindParam( 'size', $this->size );
 		$stmt->bindParam( 'owner', $this->owner );
-		$stmt->bindParam( 'group', $this->group );
+		$stmt->bindParam( 'group', $this->grp );
 		$stmt->bindParam( 'perms', $this->perms );
 		$stmt->bindParam( 'mtime', $this->mtime );
 		$stmt->bindParam( 'ctime', $this->ctime );
@@ -105,7 +113,7 @@ class FileInfo implements Model
 			$this->owner = $other->owner;
 		}
 		if ( $other->group !== null ) {
-			$this->group = $other->group;
+			$this->grp = $other->group;
 		}
 		if ( $other->perms !== null ) {
 			$this->perms = $other->perms;
@@ -132,13 +140,14 @@ class FileInfo implements Model
 	
 			if ( $key > 0 ) {
 				$joinConds[] = "INNER JOIN file AS {$curAlias} ON {$curAlias}.parent = {$lastAlias}.id";
+				$whereConds[] = "{$curAlias}.name = :{$curAlias}";
+			} else {
+				$whereConds[] = "{$curAlias}.name = :{$curAlias} AND {$curAlias}.parent IS NULL";
 			}
-			$whereConds[] = "{$curAlias}.name = :{$curAlias}";
 		}
 		$joinConds = implode( ' ', $joinConds );
 		$whereConds = implode( ' AND ', $whereConds );
 		$finalAlias = "file" . ( count( $parts ) - 1 );
-
 		$stmt = $this->deps->stmtCache->prepare( "SELECT $finalAlias.* FROM file AS file0 $joinConds WHERE $whereConds" );
 
 		foreach ( $parts as $key => $name ) {
@@ -202,7 +211,7 @@ class FileInfo implements Model
 
 	public function getOwner() {
 		$this->load();
-		return $this->deps->userCache->get( 'id', $this->owner );
+		return $this->deps->userCache->get( 'id', (int)$this->owner );
 	}
 
 	public function setOwner( WebBash\Models\User $user ) {
@@ -212,12 +221,12 @@ class FileInfo implements Model
 
 	public function getGroup() {
 		$this->load();
-		return $this->deps->groupCache->get( 'id', $this->group );
+		return $this->deps->groupCache->get( 'id', (int)$this->grp );
 	}
 
 	public function setGroup( WebBash\Models\Group $group ) {
 		$this->load();
-		$this->group = $group->getId();
+		$this->grp = $group->getId();
 	}
 
 	public function isAllowed( WebBash\Models\User $user, $action ) {
@@ -242,35 +251,67 @@ class FileInfo implements Model
 
 	public function getATime() {
 		$this->load();
-		return new DateTime( $this->atime );
+		return new \DateTime( $this->atime );
 	}
 
 	public function getMTime() {
 		$this->load();
-		return new DateTime( $this->mtime );
+		return new \DateTime( $this->mtime );
 	}
 
 	public function getCTime() {
 		$this->load();
-		return new DateTime( $this->ctime );
+		return new \DateTime( $this->ctime );
 	}
 
 	public function exists() {
 		$this->load();
-		return $this->exists;
+		return !$this->path || $this->exists;
 	}
 
-	public function getContents( $offset, $length ) {
-		if ( !is_readable( $this->path ) ) {
-			$contents = null;
-		} else if ( is_dir( $this->path ) ) {
-			foreach( new DirectoryIterator( $this->path ) as $info ) {
-				$contents[$info->getFilename] = $info->getPath();
-			}
+	public function getChildren() {
+		if ( $this->children !== null ) {
+			return $this->children;
+		}
+	
+		$this->load();
+		$this->children = array();
+
+		if ( $this->path !== '/' ) {
+			$stmt = $this->deps->stmtCache->prepare(
+				'SELECT * FROM file WHERE parent = :id'
+			);
+			$stmt->bindParam( ':id', $this->id );
 		} else {
-			$fp = fopen( $this->path, 'rb' );
-			fseek( $fp, $offset );
-			$contents = fread( $fp, $length );
+			$stmt = $this->deps->stmtCache->prepare(
+				'SELECT * FROM file WHERE parent IS NULL'
+			);
+		}
+		$stmt->execute();
+
+		for ( $row = $stmt->fetch(); $row; $row = $stmt->fetch() ) {
+			$this->children[] = $row['name'];
+		}
+
+		return $this->children;
+	}
+
+	public function getContents( $offset = 0, $length = -1 ) {
+		$finalPath = realpath( WEBBASH_ROOT . $this->path );
+
+		if ( strpos( $finalPath, WEBBASH_ROOT ) !== 0 || !is_readable( $finalPath ) ) {
+			$contents = null;
+		} elseif ( is_dir( $finalPath ) ) {
+			$contents = $this->getChildren();
+		} elseif ( $length === -1 ) {
+			$contents = file_get_contents( $finalPath );
+		} else {
+			if ( $this->fp === null ) {
+				$fp = fopen( $finalPath, 'rb' );
+			}
+
+			fseek( $this->fp, $offset );
+			$contents = fread( $this->fp, $length );
 			fclose( $fp );
 		}
 

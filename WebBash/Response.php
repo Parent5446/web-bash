@@ -13,6 +13,9 @@ class Response
 	}
 
 	public function addHeader( $key, $value ) {
+		if ( $value instanceof \DateTime ) {
+			$value = $value->format( 'r' );
+		}
 		$this->headers[$key] = $value;
 		return $this;
 	}
@@ -25,5 +28,3 @@ class Response
 		return $this->content;
 	}
 }
-
-	

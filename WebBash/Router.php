@@ -12,7 +12,8 @@ class Router
 
 	public function register( $pattern, $controller ) {
 		// Replace variables with regex capture patterns
-		$pattern = preg_replace( '/:(\w+)/', '(?P<$1>[^/]+)', $pattern );
+		$pattern = preg_replace( '/:(\w+)\+/', '(?P<$1>.*)', $pattern );
+		$pattern = preg_replace( '/:(\w+)/', '(?P<$1>[^/]*)', $pattern );
 		$this->routes[$pattern] = $controller;
 	}
 
@@ -59,7 +60,7 @@ class Router
 	}
 
 	private function getRequestInfo() {
-		$url = $_SERVER['PATH_INFO'];
+		$url = isset( $_SERVER['PATH_INFO'] ) ? $_SERVER['PATH_INFO'] : '/';
 		$method = strtolower( $_SERVER['REQUEST_METHOD'] );
 
 		// Get a standard list of request headers

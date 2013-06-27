@@ -42,7 +42,7 @@ class Group implements Model
 		} elseif ( $this->name !== null ) {
 			$this->loadFromField( 'name' );
 		} else {
-			throw new RuntimeException( 'Cannot fetch info for unknown group.' );
+			throw new \RuntimeException( 'Cannot fetch info for unknown group.' );
 		}
 		
 		$this->deps->groupCache->update( $this, array( 'id' => $this->id, 'name' => $this->name ) );
@@ -110,6 +110,20 @@ class Group implements Model
 			}
 			$this->members[] = $row['username'];
 		}
+	}
+
+	public function getId() {
+		if ( $this->id === null ) {
+			$this->load();
+		}
+		return $this->id;
+	}
+	
+	public function getName() {
+		if ( $this->name === null ) {
+			$this->load();
+		}
+		return $this->name;
 	}
 
 	public function isMember( User $user ) {

@@ -2,6 +2,8 @@
 
 error_reporting( E_ALL | E_STRICT );
 
+define( 'WEBBASH_ROOT', __DIR__ . DIRECTORY_SEPARATOR . 'filesystem' );
+
 require "WebBash/DI.php";
 require "WebBash/Util.php";
 require "WebBash/Router.php";
@@ -13,6 +15,7 @@ require "WebBash/Models/User.php";
 require "WebBash/Models/Group.php";
 require "WebBash/Models/FileInfo.php";
 require "WebBash/Controllers/UserController.php";
+require "WebBash/Controllers/FileController.php";
 require "WebBash/Controllers/LoginController.php";
 
 require "WebBash/ProcessCache/ProcessCache.php";
@@ -27,5 +30,6 @@ $di = new WebBash\DI( $db );
 
 $router = new WebBash\Router( $di );
 $router->register( '/users/:name', '\WebBash\Controllers\UserController' );
+$router->register( '/files/:path+', '\WebBash\Controllers\FileController' );
 $router->register( '/login', '\WebBash\Controllers\LoginController' );
 $router->executeMain();
