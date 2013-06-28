@@ -23,9 +23,20 @@ spl_autoload_register( array( $autoloader, 'autoload' ) );
 // Make a DI container and setup the router
 $di = new WebBash\DI( $db, $config );
 $router = new WebBash\Router( $di );
-$router->register( '/users/:name', '\WebBash\Controllers\UserController' );
-$router->register( '/files/:path+', '\WebBash\Controllers\FileController' );
 $router->register( '/login', '\WebBash\Controllers\LoginController' );
+$router->register( '/users/:name', '\WebBash\Controllers\UserController' );
+$router->register(
+	'/files/:path+',
+	'\WebBash\Controllers\FileController',
+	array(),
+	array(
+		'FILE-OWNER' => 'owner',
+		'FILE-GROUP' => 'group',
+		'FILE-PERMS' => 'perms',
+		'FILE-TYPE' => 'type',
+		'RANGE' => 'range'
+	)
+);
 
 // Run the request
 $router->executeMain();
