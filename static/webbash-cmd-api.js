@@ -100,8 +100,8 @@
 		for ( var i = 1; i < argc; i++ ) {
 			var req = api.request( 'GET', '/files' + newArgv[1], {}, {}, false );
 			for ( var j = 0; j < req['responseJSON'].length; j++ ) {
-				fds[1].write( req['responseJSON'][j] + "\n");
-				//$.printFile( fds[1], req['responseJSON'][j], opts);
+				console.log( req['responseJSON'] );
+				printFile( fds[1], req['responseJSON'][j], opts);
 			}
 		}
 		return 0;
