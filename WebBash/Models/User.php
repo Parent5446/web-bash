@@ -15,6 +15,7 @@ class User implements Model
 	public $password = '$2y$12$MTIzNDU2Nzg5MGFiY2RlZeZZskHZ2KTCr4MHqdn0WMEb4Iag4YEhq';
 	public $token = null;
 	public $exists = null;
+	private $groups = null;
 
 	public static function newFromName( DI $deps, $name ) {
 		$obj = new self( $deps );
@@ -138,7 +139,7 @@ class User implements Model
 		if ( $this->id === null ) {
 			$this->load();
 		}
-		return $this->id;
+		return (int)$this->id;
 	}
 
 	public function getEmail() {
@@ -204,20 +205,23 @@ class User implements Model
 			return $this->groups;
 		}
 
-		if ( $this->name === null ) {
+		$this->load();
+		if ( $this->id === null ) {
 			throw new \RuntimeException( 'Cannot fetch groups for unknown user.' );
 		}
 
 		$stmt = $this->deps->stmtCache->prepare(
-			"SELECT grp.name FROM usergroupinfo WHERE user.name = :name"
+			"SELECT grp.name FROM usergroup " .
+			"INNER JOIN grp ON grp.id = usergroup.grp " .
+			"WHERE usergroup.user = :id"
 		);
 
 		$this->groups = array();
-		$stmt->bindParam( ':name', $this->name );
+		$stmt->bindParam( ':id', $this->id );
 		$stmt->execute();
 		while ( $grp = $stmt->fetchColumn() ) {
 			$this->groups[] = $grp;
-			$this->deps->groupCache->cacheMember( $this, $grp );
+			$this->deps->groupCache->cacheMember( $this, 'name', $grp );
 		}
 
 		return $this->groups;

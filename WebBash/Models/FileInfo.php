@@ -10,8 +10,8 @@ class FileInfo implements Model
 	const ACTION_WRITE = 2;
 	const ACTION_READ = 4;
 
-	const SOURCE_OWNER = 8;
-	const SOURCE_GROUP = 4;
+	const SOURCE_OWNER = 6;
+	const SOURCE_GROUP = 3;
 	const SOURCE_OTHER = 0;
 
 	public $id = null;
@@ -62,11 +62,16 @@ class FileInfo implements Model
 		}
 
 		if ( $this->id !== null ) {
-			$this->exists = $this->loadFromId();
+			$this->exists = (bool)$this->loadFromId();
 		} elseif ( $this->path !== null ) {
-			$this->exists = $this->loadFromPath();
+			$this->exists = (bool)$this->loadFromPath();
 		} else {
 			throw new \RuntimeException( 'Nothing to load from.' );
+		}
+
+		// If we failed to load, at least set some defaults
+		if ( !$this->exists ) {
+			$this->perms = octdec( '0644' );
 		}
 
 		$this->deps->fileCache->update( $this, array( 'id' => $this->id, 'path' => $this->path ) );
@@ -75,25 +80,46 @@ class FileInfo implements Model
 	function save() {
 		$this->load();
 
-		$stmt = $this->deps->stmtCache->prepare(
-			'UPDATE file SET parent = :parent, name = :name, size = :size, owner = :owner, ' .
-			'grp = :group, perms = :perms, mtime = :mtime, ctime = :ctime, filetype = :filetype ' .
-			'linktarget = :linktarget, linkid = :linkid WHERE id = :id'
-		);
+		if ( !$this->exists ) {
+			$stmt = $this->deps->stmtCache->prepare(
+				'INSERT INTO file SET parent = :parent, name = :name, size = :size, owner = :owner, ' .
+				'grp = :group, perms = :perms, mtime = :mtime, ctime = :ctime, filetype = :filetype, ' .
+				'linkpath = :linkpath, linkid = :linkid'
+			);
+		} else {
+			$stmt = $this->deps->stmtCache->prepare(
+				'UPDATE file SET parent = :parent, name = :name, size = :size, owner = :owner, ' .
+				'grp = :group, perms = :perms, mtime = :mtime, ctime = :ctime, filetype = :filetype, ' .
+				'linkpath = :linkpath, linkid = :linkid WHERE id = :id'
+			);
+			$stmt->bindParam( 'id', $this->id );
+		}
 
-		$stmt->bindParam( 'parent', $this->parent );
-		$stmt->bindParam( 'name', $this->name );
+		$stmt->bindValue( 'parent', $this->getParent()->getId() );
+		$stmt->bindValue( 'name', $this->getFilename() );
 		$stmt->bindParam( 'size', $this->size );
 		$stmt->bindParam( 'owner', $this->owner );
 		$stmt->bindParam( 'group', $this->grp );
 		$stmt->bindParam( 'perms', $this->perms );
 		$stmt->bindParam( 'mtime', $this->mtime );
 		$stmt->bindParam( 'ctime', $this->ctime );
-		$stmt->bindParam( 'linktarget', $this->linktarget );
+		$stmt->bindParam( 'linkpath', $this->linkpath );
 		$stmt->bindParam( 'linkid', $this->linkid );
 		$stmt->bindParam( 'filetype', $this->filetype );
-		$stmt->bindParam( 'id', $this->id );
-		$stmt->execute();
+
+		if ( $stmt->execute() ) {
+			if ( !$this->exists() ) {
+				$this->exists = true;
+				$this->id = $this->deps->db->lastInsertId();
+				$this->deps->fileCache->update(
+					$this,
+					array( 'id' => $this->id, 'path' => $this->path )
+				);
+			}
+		} else {
+			$this->exists = null;
+			$this->load();
+		}
 	}
 
 	function merge( Model $other ) {
@@ -118,9 +144,6 @@ class FileInfo implements Model
 		}
 		if ( $other->owner !== null ) {
 			$this->owner = $other->owner;
-		}
-		if ( $other->group !== null ) {
-			$this->grp = $other->group;
 		}
 		if ( $other->perms !== null ) {
 			$this->perms = $other->perms;
@@ -150,6 +173,7 @@ class FileInfo implements Model
 			$this->name = '';
 			$this->filetype = 'd';
 			$this->owner = $this->grp = 1;
+			$this->perms = octdec( '0644' );
 			return true;
 		}
 
@@ -234,7 +258,7 @@ class FileInfo implements Model
 		if ( $this->parent !== null ) {
 			return $this->deps->fileCache->get( 'id', $this->parent );
 		} elseif ( $this->path !== null ) {
-			return $this->deps->fileCache->get( 'id', dirname( $this->path ) );
+			return $this->deps->fileCache->get( 'path', dirname( $this->path ) );
 		} else {
 			$this->load();
 			return $this->deps->fileCache->get( 'id', $this->parent );
@@ -263,35 +287,35 @@ class FileInfo implements Model
 		return $this->deps->userCache->get( 'id', (int)$this->owner );
 	}
 
-	public function setOwner( WebBash\Models\User $user ) {
+	public function setOwner( User $user ) {
 		$this->load();
 		$this->owner = $user->getId();
 	}
-
+	
 	public function getGroup() {
 		$this->load();
 		return $this->deps->groupCache->get( 'id', (int)$this->grp );
 	}
 
-	public function setGroup( WebBash\Models\Group $group ) {
+	public function setGroup( Group $group ) {
 		$this->load();
 		$this->grp = $group->getId();
 	}
 
-	public function isAllowed( WebBash\Models\User $user, $action ) {
+	public function isAllowed( User $user, $action ) {
 		$this->load();
 		if ( $user->getId() === $this->owner ) {
 			return ( $this->perms >> self::SOURCE_OWNER ) & $action;
 		} elseif ( $this->getGroup()->isMember( $user ) ) {
 			return ( $this->perms >> self::SOURCE_GROUP ) & $action;
 		} else {
-			return ( $this->params >> self::SOURCE_OTHER ) & $action;
+			return ( $this->perms >> self::SOURCE_OTHER ) & $action;
 		}
 	}
 
 	public function setPermissions( $source, $action, $allowed ) {
 		$this->load();
-		if ( $this->allowed ) {
+		if ( $allowed ) {
 			$this->perms |= ( $action << $source );
 		} else {
 			$this->perms &= ~ ( $action << $source );
@@ -405,5 +429,26 @@ class FileInfo implements Model
 		}
 
 		return $contents;
+	}
+
+	public function setContents( $data = null ) {
+		$webRoot = $this->deps->config['webbash']['fileroot'];
+		$finalPath = realpath( $webRoot . $this->path );
+
+		if (
+			strpos( $finalPath, $webRoot ) !== 0 ||
+			file_exists( $finalPath ) &&
+			!is_writeable( $finalPath )
+		) {
+			return false;
+		} elseif ( $this->isDir() && !is_dir( $finalPath ) ) {
+			unlink( $finalPath );
+			return mkdir( $finalPath, $this->perms );
+		} elseif ( $this->isFile() && !is_file( $finalPath ) ) {
+			unlink( $finalPath );
+			return file_put_contents( $finalPath, $data );
+		} else {
+			return file_put_contents( $finalPath, $data );
+		}
 	}
 }

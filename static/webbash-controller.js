@@ -34,7 +34,7 @@ function WebBash( username ) {
 	 */
 	this.startup = function( terminal ) {
 		var api = new WebBashApi();
-		var info = api.request( 'GET', '/users/' + this.username, {}, false );
+		var info = api.request( 'GET', '/users/' + this.username, {}, {}, false );
 
 		var homedir = info['responseJSON']['homedir'];
 		this.environment['HOME'] = homedir;
