@@ -25,7 +25,7 @@
 			newDir = $.realpath( env['PWD'] + '/' + argv[1] );
 		}
 
-		var req = api.request( 'GET', '/files' + newDir, {}, false );
+		var req = api.request( 'GET', '/files' + newDir, {}, {}, false );
 		if ( req.status === 200 ) {
 			env['PWD'] = newDir;
 			return 0;
@@ -50,7 +50,7 @@
 		}
 
 		for ( var i = 1; i < argc; i++ ) {
-			var req = api.request( 'GET', '/files' + argv[1], {}, false );
+			var req = api.request( 'GET', '/files' + argv[1], {}, {}, false );
 			for ( var j = 0; j < req['responseJSON'].length; j++ ) {
 				fds[1].write( req['responseJSON'][j] + "\n" );
 			}
@@ -92,6 +92,22 @@
 	 * @return {number} Retcode, 0 for success
 	 */
 	WebBash['commands']['mkdir'] = function( fds, argc, argv, env ) {
+		for ( var i = 1; i < argc; i++ ) {
+			var req = api.request( 'PUT', '/files' + argv[i], '', {
+				'File-Type': 'directory'
+			}, false );
+
+			if ( req['status'] === 404 ) {
+				fds[2].write( 'mkdir: cannot create directory ' + argv[i] + ': No such file or directory' );
+				return 1;
+			} else if ( req['status'] === 403 ) {
+				fds[2].write( 'mkdir: cannot create directory ' + argv[i] + ': Permission denied' );
+				return 1;
+			} else if ( req['status'] >= 400 ) {
+				fds[2].write( 'mkdir: cannot create directory ' + argv[i] + ': An internal error occurred' );
+				return 1;
+			}
+		}
 		return 0;
 	};
 
