@@ -52,7 +52,7 @@ class LoginController
 		} elseif ( !$user->checkPassword( $data['password'] ) || !$user->exists() ) {
 			throw new HttpException( 401, 'Username or password is incorrect' );
 		}
-		
+
 		$_SESSION['userId'] = $user->getId();
 		unset( $_SESSION['loginCount'] );
 

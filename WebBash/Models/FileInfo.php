@@ -152,7 +152,7 @@ class FileInfo implements Model
 			$this->owner = $this->grp = 1;
 			return true;
 		}
-	
+
 		$parts = explode( '/', substr( $this->path, 1 ) );
 
 		$joinConds = array();
@@ -160,7 +160,7 @@ class FileInfo implements Model
 		foreach ( $parts as $key => $val ) {
 			$curAlias = "file$key";
 			$lastAlias = 'file' . ( $key - 1 );
-	
+
 			if ( $key > 0 ) {
 				$joinConds[] = "INNER JOIN file AS {$curAlias} ON {$curAlias}.parent = {$lastAlias}.id";
 				$whereConds[] = "{$curAlias}.name = :{$curAlias}";
@@ -192,13 +192,13 @@ class FileInfo implements Model
 		if ( !$exists ) {
 			return false;
 		}
-		
+
 		$joinConds = array();
 		$selectFields = array( 'file0.name AS file0name' );
 		for ( $i = 0; $i < 10; $i++ ) {
 			$curAlias = "file$i";
 			$lastAlias = 'file' . ( $i - 1 );
-	
+
 			if ( $i > 0 ) {
 				$joinConds[] = "LEFT JOIN file AS {$curAlias} ON {$curAlias}.id = {$lastAlias}.parent";
 				$selectFields[] = "{$curAlias}.name AS {$curAlias}name";
@@ -356,7 +356,7 @@ class FileInfo implements Model
 		if ( $this->children !== null ) {
 			return $this->children;
 		}
-	
+
 		$this->load();
 		$this->children = array();
 
@@ -380,10 +380,11 @@ class FileInfo implements Model
 	}
 
 	public function getContents( $offset = 0, $length = -1 ) {
-		$finalPath = realpath( WEBBASH_ROOT . $this->path );
+		$webRoot = $this->deps->config['webbash']['fileroot'];
+		$finalPath = realpath( $webRoot . $this->path );
 
 		if (
-			strpos( $finalPath, WEBBASH_ROOT ) !== 0 ||
+			strpos( $finalPath, $webRoot ) !== 0 ||
 			!is_file( $finalPath ) ||
 			!is_readable( $finalPath )
 		) {
