@@ -35,6 +35,37 @@
 		}
 	};
 
+	/** 
+	 * print the file info with options to the provided output stream
+	 * @param {<IoStream} fd Output stream
+	 * @param responseJSON  {object} responseJSON AJAX response object
+	 * @param opts {Array.<string>} opts
+	 */
+	 function printFile( fd, responseJSON, opts ) {
+	 	var name = responseJSON;
+	 	var output = name;
+	 	var printDot = false;
+/*
+	 	foreach ( var option in opts ) {
+	 		if ( opts.hasOwnProperty( option) ) {
+	 			switch ( option ) {
+	 				case 'a':
+	 					printDot = true;
+	 					break;
+	 				case 'l':
+	 					// add stuff here
+	 					break;
+
+	 			}
+	 		}
+	 	}
+*/	 	
+
+	 	//if( name[0] !== '.' || printDot )
+		 	fd.write( responseJSON + "\n" );
+	 };
+
+
 	/**
 	 * List the elements of a directory
 	 * @param {Array.<IoStream>} fds Input/output streams
@@ -47,29 +78,27 @@
 		var opts = [];
 		var newArgv = [];
 
+		var optPattern = /-[\w]+/;
+
+		for ( var index in argv ) {
+			if ( optPattern.test( argv[index] ) ) {
+				opts[opts.length] = argv[index];
+			}
+			else {
+				newArgv[newArgv.length] = argv[index];
+			}
+		}
+
+		argc = newArgv.length;			
+		opts = $.normalizeopts( opts );
+
 		if ( argc === 1 ) {
-			argv[argc] = env['PWD'];
+			newArgv[argc] = env['PWD'];
 			argc++;
 		}
-		else {
-			var optPattern = /-[\w]+/;
-
-			for ( var index in argv ) {
-				if ( optPattern.test( argv[index] ) ) {
-					opts[opts.length] = argv[index];
-				}
-				else {
-					newArgv[newArgv.length] = argv[index];
-				}
-			}
-			argc = newArgv.length;		
-		}
-
-		opts = $.normalizeopts( opts );
-		console.log( opts );
 
 		for ( var i = 1; i < argc; i++ ) {
-			var req = api.request( 'GET', '/files' + argv[1], {}, false );
+			var req = api.request( 'GET', '/files' + newArgv[1], {}, false );
 			for ( var j = 0; j < req['responseJSON'].length; j++ ) {
 				fds[1].write( req['responseJSON'][j] + "\n");
 				//$.printFile( fds[1], req['responseJSON'][j], opts);
