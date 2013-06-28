@@ -15,7 +15,7 @@ class GroupCache extends ProcessCache
 		);
 	}
 
-	public function cacheMember( WebBash\Models\User $user, $field, $value ) {
+	public function cacheMember( \WebBash\Models\User $user, $field, $value ) {
 		$grp = $this->get( $field, $value );
 		$grp->cacheMember( $user );
 	}
