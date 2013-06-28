@@ -300,16 +300,19 @@ class FileInfo implements Model
 
 	public function getATime() {
 		$this->load();
+		date_default_timezone_set( 'UTC' );
 		return new \DateTime( $this->atime );
 	}
 
 	public function getMTime() {
 		$this->load();
+		date_default_timezone_set( 'UTC' );
 		return new \DateTime( $this->mtime );
 	}
 
 	public function getCTime() {
 		$this->load();
+		date_default_timezone_set( 'UTC' );
 		return new \DateTime( $this->ctime );
 	}
 

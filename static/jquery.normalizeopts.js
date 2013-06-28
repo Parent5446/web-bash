@@ -6,7 +6,7 @@
 	 * @param opts {Array.<string>} opts
 	 * @return {Array.<string>}
 	 */
-	 $.realoptions = function( opts ) {
+	 $.normalizeopts = function( opts ) {
 	 	var newOpts = [];
 	 	
 	 	for ( var option in opts ) {

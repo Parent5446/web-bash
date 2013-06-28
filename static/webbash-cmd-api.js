@@ -35,20 +35,6 @@
 		}
 	};
 
-	printFile( fd, responseJSON, opts )
-	{
-		const $showAll = 1;
-		const
-
-
-
-		if( )
-
-
-
-		fd.wrte( responseJSON + "\n" );
-	}
-
 	/**
 	 * List the elements of a directory
 	 * @param {Array.<IoStream>} fds Input/output streams
@@ -58,36 +44,37 @@
 	 * @return {number} Retcode, 0 for success
 	 */
 	WebBash['commands']['ls'] = function( fds, argc, argv, env ) {
+		var opts = [];
+		var newArgv = [];
+
 		if ( argc === 1 ) {
-			argv[argc] = env['HOME'];
+			argv[argc] = env['PWD'];
 			argc++;
 		}
 		else {
 			var optPattern = /-[\w]+/;
-			var opts = [];
-			var newArgv = [];
 
-
-			for ( var arg in argv ) {
-				if () optPattern.test( $arg ) ) {
-					opts[opts.length] = arg
+			for ( var index in argv ) {
+				if ( optPattern.test( argv[index] ) ) {
+					opts[opts.length] = argv[index];
 				}
 				else {
-					newArgv[newArgv.length] = arg;
+					newArgv[newArgv.length] = argv[index];
 				}
 			}
-			argc = newArgv.length;
+			argc = newArgv.length;		
 		}
+
+		opts = $.normalizeopts( opts );
+		console.log( opts );
 
 		for ( var i = 1; i < argc; i++ ) {
-			var req = api.request( 'GET', '/files' + newArgv[1], {}, false );
+			var req = api.request( 'GET', '/files' + argv[1], {}, false );
 			for ( var j = 0; j < req['responseJSON'].length; j++ ) {
-
-				opts = $.normalizeopts( opts );
-				$.printFile( fds[1], req['responseJSON'][j], opts);
+				fds[1].write( req['responseJSON'][j] + "\n");
+				//$.printFile( fds[1], req['responseJSON'][j], opts);
 			}
 		}
-
 		return 0;
 	};
 

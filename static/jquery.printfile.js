@@ -11,7 +11,7 @@
 	 	var name = responseJSON;
 	 	var output = name;
 	 	bool printDot = false;
-
+/*
 	 	foreach ( var option in opts ) {
 	 		if ( opts.hasOwnProperty( option) ) {
 	 			switch ( option ) {
@@ -25,9 +25,9 @@
 	 			}
 	 		}
 	 	}
-	 	
+*/	 	
 
-	 	if( name[0] !== '.' || printDot )
-	 	fd.write( responseJSON + "\n" );
+	 	//if( name[0] !== '.' || printDot )
+		 	fd.write( responseJSON + "\n" );
 	 };
 } )( jQuery );
