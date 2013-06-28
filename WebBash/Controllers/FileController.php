@@ -43,9 +43,9 @@ class FileController
 	public function put( array $params, $data ) {
 		$file = $this->deps->fileCache->get( 'path', "/{$params['path']}" );
 
-		$file->setOwner( $data['owner'] );
-		$file->setGroup( $data['grp'] );
-		$file->setPermissions( $data['perms BIT'] );
+		$file->setOwner( $params['owner'] );
+		$file->setGroup( $params['group'] );
+		$file->setPermissions( $params['perms'] );
 	}
 
 	public function delete( array $params ) {

@@ -1,0 +1,11 @@
+Options -Indexes +FollowSymLinks
+DirectoryIndex index.html  
+<Files ~ "^\.(htaccess|htpasswd)$">
+	deny from all
+</Files>
+<Files "config.ini">
+	deny from all
+</Files>
+<Files ~ "(filesystem|maintenance)/*">
+	deny from all
+</Files>

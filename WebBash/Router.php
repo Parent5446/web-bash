@@ -10,11 +10,11 @@ class Router
 		$this->deps = $deps;
 	}
 
-	public function register( $pattern, $controller ) {
+	public function register( $pattern, $controller, $queryParams = array(), $headerParams = array() ) {
 		// Replace variables with regex capture patterns
 		$pattern = preg_replace( '/:(\w+)\+/', '(?P<$1>.*)', $pattern );
 		$pattern = preg_replace( '/:(\w+)/', '(?P<$1>[^/]*)', $pattern );
-		$this->routes[$pattern] = $controller;
+		$this->routes[$pattern] = array( $controller, $queryParams, $headerParams );
 	}
 
 	public function executeMain() {
@@ -133,17 +133,17 @@ class Router
 		}
 
 		// Execute the request
-		$response = $this->runController( $method, $url, $data );
+		$response = $this->runController( $method, $url, $data, $headers );
 		if ( !( $response instanceof Response ) ) {
 			$response = new Response( $response );
 		}
 		$response->addHeader( 'X-Frame-Options', 'deny' );
 
 		// Encode the response appropriately for the client
-		if ( !isset( $_SERVER['HTTP_ACCEPT'] ) ) {
-			$_SERVER['HTTP_ACCEPT'] = 'application/json';
+		if ( !isset( $headers['ACCEPT'] ) ) {
+			$headers['ACCEPT'] = 'application/json';
 		}
-		foreach ( array_map( 'trim', explode( ',', $_SERVER['HTTP_ACCEPT'] ) ) as $accept ) {
+		foreach ( array_map( 'trim', explode( ',', $headers['ACCEPT'] ) ) as $accept ) {
 			switch ( $accept ) {
 				case 'text/html':
 				case 'application/json':
@@ -171,7 +171,7 @@ class Router
 			strtolower( \ini_get( 'zlib.output_compression' ) ),
 			array( 'on', 'true', 'yes' )
 		) ) {
-			$encodings = explode( ',', $_SERVER['HTTP_ACCEPT'] );
+			$encodings = explode( ',', $headers['ACCEPT'] );
 			foreach ( $encodings as $encoding ) {
 				switch ( trim( $encoding ) ) {
 					case 'deflate':
@@ -199,11 +199,14 @@ class Router
 		return true;
 	}
 
-	private function runController( $method, $url, $data ) {
+	private function runController( $method, $url, $data, $headers ) {
 		$controller = null;
 		$matches = array();
+		$queryParamsDef = array();
+		$headerParamsDef = array();
 
-		foreach ( $this->routes as $pattern => $class ) {
+		foreach ( $this->routes as $pattern => $info ) {
+			list( $class, $queryParamsDef, $headerParamsDef ) = $info;
 			if ( preg_match( "!^{$pattern}$!", $url, $matches ) ) {
 				$controller = new $class( $this->deps );
 				break;
@@ -225,6 +228,21 @@ class Router
 				405, '',
 				array( 'Allow' => implode( ', ', $allowedMethods ) )
 			);
+		}
+
+		$query = parse_url( "http:$url", PHP_URL_QUERY );
+		$rawParams = array();
+		parse_str( (string)$query, $rawParams );
+		foreach ( $rawParams as $key => $val ) {
+			if ( isset( $queryParamsDef[$key] ) ) {
+				$matches[$queryParamsDef[$key]] = $val;
+			}
+		}
+
+		foreach ( $headers as $key => $val ) {
+			if ( isset( $headerParamsDef[$key] ) ) {
+				$matches[$headerParamsDef[$key]] = $val;
+			}
 		}
 
 		return $controller->$method( $matches, $data );

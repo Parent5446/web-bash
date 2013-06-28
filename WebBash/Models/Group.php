@@ -14,13 +14,13 @@ class Group implements Model
 	private $membersToAdd = array();
 	private $membersToRemove = array();
 	private $fullyLoaded = false;
-	
+
 	public static function newFromId( DI $deps, $id ) {
 		$obj = new self( $deps );
 		$obj->id = $id;
 		return $obj;
 	}
-	
+
 	public static function newFromName( DI $deps, $name ) {
 		$obj = new self( $deps );
 		$obj->name = $name;
@@ -44,7 +44,7 @@ class Group implements Model
 		} else {
 			throw new \RuntimeException( 'Cannot fetch info for unknown group.' );
 		}
-		
+
 		$this->deps->groupCache->update( $this, array( 'id' => $this->id, 'name' => $this->name ) );
 	}
 
@@ -66,7 +66,7 @@ class Group implements Model
 			'DELETE FROM usergroup WHERE user = :user AND grp = :grp'
 		);
 		$stmt->bindValue( $this->id );
-		
+
 		foreach ( $this->membersToRemove as $name ) {
 			$user = $this->deps->userCache->get( 'name', $name );
 			$stmt->bindValue( $user->getId() );
@@ -118,7 +118,7 @@ class Group implements Model
 		}
 		return $this->id;
 	}
-	
+
 	public function getName() {
 		if ( $this->name === null ) {
 			$this->load();
