@@ -41,6 +41,48 @@
 		}
 	};
 
+	/**
+	*
+	*  Javascript string pad
+	*  http://www.webtoolkit.info/
+	*
+	**/
+	 
+	var STR_PAD_LEFT = 1;
+	var STR_PAD_RIGHT = 2;
+	var STR_PAD_BOTH = 3;
+	 
+	function pad(str, len, pad, dir) {
+	 
+		if (typeof(len) == "undefined") { var len = 0; }
+		if (typeof(pad) == "undefined") { var pad = ' '; }
+		if (typeof(dir) == "undefined") { var dir = STR_PAD_RIGHT; }
+	 
+		if (len + 1 >= str.length) {
+	 
+			switch (dir){
+	 
+				case STR_PAD_LEFT:
+					str = Array(len + 1 - str.length).join(pad) + str;
+				break;
+	 
+				case STR_PAD_BOTH:
+					var right = Math.ceil((padlen = len - str.length) / 2);
+					var left = padlen - right;
+					str = Array(left+1).join(pad) + str + Array(right+1).join(pad);
+				break;
+	 
+				default:
+					str = str + Array(len + 1 - str.length).join(pad);
+				break;
+	 
+			} // switch
+	 
+		}
+
+		return str;
+	}
+
 	/** 
 	 * print the file info with options to the provided output stream
 	 * @param {<IoStream} fd Output stream
@@ -56,7 +98,6 @@
 	 	console.log( responseJSON );
 
 	 	for ( var option in opts ) {
-	 		console.log( opts[option] );
 	 		if ( opts.hasOwnProperty( option) ) {
 	 			switch ( opts[option] ) {
 	 				case 'a':
@@ -96,12 +137,11 @@
 	 						}
 	 					}
 
-	 					output += (' ' + responseJSON[2]); // owner
-	 					output += ('   '  + responseJSON[3]); // group
-	 					output += (' ' + responseJSON[4]); // size
-	 					// DO THE DATE HERE
-	 					output += (' ' + responseJSON[6]) //file name
-
+	 					output += (' ' + pad( responseJSON[2], 10, ' ', STR_PAD_LEFT )); // owner
+	 					output += (' ' + pad( responseJSON[3],  6, ' ', STR_PAD_LEFT )); // group
+	 					output += (' ' + pad( responseJSON[4].toString(), 6, ' ', STR_PAD_LEFT )); // size
+	 					output += (' ' + responseJSON[5]['date']); //date
+	 					output += (' ' + responseJSON[6]); //file name
 
 	 					useCounter = false;
 	 					break;
