@@ -50,11 +50,11 @@ function Terminal() {
 		$( "body > ul > li:last-child" ).append( $( '<div id="cursor" class="userinput">&nbsp;</div>' ) );
 
 		if ( this.passwordMode ) {
-			$( '#cursor' ).before( $( '<div id="hiddentext" class="userinput"></div>' ) );
-			$( '#cursor' ).after( $( '<div id="hiddentext" class="userinput></div>' ) );			
-		} else {		
 			$( '#cursor' ).before( $( '<div class="userinput"></div>' ) );
-			$( '#cursor' ).after( $( '<div class="userinput"></div>' ) );
+			$( '#cursor' ).after( $( '<div class="userinput></div>' ) );			
+		} else {		
+			$( '#cursor' ).before( $( '<div id="hiddentext" class="userinput"></div>' ) );
+			$( '#cursor' ).after( $( '<div id="hiddentext" class="userinput"></div>' ) );
 		}
 		$( window ).scrollTop( $( document ).height() );
 	};
@@ -80,10 +80,10 @@ function Terminal() {
 	 */
 	this.appendOutput = function( txt ) {
 		var output;
-		if ( this.passwordMode ) {
-			output = $( '<div id="hiddentext" class="userinput></div>' );
+		if ( !this.passwordMode ) {
+			output = $( '<div class="userinput></div>' );
 		} else {
-			output = $( '<div id="system_output"></div>' );
+			output = $( '<div id="hiddentext" id="system_output"></div>' );
 		}
 		output.text( txt );
 		$( "body > ul > li:last-child" ).append( output );
@@ -193,15 +193,19 @@ function Terminal() {
 
 		if ( e.which === 37 ) {
 			// Left arrow key: move cursor
+			e.preventDefault();
 			this.moveCursorLeft();
 		} else if ( e.which === 39 ) {
 			// Right arrow key: move cursor
+			e.preventDefault();
 			this.moveCursorRight();
 		} else if ( e.which === 38 ) {
 			// Up arrow key: scroll history
+			e.preventDefault();
 			this.cycleHistory( -1 );
 		} else if ( e.which === 40 ) {
 			// Down arrow key: scroll history
+			e.preventDefault();
 			this.cycleHistory( 1 );
 		} else if ( e.which === 35 ) {
 			// End key: move to end of line
