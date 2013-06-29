@@ -359,6 +359,11 @@ class FileInfo implements Model
 		return $this->exists;
 	}
 
+	public function getFiletype() {
+		$this->load();
+		return $this->filetype;
+	}
+	
 	public function isDir() {
 		$this->load();
 		return $this->filetype === 'd';

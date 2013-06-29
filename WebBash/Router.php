@@ -26,6 +26,7 @@ class Router
 			$code = $e->getHttpCode();
 
 			header( "HTTP/1.0 {$e->getHttpCode()} {$e->getHttpMsg()}" );
+			header( 'Content-Type: application/json' );
 			foreach ( $e->getHeaders() as $header => $value ) {
 				header( "$header: $value" );
 			}
@@ -98,7 +99,12 @@ class Router
 		// Use the method and Content-Type headers to extract the final representation
 		// of the request body
 		if ( isset( $headers['CONTENT-TYPE'] ) ) {
-			$contentType = substr( $headers['CONTENT-TYPE'], 0, strpos( $headers['CONTENT-TYPE'], ';' ) );
+			$pos = strpos( $headers['CONTENT-TYPE'], ';' );
+			if ( $pos !== false ) {
+				$contentType = substr( $headers['CONTENT-TYPE'], 0, $pos );
+			} else {
+				$contentType = $headers['CONTENT-TYPE'];
+			}
 
 			switch ( $method ) {
 				case 'get':
@@ -121,8 +127,20 @@ class Router
 						parse_str( $rawData, $data );
 					} elseif ( $contentType === 'text/plain' ) {
 						$data = $rawData;
+					} elseif ( $contentType === 'application/vnd.webbash.filepath' ) {
+						$file = $this->deps->fileCache->get( 'path', $rawData );
+						if ( $file->exists() ) {
+							$data = $file->getContents();
+							$headers += array(
+								'FILE-OWNER' => $file->getOwner()->getName(),
+								'FILE-GROUP' => $file->getGroup()->getName(),
+								'FILE-TYPE' => $file->getFiletype(),
+							);
+						} else {
+							throw new HttpException( 400, 'Invalid file data source' );
+						}
 					} else {
-						throw new HttpException( 415 );
+						throw new HttpException( 415, "Invalid content type: $contentType" );
 					}
 					break;
 
@@ -146,18 +164,24 @@ class Router
 		}
 		foreach ( array_map( 'trim', explode( ',', $headers['ACCEPT'] ) ) as $accept ) {
 			switch ( $accept ) {
+				case '*/*':
+				case 'text/*':
+				case 'application/*':
 				case 'text/html':
 				case 'application/json':
+					$response->addHeader( 'Content-Type', 'application/json' );
 					$responseData = json_encode( $response->getContents() );
 					break 2;
 
 				case 'application/x-www-form-urlencoded':
+					$response->addHeader( 'Content-Type', 'application/x-www-form-urlencoded' );
 					$responseData = http_build_query( $response->getContents() );
 					break 2;
 
 				case '':
 				case null:
 				case 'undefined':
+					$response->addHeader( 'Content-Type', 'text/plain' );
 					$responseData = $response->getContents();
 					break;
 

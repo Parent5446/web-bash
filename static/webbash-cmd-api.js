@@ -208,6 +208,25 @@
 	 * @return {number} Retcode, 0 for success
 	 */
 	WebBash['commands']['cp'] = function( fds, argc, argv, env ) {
+		if ( argc !== 3 ) {
+			fds[2].write( 'ln: invalid number of parameters' );
+		}
+
+		var req = api.request( 'PUT', '/files' + argv[2], argv[1], {
+			'File-Type': 'link',
+			'Content-Type': 'application/vnd.webbash.filepath'
+		}, false );
+
+		if ( req['status'] === 404 ) {
+			fds[2].write( 'cp: cannot create regular file ' + argv[2] + ': No such file or directory' );
+			return 1;
+		} else if ( req['status'] === 403 ) {
+			fds[2].write( 'cp: cannot create regular file ' + argv[2] + ': Permission denied' );
+			return 1;
+		} else if ( req['status'] >= 400 && req['responseJSON'] === 'Invalid file data source' ) {
+			fds[2].write( 'cp: cannot stat ' + argv[1] + ': No such file or directory' );
+		}
+
 		return 0;
 	};
 

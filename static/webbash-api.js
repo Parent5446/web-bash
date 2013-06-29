@@ -51,13 +51,18 @@ function WebBashApi() {
 	 */
 	this.request = function( method, url, data, headers, async ) {
 		async = async === undefined ? true : async;
+		var contentType = 'application/x-www-form-urlencoded';
+		if ( headers !== undefined && 'Content-Type' in headers ) {
+			var contentType = headers['Content-Type'];
+		}
+
 		return $.ajax( {
-			async: async,
-			data: data,
-			dataType: 'json',
-			headers: headers,
-			type: method,
-			url: 'api.php' + url
+			'async': async,
+			'contentType': contentType,
+			'data': data,
+			'headers': headers,
+			'type': method,
+			'url': 'api.php' + url
 		} );
 	};
 }
