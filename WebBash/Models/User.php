@@ -54,7 +54,6 @@ class User implements Model
 		$this->load();
 
 		if ( !$this->exists ) {
-			/** @TODO Add a ON DUPLICATE KEY UPDATE clause here. */
 			$stmt = $this->deps->stmtCache->prepare(
 				'INSERT into user (name, email, email_confirmed, password, token, homedir) ' .
 				'VALUES (:name, :email, :email_confirmed, :password, :token, :homedir)'
@@ -184,11 +183,15 @@ class User implements Model
 	}
 
 	public function setPassword( $plaintext ) {
+		/*
 		$this->password = Util\bcrypt(
 			$plaintext,
 			false,
-			$this->deps->config['webbash']['bcryptrounts']
+			$this->deps->config['webbash']['bcryptrounds']
 		);
+		*/
+		//$this->password = Util\bcrypt( $plaintext, $this->password );
+		$this->password = Util\bcrypt( $plaintext, false );
 	}
 
 	public function getHomeDirectory() {

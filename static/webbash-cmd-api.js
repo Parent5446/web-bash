@@ -355,6 +355,38 @@
 	};
 
 	/**
+	 * Add a new user
+	 * @param {Array.<IoStream>} fds Input/output streams
+	 * @param {number} argc Number of arguments
+	 * @param {Array.<string>} Arguments passed to command
+	 * @param {Array.<string>} Environment variables
+	 * @return {number} Retcode, 0 for success
+	 */
+	WebBash['commands']['useradd'] = function( fds, argc, argv, env ) {
+		// useradd user password
+		if ( argc != 4 )
+		{
+			fds[2].write( 'error in usage: useradd username password email' );
+			return 1;
+		}
+
+		var req = api.request( 'PUT', '/useradd/' + argv[1], {
+				'password': argv[2],
+				'email': argv[3],
+				'home_directory': "/"+argv[1]
+			}, '', false );
+
+		if( req['status'] == 400 || req['status'] == 403 ) {
+			fds[2].write( 'count not create user: '+req['responseJSON'] );
+			return 1;
+		}
+		else {
+			fds[1].write( 'user successfully created' );
+		}
+		return 0;
+	}
+
+	/**
 	 * Copy one or more files to another location
 	 * @param {Array.<IoStream>} fds Input/output streams
 	 * @param {number} argc Number of arguments
