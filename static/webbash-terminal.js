@@ -39,6 +39,7 @@ function Terminal() {
 		$( "body > ul > li:last-child" ).append( $( '<div id="cursor" class="userinput">&nbsp;</div>' ) );
 		$( '#cursor' ).before( $( '<div class="userinput"></div>' ) );
 		$( '#cursor' ).after( $( '<div class="userinput"></div>' ) );
+		$( window ).scrollTop( $( document ).height() );
 	};
 
 	/**
@@ -234,7 +235,7 @@ function Terminal() {
 				.progress( $.proxy( this.appendOutput, this ) )
 				.always( $.proxy( this.displayPrompt, this ) );
 		} else if ( e.which === 222 && e.shiftKey) {
-			// Single quote: Needs special handling
+			// double quote: Needs special handling
 			e.preventDefault();
 			elem = $( '#cursor' ).prev();
 			elem.append( '\"' );

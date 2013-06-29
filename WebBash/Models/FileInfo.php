@@ -71,7 +71,7 @@ class FileInfo implements Model
 
 		// If we failed to load, at least set some defaults
 		if ( !$this->exists ) {
-			$this->perms = octdec( '0644' );
+			$this->perms = $this->isDir() ? octdec( '0755' ) : octdec( '0644' );
 		}
 
 		$this->deps->fileCache->update( $this, array( 'id' => $this->id, 'path' => $this->path ) );
@@ -121,6 +121,28 @@ class FileInfo implements Model
 			$this->load();
 		}
 	}
+	
+	function delete() {
+		$this->load();
+
+		$webRoot = $this->deps->config['webbash']['fileroot'];
+		$finalPath = realpath( $webRoot . $this->path );
+
+		if (
+			strpos( $finalPath, $webRoot ) === 0 ||
+			file_exists( $finalPath )
+		) {
+			if ( $this->isDir() ) {
+				rmdir( $finalPath );
+			} elseif ( $this->isFile() ) {
+				unlink( $finalPath );
+			}
+		}
+		
+		$stmt = $this->deps->stmtCache->prepare( 'DELETE FROM file WHERE id = :id' );
+		$stmt->bindParam( ':id', $this->id );
+		return $stmt->execute();
+	}
 
 	function merge( Model $other ) {
 		if ( !$other instanceof self ) {
@@ -169,11 +191,12 @@ class FileInfo implements Model
 	}
 
 	private function loadFromPath() {
+		// Root always exists, but is not in the database
 		if ( $this->path === '/' ) {
 			$this->name = '';
 			$this->filetype = 'd';
 			$this->owner = $this->grp = 1;
-			$this->perms = octdec( '0644' );
+			$this->perms = octdec( '0755' );
 			return true;
 		}
 
@@ -304,12 +327,25 @@ class FileInfo implements Model
 
 	public function isAllowed( User $user, $action ) {
 		$this->load();
-		if ( $user->getId() === $this->owner ) {
-			return ( $this->perms >> self::SOURCE_OWNER ) & $action;
-		} elseif ( $this->getGroup()->isMember( $user ) ) {
-			return ( $this->perms >> self::SOURCE_GROUP ) & $action;
+		if ( $this->exists() ) {
+			if ( $user->getId() === (int)$this->owner ) {
+				return ( $this->perms >> self::SOURCE_OWNER ) & $action;
+			} elseif ( $this->getGroup()->isMember( $user ) ) {
+				return ( $this->perms >> self::SOURCE_GROUP ) & $action;
+			} else {
+				return ( $this->perms >> self::SOURCE_OTHER ) & $action;
+			}
 		} else {
-			return ( $this->perms >> self::SOURCE_OTHER ) & $action;
+			$parent = $this->getParent();
+			if ( !$parent->exists() || $action === self::ACTION_READ || $action === self::ACTION_EXECUTE ) {
+				return false;
+			} elseif ( $user->getId() === $parent->owner ) {
+				return ( $this->perms >> self::SOURCE_OWNER ) & $action;
+			} elseif ( $parent->getGroup()->isMember( $user ) ) {
+				return ( $this->perms >> self::SOURCE_GROUP ) & $action;
+			} else {
+				return ( $this->perms >> self::SOURCE_OTHER ) & $action;
+			}
 		}
 	}
 
@@ -345,6 +381,11 @@ class FileInfo implements Model
 		return $this->exists;
 	}
 
+	public function getFiletype() {
+		$this->load();
+		return $this->filetype;
+	}
+	
 	public function isDir() {
 		$this->load();
 		return $this->filetype === 'd';
@@ -401,9 +442,7 @@ class FileInfo implements Model
 
 		for ( $row = $stmt->fetch(); $row; $row = $stmt->fetch() ) {
 			$this->children[] = $this->deps->fileCache->get( 'id', $row['id'] );
-			echo $this->deps->fileCache->get( 'id', $row['id'] );
 		}
-
 		return $this->children;
 	}
 

@@ -32,9 +32,7 @@ $router->register(
 	array(
 		'FILE-OWNER' => 'owner',
 		'FILE-GROUP' => 'group',
-		'FILE-PERMS' => 'perms',
 		'FILE-TYPE' => 'type',
-		'RANGE' => 'range'
 	)
 );
 
