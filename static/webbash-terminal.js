@@ -39,6 +39,7 @@ function Terminal() {
 		$( "body > ul > li:last-child" ).append( $( '<div id="cursor" class="userinput">&nbsp;</div>' ) );
 		$( '#cursor' ).before( $( '<div class="userinput"></div>' ) );
 		$( '#cursor' ).after( $( '<div class="userinput"></div>' ) );
+		$( window ).scrollTop( $( document ).height() );
 	};
 
 	/**
