@@ -44,15 +44,18 @@ function WebBashApi() {
 	 * Perform an API request
 	 * @param {string} method HTTP method to use
 	 * @param {string} url URL to perform request on
-	 * @param {*} Data to pass to the server
+	 * @param {*} data Data to pass to the server
+	 * @param {Array.<string>} headers Request headers to send
+	 * @param {boolean} async Whether to be asynchronous
 	 * @return {jQuery.jqXHR} jQuery AJAX object
 	 */
-	this.request = function( method, url, data, async ) {
+	this.request = function( method, url, data, headers, async ) {
 		async = async === undefined ? true : async;
 		return $.ajax( {
 			async: async,
 			data: data,
 			dataType: 'json',
+			headers: headers,
 			type: method,
 			url: 'api.php' + url
 		} );

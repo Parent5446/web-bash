@@ -5,6 +5,7 @@ namespace WebBash\Controllers;
 use \WebBash\DI;
 use \WebBash\HttpException;
 use \WebBash\Response;
+use \WebBash\Models\FileInfo;
 
 class FileController
 {
@@ -18,6 +19,14 @@ class FileController
 		$file = $this->deps->fileCache->get( 'path', "/{$params['path']}" );
 		if( !$file->exists() ) {
 			throw new HttpException( 404, 'File not found' );
+		} elseif (
+			( $file->isFile() || $file->isLink() ) &&
+			!$file->isAllowed( $this->deps->currentUser, FileInfo::ACTION_READ ) ||
+
+			$file->isDir() &&
+			!$file->isAllowed( $this->deps->currentUser, FileInfo::ACTION_EXECUTE )
+		) {
+			throw new HttpException( 403 );
 		}
 
 		if ( $file->isDir() ) {
@@ -43,9 +52,42 @@ class FileController
 	public function put( array $params, $data ) {
 		$file = $this->deps->fileCache->get( 'path', "/{$params['path']}" );
 
-		$file->setOwner( $params['owner'] );
-		$file->setGroup( $params['group'] );
-		$file->setPermissions( $params['perms'] );
+		static $fileTypes = array(
+			'file' => 'f',
+			'directory' => 'd',
+			'link' => 'l'
+		);
+		
+		if ( isset( $params['owner'] ) ) {
+			$owner = $this->deps->userCache->get( 'name', $params['owner'] );
+		} else {
+			$owner = $this->deps->currentUser;
+		}
+		
+		if ( isset( $params['group'] ) ) {
+			$group = $this->deps->groupCache->get( 'name', $params['group'] );
+		} else {
+			$groups = $this->deps->currentUser->getGroups();
+			$group = $this->deps->groupCache->get( 'name', $groups[0] );
+		}
+		
+		if ( !isset( $fileTypes[$params['type']] ) ) {
+			throw new HttpException( 400, 'Invalid file type' );
+		} elseif ( !$file->exists() && !$file->getParent()->exists() ) {
+			throw new HttpException( 404 );
+		} elseif ( !$file->isAllowed( $this->deps->currentUser, FileInfo::ACTION_WRITE ) ) {
+			throw new HttpException( 403 );
+		} elseif ( !$owner->exists() ) {
+			throw new HttpException( 400, 'Invalid owner' );
+		} elseif ( !$group->exists() ) {
+			throw new HttpException( 400, 'Invalid group' );
+		}
+
+		$file->setFiletype( $fileTypes[$params['type']] );
+		$file->setOwner( $owner );
+		$file->setGroup( $group );
+		$file->save();
+		$file->setContents( $data );
 	}
 
 	public function delete( array $params ) {
