@@ -256,6 +256,10 @@ class User implements Model
 	}
 	
 	public function addHistory( array $cmds ) {
+		if ( !$cmds ) {
+			return true;
+		}
+
 		if ( $this->history !== null ) {
 			$this->history = array_merge( $this->history, $cmds );
 		}
