@@ -19,10 +19,8 @@
 		var newDir = '';
 		if ( argc <= 1 ) {
 			newDir = env['HOME'];
-		} else if ( argv[1][0] === '/' ) {
-			newDir = $.realpath( argv[1] );
 		} else {
-			newDir = $.realpath( env['PWD'] + '/' + argv[1] );
+			newDir = $.realpath( argv[1], env['PWD'], env['HOME'] );
 		}
 
 		var req = api.request( 'GET', '/files' + newDir, {}, {}, false );
@@ -126,19 +124,22 @@
 			fds[2].write( 'ln: invalid number of parameters' );
 		}
 
-		var req = api.request( 'PUT', '/files' + argv[2], '', {
+		var src = $.realpath( argv[1], env['PWD'], env['HOME'] );
+		var dst = $.realpath( argv[2], env['PWD'], env['HOME'] );
+
+		var req = api.request( 'PUT', '/files' + dst, '', {
 			'File-Type': 'link',
-			'Content-Location': argv[1]
+			'Content-Location': src
 		}, false );
 
 		if ( req['status'] === 404 ) {
-			fds[2].write( 'ln: failed to create symbolic link ' + argv[2] + ': No such file or directory' );
+			fds[2].write( 'ln: failed to create symbolic link ' + dst + ': No such file or directory' );
 			return 1;
 		} else if ( req['status'] === 403 ) {
-			fds[2].write( 'ln: failed to create symbolic link ' + argv[2] + ': Permission denied' );
+			fds[2].write( 'ln: failed to create symbolic link ' + dst + ': Permission denied' );
 			return 1;
 		} else if ( req['status'] >= 400 ) {
-			fds[2].write( 'ln: failed to create symbolic link ' + argv[2] + ': An internal error occurred' );
+			fds[2].write( 'ln: failed to create symbolic link ' + dst + ': An internal error occurred' );
 			return 1;
 		}
 
@@ -155,16 +156,17 @@
 	 */
 	WebBash['commands']['touch'] = function( fds, argc, argv, env ) {
 		for ( var i = 1; i < argc; i++ ) {
-			var req = api.request( 'POST', '/files' + argv[i], '', {}, false );
+			var path = $.realpath( argv[i], env['PWD'], env['HOME'] );
+			var req = api.request( 'POST', '/files' + path, '', {}, false );
 
 			if ( req['status'] === 404 ) {
-				fds[2].write( 'touch: cannot touch ' + argv[i] + ': No such file or directory' );
+				fds[2].write( 'touch: cannot touch ' + path + ': No such file or directory' );
 				return 1;
 			} else if ( req['status'] === 403 ) {
-				fds[2].write( 'touch: cannot touch ' + argv[i] + ': Permission denied' );
+				fds[2].write( 'touch: cannot touch ' + path + ': Permission denied' );
 				return 1;
 			} else if ( req['status'] >= 400 ) {
-				fds[2].write( 'touch: cannot touch ' + argv[i] + ': An internal error occurred' );
+				fds[2].write( 'touch: cannot touch ' + path + ': An internal error occurred' );
 				return 1;
 			}
 		}
@@ -181,18 +183,19 @@
 	 */
 	WebBash['commands']['mkdir'] = function( fds, argc, argv, env ) {
 		for ( var i = 1; i < argc; i++ ) {
-			var req = api.request( 'PUT', '/files' + argv[i], '', {
+			var path = $.realpath( argv[i], env['PWD'], env['HOME'] );
+			var req = api.request( 'PUT', '/files' + path, '', {
 				'File-Type': 'directory'
 			}, false );
 
 			if ( req['status'] === 404 ) {
-				fds[2].write( 'mkdir: cannot create directory ' + argv[i] + ': No such file or directory' );
+				fds[2].write( 'mkdir: cannot create directory ' + path + ': No such file or directory' );
 				return 1;
 			} else if ( req['status'] === 403 ) {
-				fds[2].write( 'mkdir: cannot create directory ' + argv[i] + ': Permission denied' );
+				fds[2].write( 'mkdir: cannot create directory ' + path + ': Permission denied' );
 				return 1;
 			} else if ( req['status'] >= 400 ) {
-				fds[2].write( 'mkdir: cannot create directory ' + argv[i] + ': An internal error occurred' );
+				fds[2].write( 'mkdir: cannot create directory ' + path + ': An internal error occurred' );
 				return 1;
 			}
 		}
@@ -212,18 +215,21 @@
 			fds[2].write( 'cp: invalid number of parameters' );
 		}
 
-		var req = api.request( 'PUT', '/files' + argv[2], argv[1], {
+		var src = $.realpath( argv[1], env['PWD'], env['HOME'] );
+		var dst = $.realpath( argv[2], env['PWD'], env['HOME'] );
+
+		var req = api.request( 'PUT', '/files' + dst, src, {
 			'Content-Type': 'application/vnd.webbash.filepath'
 		}, false );
 
 		if ( req['status'] === 404 ) {
-			fds[2].write( 'cp: cannot create regular file ' + argv[2] + ': No such file or directory' );
+			fds[2].write( 'cp: cannot create regular file ' + dst + ': No such file or directory' );
 			return 1;
 		} else if ( req['status'] === 403 ) {
-			fds[2].write( 'cp: cannot create regular file ' + argv[2] + ': Permission denied' );
+			fds[2].write( 'cp: cannot create regular file ' + dst + ': Permission denied' );
 			return 1;
 		} else if ( req['status'] >= 400 && req['responseJSON'] === 'Invalid file data source' ) {
-			fds[2].write( 'cp: cannot stat ' + argv[1] + ': No such file or directory' );
+			fds[2].write( 'cp: cannot stat ' + src + ': No such file or directory' );
 			return 1;
 		}
 
@@ -242,26 +248,29 @@
 		if ( argc !== 3 ) {
 			fds[2].write( 'mv: invalid number of parameters' );
 		}
+		
+		var src = $.realpath( argv[1], env['PWD'], env['HOME'] );
+		var dst = $.realpath( argv[2], env['PWD'], env['HOME'] );
 
-		var req = api.request( 'PUT', '/files' + argv[2], argv[1], {
+		var req = api.request( 'PUT', '/files' + dst, src, {
 			'Content-Type': 'application/vnd.webbash.filepath'
 		}, false );
 
 		if ( req['status'] === 404 ) {
-			fds[2].write( 'mv: cannot create regular file ' + argv[2] + ': No such file or directory' );
+			fds[2].write( 'mv: cannot create regular file ' + dst + ': No such file or directory' );
 			return 1;
 		} else if ( req['status'] === 403 ) {
-			fds[2].write( 'mv: cannot create regular file ' + argv[2] + ': Permission denied' );
+			fds[2].write( 'mv: cannot create regular file ' + dst + ': Permission denied' );
 			return 1;
 		} else if ( req['status'] >= 400 && req['responseJSON'] === 'Invalid file data source' ) {
-			fds[2].write( 'mv: cannot stat ' + argv[1] + ': No such file or directory' );
+			fds[2].write( 'mv: cannot stat ' + src + ': No such file or directory' );
 			return 1;
 		}
 
-		req = api.request( 'DELETE', '/files' + argv[1], '', {}, false );
+		req = api.request( 'DELETE', '/files' + src, '', {}, false );
 		
 		if ( req['status'] === 403 ) {
-			fds[2].write( 'mv: cannot remove ' + argv[2] + ': Permission denied' );
+			fds[2].write( 'mv: cannot remove ' + src + ': Permission denied' );
 			return 1;
 		}
 
@@ -308,15 +317,16 @@
 
 		var retcode = 0;
 		for ( var i = 2; i < argc; i++ ) {
-			var req = api.request( 'PATCH', '/files' + argv[i], '', {
+			var path = $.realpath( argv[i], env['PWD'], env['HOME'] );
+			var req = api.request( 'PATCH', '/files' + path, '', {
 				'File-Group': argv[1]
 			}, false );
 
 			if ( req['status'] === 404 ) {
-				fds[2].write( 'chown: cannot access ' + argv[i] + ': No such file or directory' );
+				fds[2].write( 'chown: cannot access ' + path + ': No such file or directory' );
 				retcode = 1;
 			} else if ( req['status'] === 403 ) {
-				fds[2].write( 'chown: changing ownership of ' + argv[i] + ': Permission denied' );
+				fds[2].write( 'chown: changing ownership of ' + path + ': Permission denied' );
 				retcode = 1;
 			} else if ( req['status'] >= 400 && req['responseJSON'] === 'Invalid group' ) {
 				fds[2].write( 'chown: invalid group: ' + argv[1] );
@@ -343,15 +353,16 @@
 
 		var retcode = 0;
 		for ( var i = 2; i < argc; i++ ) {
-			var req = api.request( 'PATCH', '/files' + argv[i], '', {
+			var path = $.realpath( argv[i], env['PWD'], env['HOME'] );
+			var req = api.request( 'PATCH', '/files' + path, '', {
 				'File-Owner': argv[1]
 			}, false );
 
 			if ( req['status'] === 404 ) {
-				fds[2].write( 'chown: cannot access ' + argv[i] + ': No such file or directory' );
+				fds[2].write( 'chown: cannot access ' + path + ': No such file or directory' );
 				retcode = 1;
 			} else if ( req['status'] === 403 ) {
-				fds[2].write( 'chown: changing ownership of ' + argv[i] + ': Permission denied' );
+				fds[2].write( 'chown: changing ownership of ' + path + ': Permission denied' );
 				retcode = 1;
 			} else if ( req['status'] >= 400 && req['responseJSON'] === 'Invalid owner' ) {
 				fds[2].write( 'chown: invalid user: ' + argv[1] );
