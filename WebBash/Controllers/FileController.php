@@ -19,7 +19,13 @@ class FileController
 		$file = $this->deps->fileCache->get( 'path', "/{$params['path']}" );
 		if( !$file->exists() ) {
 			throw new HttpException( 404, 'File not found' );
-		} elseif ( !$file->isAllowed( $this->deps->currentUser, FileInfo::ACTION_READ ) ) {
+		} elseif (
+			( $file->isFile() || $file->isLink() ) &&
+			!$file->isAllowed( $this->deps->currentUser, FileInfo::ACTION_READ ) ||
+
+			$file->isDir() &&
+			!$file->isAllowed( $this->deps->currentUser, FileInfo::ACTION_EXECUTE )
+		) {
 			throw new HttpException( 403 );
 		}
 
@@ -67,10 +73,10 @@ class FileController
 		
 		if ( !isset( $fileTypes[$params['type']] ) ) {
 			throw new HttpException( 400, 'Invalid file type' );
-		} elseif ( !$file->isAllowed( $this->deps->currentUser, FileInfo::ACTION_WRITE ) ) {
-			throw new HttpException( 403 );
 		} elseif ( !$file->exists() && !$file->getParent()->exists() ) {
 			throw new HttpException( 404 );
+		} elseif ( !$file->isAllowed( $this->deps->currentUser, FileInfo::ACTION_WRITE ) ) {
+			throw new HttpException( 403 );
 		} elseif ( !$owner->exists() ) {
 			throw new HttpException( 400, 'Invalid owner' );
 		} elseif ( !$group->exists() ) {
@@ -80,7 +86,6 @@ class FileController
 		$file->setFiletype( $fileTypes[$params['type']] );
 		$file->setOwner( $owner );
 		$file->setGroup( $group );
-		//$file->setPermissions( $params['perms'] );
 		$file->save();
 		$file->setContents( $data );
 	}

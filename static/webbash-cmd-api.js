@@ -29,8 +29,14 @@
 		if ( req.status === 200 ) {
 			env['PWD'] = newDir;
 			return 0;
-		} else {
+		} else if ( req.status === 404 ) {
 			fds[2].write( 'cd: ' + newDir + ': No such file or directory' );
+			return 1;
+		} else if ( req.status === 403 ) {
+			fds[2].write( 'cd: ' + newDir + ': Permission denied' );
+			return 1;
+		} else {
+			fds[2].write( 'cd: ' + newDir + ': An internal error occurred' );
 			return 1;
 		}
 	};

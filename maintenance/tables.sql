@@ -30,7 +30,7 @@ CREATE  TABLE IF NOT EXISTS `webbash`.`file` (
   `linkpath` TINYBLOB NULL DEFAULT NULL ,
   `owner` INT UNSIGNED NULL DEFAULT 1 ,
   `grp` INT UNSIGNED NULL DEFAULT 1 ,
-  `perms` BIT(12) NOT NULL DEFAULT 420 ,
+  `perms` INT UNSIGNED NOT NULL DEFAULT 420 ,
   `atime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP ,
   `mtime` TIMESTAMP NULL DEFAULT NULL ,
   `ctime` TIMESTAMP NULL DEFAULT NULL ,
@@ -132,7 +132,7 @@ SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
 -- -----------------------------------------------------
 START TRANSACTION;
 USE `webbash`;
-INSERT INTO `webbash`.`file` (`id`, `parent`, `name`, `size`, `filetype`, `linkid`, `linkpath`, `owner`, `grp`, `perms`, `atime`, `mtime`, `ctime`) VALUES (1, NULL, 'root', NULL, 'd', NULL, NULL, NULL, NULL, 420, NULL, NULL, NULL);
+INSERT INTO `webbash`.`file` (`id`, `name`, `filetype`, `owner`, `grp`, `perms`) VALUES (1, 'root', 'd', NULL, NULL, 493);
 INSERT INTO `webbash`.`user` (`id`, `name`, `homedir`, `email`, `email_confirmed`, `password`, `token`) VALUES (1, 'root', 1, 'root@localhost', true, 0x243279243132243031323334353637383961626364656624242424242E734D71736A77696F344C6C484172772F78336C653569694943374E51685032, NULL);
 
 INSERT INTO `webbash`.`grp` (`id`, `name`) VALUES (1, 'root');

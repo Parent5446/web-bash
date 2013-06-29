@@ -11,6 +11,7 @@ class Group implements Model
 	private $name = null;
 	private $members = array();
 
+	private $exists = null;
 	private $membersToAdd = array();
 	private $membersToRemove = array();
 	private $fullyLoaded = false;
@@ -32,15 +33,15 @@ class Group implements Model
 	}
 
 	function load() {
-		if ( $this->fullyLoaded ) {
+		if ( $this->fullyLoaded || $this->exists !== null ) {
 			return;
 		}
 
 		$this->fullyLoaded = true;
 		if ( $this->id !== null ) {
-			$this->loadFromField( 'id' );
+			$this->exists = $this->loadFromField( 'id' );
 		} elseif ( $this->name !== null ) {
-			$this->loadFromField( 'name' );
+			$this->exists = $this->loadFromField( 'name' );
 		} else {
 			throw new \RuntimeException( 'Cannot fetch info for unknown group.' );
 		}
@@ -100,7 +101,7 @@ class Group implements Model
 
 		$stmt->setFetchMode( \PDO::FETCH_ASSOC );
 		$stmt->bindParam( ":$field", $this->$field );
-		$stmt->execute();
+		$exists = $stmt->execute();
 
 		for ( $row = $stmt->fetch(), $first = true; $row; $row = $stmt->fetch() ) {
 			if ( $first ) {
@@ -110,6 +111,8 @@ class Group implements Model
 			}
 			$this->members[] = $row['username'];
 		}
+
+		return $exists;
 	}
 
 	public function getId() {
@@ -164,5 +167,10 @@ class Group implements Model
 			unset( $this->members[$index] );
 			$this->membersToRemove[] = $user->getName();
 		}
+	}
+
+	public function exists() {
+		$this->load();
+		return $this->exists;
 	}
 }

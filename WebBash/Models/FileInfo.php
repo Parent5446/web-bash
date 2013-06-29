@@ -71,7 +71,7 @@ class FileInfo implements Model
 
 		// If we failed to load, at least set some defaults
 		if ( !$this->exists ) {
-			$this->perms = octdec( '0644' );
+			$this->perms = $this->isDir() ? octdec( '0755' ) : octdec( '0644' );
 		}
 
 		$this->deps->fileCache->update( $this, array( 'id' => $this->id, 'path' => $this->path ) );
@@ -169,11 +169,12 @@ class FileInfo implements Model
 	}
 
 	private function loadFromPath() {
+		// Root always exists, but is not in the database
 		if ( $this->path === '/' ) {
 			$this->name = '';
 			$this->filetype = 'd';
 			$this->owner = $this->grp = 1;
-			$this->perms = octdec( '0644' );
+			$this->perms = octdec( '0755' );
 			return true;
 		}
 
@@ -304,12 +305,25 @@ class FileInfo implements Model
 
 	public function isAllowed( User $user, $action ) {
 		$this->load();
-		if ( $user->getId() === $this->owner ) {
-			return ( $this->perms >> self::SOURCE_OWNER ) & $action;
-		} elseif ( $this->getGroup()->isMember( $user ) ) {
-			return ( $this->perms >> self::SOURCE_GROUP ) & $action;
+		if ( $this->exists() ) {
+			if ( $user->getId() === (int)$this->owner ) {
+				return ( $this->perms >> self::SOURCE_OWNER ) & $action;
+			} elseif ( $this->getGroup()->isMember( $user ) ) {
+				return ( $this->perms >> self::SOURCE_GROUP ) & $action;
+			} else {
+				return ( $this->perms >> self::SOURCE_OTHER ) & $action;
+			}
 		} else {
-			return ( $this->perms >> self::SOURCE_OTHER ) & $action;
+			$parent = $this->getParent();
+			if ( !$parent->exists() || $action === self::ACTION_READ || $action === self::ACTION_EXECUTE ) {
+				return false;
+			} elseif ( $user->getId() === $parent->owner ) {
+				return ( $this->perms >> self::SOURCE_OWNER ) & $action;
+			} elseif ( $parent->getGroup()->isMember( $user ) ) {
+				return ( $this->perms >> self::SOURCE_GROUP ) & $action;
+			} else {
+				return ( $this->perms >> self::SOURCE_OTHER ) & $action;
+			}
 		}
 	}
 
