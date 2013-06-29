@@ -286,6 +286,17 @@
 	 * @return {number} Retcode, 0 for success
 	 */
 	WebBash['commands']['rm'] = function( fds, argc, argv, env ) {
+		for ( var i = 1; i < argc; i++ ) {
+			var path = $.realpath( argv[i], env['PWD'], env['HOME'] );
+			req = api.request( 'DELETE', '/files' + path, '', {}, false );
+
+			if ( req['status'] === 404 ) {
+				fds[2].write( 'mv: cannot remove ' + src + ': No such file or directory' );
+			} else if ( req['status'] === 403 ) {
+				fds[2].write( 'mv: cannot remove ' + src + ': Permission denied' );
+			}
+		}
+
 		return 0;
 	};
 

@@ -125,7 +125,7 @@ function WebBash( username ) {
 		if ( $.type( retval ) === 'object' && retval.then !== undefined ) {
 			retval.then( updateFunc );
 		} else {
-			updateFunc();
+			updateFunc( retval );
 		}
 	};
 
