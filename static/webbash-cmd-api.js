@@ -96,6 +96,7 @@
 	 	var useCounter = true;
 	 	var printDot = false;
 
+	 	console.log( responseJSON );
 	 	for ( var option in opts ) {
 	 		if ( opts.hasOwnProperty( option) ) {
 	 			switch ( opts[option] ) {
@@ -144,7 +145,6 @@
 
 	 					useCounter = false;
 	 					break;
-
 	 			}
 	 		}
 	 	}
