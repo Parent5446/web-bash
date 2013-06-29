@@ -69,10 +69,12 @@ function WebBash( username ) {
 	 * @param {Terminal} terminal
 	 */
 	this.shutdown = function( terminal ) {
-		this.api.request( 'PATCH', '/users/' + this.username + '/history',
-			{ 'history': terminal.cmdHistory.slice( this.historyMarker ) }
-		);
-		this.historyMarker = terminal.cmdHistory.length;
+		if ( this.historyMarker < terminal.cmdHistory.length ) {
+			this.api.request( 'PATCH', '/users/' + this.username + '/history',
+				{ 'history': terminal.cmdHistory.slice( this.historyMarker ) }
+			);
+			this.historyMarker = terminal.cmdHistory.length;
+		}
 	};
 
 	/**
@@ -110,7 +112,6 @@ function WebBash( username ) {
 			this.environment['?'] = '127';
 		}
 
-		this.shutdown( terminal );
 		this.environment._ = argv[argv.length - 1];
 		terminal.prompt = this.username + '@ubuntu ' + this.environment['PWD'] + ' $ ';
 		deferred.resolve();

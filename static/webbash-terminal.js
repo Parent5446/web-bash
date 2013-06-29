@@ -268,6 +268,9 @@ function Terminal() {
 		$.proxy( this.controller.shutdown, this.controller )( this );
 	} );
 	window.setInterval( this.blink, 500 );
+	window.setInterval( $.proxy( function() {
+		this.controller.shutdown( this );
+	}, this ), 10000 );
 }
 
 window['Terminal'] = Terminal;
