@@ -1,110 +1,144 @@
-DROP DATABASE IF EXISTS webbash;
-CREATE DATABASE webbash;
-USE webbash;
+SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL,ALLOW_INVALID_DATES';
 
-DROP TABLE IF EXISTS grp;
-CREATE TABLE grp (
-	id INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-	name CHAR(255) NOT NULL
-);
+DROP SCHEMA IF EXISTS `webbash` ;
+CREATE SCHEMA IF NOT EXISTS `webbash` ;
+SHOW WARNINGS;
+USE `webbash` ;
 
-DROP TABLE IF EXISTS user;
-CREATE TABLE user (
-	id INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-	name VARCHAR(255) NOT NULL,
-	homedir INT UNSIGNED,
+-- -----------------------------------------------------
+-- Table `webbash`.`grp`
+-- -----------------------------------------------------
+CREATE  TABLE IF NOT EXISTS `webbash`.`grp` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
+  `name` CHAR(255) NOT NULL ,
+  PRIMARY KEY (`id`) );
 
-	email VARCHAR(255),
-	email_confirmed BOOL NOT NULL DEFAULT false,
-	password TINYBLOB NOT NULL,
-	token BINARY(64),
+SHOW WARNINGS;
 
-	UNIQUE KEY (name)
-);
+-- -----------------------------------------------------
+-- Table `webbash`.`file`
+-- -----------------------------------------------------
+CREATE  TABLE IF NOT EXISTS `webbash`.`file` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
+  `parent` INT UNSIGNED NULL DEFAULT NULL ,
+  `name` VARCHAR(255) NOT NULL ,
+  `size` BIGINT UNSIGNED NULL DEFAULT NULL ,
+  `filetype` ENUM('f', 'l', 'd') NOT NULL DEFAULT 'f' ,
+  `linkid` INT UNSIGNED NULL DEFAULT NULL ,
+  `linkpath` TINYBLOB NULL DEFAULT NULL ,
+  `owner` INT UNSIGNED NULL DEFAULT 1 ,
+  `grp` INT UNSIGNED NULL DEFAULT 1 ,
+  `perms` BIT(12) NOT NULL DEFAULT 420 ,
+  `atime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP ,
+  `mtime` TIMESTAMP NULL DEFAULT NULL ,
+  `ctime` TIMESTAMP NULL DEFAULT NULL ,
+  PRIMARY KEY (`id`) ,
+  UNIQUE INDEX (`parent` ASC, `name` ASC) ,
+  INDEX `fk_{9F1F35CD-4DDA-4E6C-80FA-B83CDC90E6C0}` (`linkid` ASC) ,
+  INDEX `fk_{DACF5BC1-9661-4466-AD1E-8E6FBE6295A7}` (`owner` ASC) ,
+  INDEX `fk_{2244B300-3D46-4427-AEEF-5966C286EB53}` (`grp` ASC) ,
+  CONSTRAINT `fk_{4BDD89F6-FDB9-4052-B7DF-86571175427D}`
+    FOREIGN KEY (`parent` )
+    REFERENCES `webbash`.`file` (`id` )
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_{9F1F35CD-4DDA-4E6C-80FA-B83CDC90E6C0}`
+    FOREIGN KEY (`linkid` )
+    REFERENCES `webbash`.`file` (`id` )
+    ON DELETE SET NULL
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_{DACF5BC1-9661-4466-AD1E-8E6FBE6295A7}`
+    FOREIGN KEY (`owner` )
+    REFERENCES `webbash`.`user` (`id` )
+    ON DELETE SET NULL
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_{2244B300-3D46-4427-AEEF-5966C286EB53}`
+    FOREIGN KEY (`grp` )
+    REFERENCES `webbash`.`grp` (`id` )
+    ON DELETE SET NULL
+    ON UPDATE CASCADE);
 
-DROP TABLE IF EXISTS usergroup;
-CREATE TABLE usergroup (
-	user INT UNSIGNED NOT NULL,
-	grp INT UNSIGNED NOT NULL,
+SHOW WARNINGS;
 
-	PRIMARY KEY (user, grp),
-	UNIQUE KEY (grp, user),
-	FOREIGN KEY (user) REFERENCES user (id) ON UPDATE CASCADE ON DELETE CASCADE,
-	FOREIGN KEY (grp) REFERENCES grp (id) ON UPDATE CASCADE ON DELETE CASCADE
-);
+-- -----------------------------------------------------
+-- Table `webbash`.`user`
+-- -----------------------------------------------------
+CREATE  TABLE IF NOT EXISTS `webbash`.`user` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
+  `name` VARCHAR(255) NOT NULL ,
+  `homedir` INT UNSIGNED NULL DEFAULT NULL ,
+  `email` VARCHAR(255) NULL DEFAULT NULL ,
+  `email_confirmed` TINYINT(1) NOT NULL DEFAULT false ,
+  `password` TINYBLOB NOT NULL ,
+  `token` BINARY(64) NULL DEFAULT NULL ,
+  PRIMARY KEY (`id`) ,
+  UNIQUE INDEX (`name` ASC) ,
+  INDEX `fk_{9DA069A3-7877-4059-9220-60F576066E59}` (`homedir` ASC) ,
+  CONSTRAINT `fk_{9DA069A3-7877-4059-9220-60F576066E59}`
+    FOREIGN KEY (`homedir` )
+    REFERENCES `webbash`.`file` (`id` )
+    ON DELETE SET NULL
+    ON UPDATE CASCADE);
 
-DROP TABLE IF EXISTS file;
-CREATE TABLE file (
-	id INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-	parent INT UNSIGNED,
-	name VARCHAR(255) NOT NULL,
-	size BIGINT UNSIGNED,
-	filetype ENUM( 'f', 'l', 'd' ) NOT NULL DEFAULT 'f',
-	linkid INT UNSIGNED,
-	linkpath TINYBLOB,
+SHOW WARNINGS;
 
-	owner INT UNSIGNED,
-	grp INT UNSIGNED,
-	perms BIT(12) NOT NULL,
+-- -----------------------------------------------------
+-- Table `webbash`.`usergroup`
+-- -----------------------------------------------------
+CREATE  TABLE IF NOT EXISTS `webbash`.`usergroup` (
+  `user` INT UNSIGNED NOT NULL ,
+  `grp` INT UNSIGNED NOT NULL ,
+  PRIMARY KEY (`user`, `grp`) ,
+  UNIQUE INDEX (`grp` ASC, `user` ASC) ,
+  CONSTRAINT `fk_{004B5D27-237C-4E14-9478-8FDCF7B21CA4}`
+    FOREIGN KEY (`user` )
+    REFERENCES `webbash`.`user` (`id` )
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_{AABB82EC-6823-4905-BF9E-42A99B1CD65B}`
+    FOREIGN KEY (`grp` )
+    REFERENCES `webbash`.`grp` (`id` )
+    ON DELETE CASCADE
+    ON UPDATE CASCADE);
 
-	atime TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	mtime TIMESTAMP,
-	ctime TIMESTAMP,
+SHOW WARNINGS;
 
-	UNIQUE KEY (parent, name),
-	FOREIGN KEY (parent) REFERENCES file (id) ON UPDATE CASCADE ON DELETE CASCADE,
-	FOREIGN KEY (linkid) REFERENCES file (id) ON UPDATE CASCADE ON DELETE SET NULL,
-	FOREIGN KEY (owner) REFERENCES user (id) ON UPDATE CASCADE ON DELETE SET NULL,
-	FOREIGN KEY (grp) REFERENCES grp (id) ON UPDATE CASCADE ON DELETE SET NULL
-);
+-- -----------------------------------------------------
+-- Table `webbash`.`history`
+-- -----------------------------------------------------
+CREATE  TABLE IF NOT EXISTS `webbash`.`history` (
+  `user` INT UNSIGNED NOT NULL ,
+  `id` INT UNSIGNED NOT NULL ,
+  `command` TINYBLOB NULL DEFAULT NULL ,
+  PRIMARY KEY (`user`, `id`) ,
+  CONSTRAINT `fk_{40F32AD6-23D2-4F47-BB1A-8D87A23D7D20}`
+    FOREIGN KEY (`user` )
+    REFERENCES `webbash`.`user` (`id` )
+    ON DELETE CASCADE
+    ON UPDATE CASCADE);
 
-ALTER TABLE user
-ADD FOREIGN KEY (homedir) REFERENCES file (id) ON UPDATE CASCADE ON DELETE SET NULL;
+SHOW WARNINGS;
+USE `webbash` ;
 
-DROP TABLE IF EXISTS job;
-CREATE TABLE job (
-	user INT UNSIGNED NOT NULL,
-	id INT UNSIGNED NOT NULL,
 
-	status ENUM( 'running', 'stopped', 'terminated' ) NOT NULL DEFAULT 'running',
-	command TINYBLOB,
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
 
-	PRIMARY KEY (user, id),
-	FOREIGN KEY (user) REFERENCES user (id) ON UPDATE CASCADE ON DELETE RESTRICT
-);
+-- -----------------------------------------------------
+-- Data for table `webbash`
+-- -----------------------------------------------------
+START TRANSACTION;
+USE `webbash`;
+INSERT INTO `webbash`.`file` (`id`, `parent`, `name`, `size`, `filetype`, `linkid`, `linkpath`, `owner`, `grp`, `perms`, `atime`, `mtime`, `ctime`) VALUES (1, NULL, 'root', NULL, 'd', NULL, NULL, NULL, NULL, 420, NULL, NULL, NULL);
+INSERT INTO `webbash`.`user` (`id`, `name`, `homedir`, `email`, `email_confirmed`, `password`, `token`) VALUES (1, 'root', 1, 'root@localhost', true, 0x243279243132243031323334353637383961626364656624242424242E734D71736A77696F344C6C484172772F78336C653569694943374E51685032, NULL);
 
-DROP TABLE IF EXISTS filedescriptor;
-CREATE TABLE filedescriptor (
-	user INT UNSIGNED NOT NULL,
-	file INT UNSIGNED NOT NULL,
-	job INT UNSIGNED NOT NULL,
+INSERT INTO `webbash`.`grp` (`id`, `name`) VALUES (1, 'root');
+INSERT INTO `webbash`.`grp` (`id`, `name`) VALUES (2, 'admin');
 
-	lck SET('read', 'write') NOT NULL DEFAULT '',
-	expiry TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-	PRIMARY KEY (user, file, job),
-	FOREIGN KEY (user) REFERENCES user (id) ON UPDATE CASCADE ON DELETE CASCADE,
-	FOREIGN KEY (file) REFERENCES file (id) ON UPDATE CASCADE ON DELETE CASCADE,
-	FOREIGN KEY (user, job) REFERENCES job (user, id) ON UPDATE CASCADE ON DELETE CASCADE
-);
-
-DROP TABLE IF EXISTS history;
-CREATE TABLE history (
-	user INT UNSIGNED NOT NULL,
-	id INT UNSIGNED NOT NULL,
-
-	command TINYBLOB,
-
-	PRIMARY KEY (user, id),
-	FOREIGN KEY (user) REFERENCES user (id) ON UPDATE CASCADE ON DELETE CASCADE
-);
-
-INSERT INTO file SET id = 1, name = 'root', filetype = 'd';
-INSERT INTO user SET
-	id = 1, name = 'root', email = 'root@localhost', email_confirmed = 1, homedir = 1,
-	password = '$2y$12$0123456789abcdef$$$$$.sMqsjwio4LlHArw/x3le5iiIC7NQhP2';
-INSERT INTO grp SET id = 1, name = 'root';
-INSERT INTO grp SET id = 2, name = 'admin';
-UPDATE file SET owner = 1, grp = 1;
-INSERT INTO usergroup SET user = 1, grp = 1;
-INSERT INTO usergroup SET user = 1, grp = 2;
+UPDATE `webbash`.`file` SET `owner` = 1, `grp` = 1;
+INSERT INTO `webbash`.`usergroup` (`user`, `grp`) VALUES (1, 1);
+INSERT INTO `webbash`.`usergroup` (`user`, `grp`) VALUES (1, 2);
+COMMIT;
