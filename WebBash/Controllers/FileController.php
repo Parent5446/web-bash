@@ -10,6 +10,15 @@ use \WebBash\Models\FileInfo;
 class FileController
 {
 	private $deps;
+	
+	private static $fileTypes = array(
+		'file' => 'f',
+		'directory' => 'd',
+		'link' => 'l',
+		'f' => 'f',
+		'd' => 'd',
+		'l' => 'l'
+	);
 
 	public function __construct( DI $deps ) {
 		$this->deps = $deps;
@@ -91,12 +100,6 @@ class FileController
 	public function put( array $params, $data ) {
 		$file = $this->deps->fileCache->get( 'path', "/{$params['path']}" );
 
-		static $fileTypes = array(
-			'file' => 'f',
-			'directory' => 'd',
-			'link' => 'l'
-		);
-		
 		if ( isset( $params['owner'] ) ) {
 			$owner = $this->deps->userCache->get( 'name', $params['owner'] );
 		} else {
@@ -114,7 +117,7 @@ class FileController
 			$params['type'] = 'file';
 		}
 		
-		if ( !isset( $fileTypes[$params['type']] ) ) {
+		if ( !isset( self::$fileTypes[$params['type']] ) ) {
 			throw new HttpException( 400, 'Invalid file type' );
 		} elseif ( !$file->exists() && !$file->getParent()->exists() ) {
 			throw new HttpException( 404 );
@@ -126,7 +129,7 @@ class FileController
 			throw new HttpException( 400, 'Invalid group' );
 		}
 
-		$file->setFiletype( $fileTypes[$params['type']] );
+		$file->setFiletype( self::$fileTypes[$params['type']] );
 		$file->setOwner( $owner );
 		$file->setGroup( $group );
 		$file->save();
@@ -136,14 +139,10 @@ class FileController
 	public function patch( array $params, $data ) {
 		$file = $this->deps->fileCache->get( 'path', "/{$params['path']}" );
 
-		static $fileTypes = array(
-			'file' => 'f',
-			'directory' => 'd',
-			'link' => 'l'
-		);
+
 		
-		if ( isset( $params['type'] ) && !isset( $fileTypes[$params['type']] ) ) {
-			throw new HttpException( 400, 'Invalid file type' );
+		if ( isset( $params['type'] ) && !isset( self::$fileTypes[$params['type']] ) ) {
+			throw new HttpException( 400, "Invalid file type {$params['type']}" );
 		} elseif ( !$file->exists() ) {
 			throw new HttpException( 404 );
 		} elseif ( !$file->isAllowed( $this->deps->currentUser, FileInfo::ACTION_WRITE ) ) {
@@ -167,7 +166,7 @@ class FileController
 		}
 
 		if ( isset( $params['type'] ) ) {
-			$file->setFiletype( $fileTypes[$params['type']] );
+			$file->setFiletype( self::$fileTypes[$params['type']] );
 		}
 
 		if ( $data ) {

@@ -213,7 +213,6 @@
 		}
 
 		var req = api.request( 'PUT', '/files' + argv[2], argv[1], {
-			'File-Type': 'link',
 			'Content-Type': 'application/vnd.webbash.filepath'
 		}, false );
 
