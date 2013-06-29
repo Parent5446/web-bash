@@ -6,7 +6,14 @@
 	 * @param {string} path
 	 * @return {string}
 	 */
-	$.realpath = function( path ) {
+	$.realpath = function( path, cwd, home ) {
+		var prefix = path[0];
+		if ( prefix === '~' ) {
+			path = home + '/' + path;
+		} else if ( prefix !== '/' ) {
+			path = cwd + '/' + path;
+		}
+
 		var parts = path.substr( 1 ) .split( '/' );
 		var finalparts = [];
 
