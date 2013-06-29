@@ -63,8 +63,6 @@ function WebBash( username ) {
 	this.executeCommand = function( argv, terminal, deferred ) {
 		if ( argv[0] === "clear" ) {
 			terminal.clear();
-			terminal.prompt = this.username + '@ubuntu ' + this.environment['PWD'] + ' $ ';
-			deferred.resolve();
 		}
 		else if ( typeof WebBash['commands'][argv[0]] !== 'undefined' ) {
 			var fds = [ new IoStream(), new IoStream(), new IoStream() ];

@@ -99,6 +99,7 @@
 
 		for ( var i = 1; i < argc; i++ ) {
 			var req = api.request( 'GET', '/files' + newArgv[1], {}, {}, false );
+					console.log( req['responseJSON'] );
 			for ( var j = 0; j < req['responseJSON'].length; j++ ) {
 				console.log( req['responseJSON'] );
 				printFile( fds[1], req['responseJSON'][j], opts);

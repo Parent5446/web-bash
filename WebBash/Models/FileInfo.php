@@ -400,7 +400,8 @@ class FileInfo implements Model
 		$stmt->execute();
 
 		for ( $row = $stmt->fetch(); $row; $row = $stmt->fetch() ) {
-			$this->children[] = $row['name'];
+			$this->children[] = $this->deps->fileCache->get( 'id', $row['id'] );
+			echo $this->deps->fileCache->get( 'id', $row['id'] );
 		}
 
 		return $this->children;
