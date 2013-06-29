@@ -227,7 +227,7 @@ function Terminal() {
 				.progress( $.proxy( this.appendOutput, this ) )
 				.always( $.proxy( this.displayPrompt, this ) );
 		} else if ( e.which === 222 && e.shiftKey) {
-			// Single quote: Needs special handling
+			// double quote: Needs special handling
 			e.preventDefault();
 			elem = $( '#cursor' ).prev();
 			elem.append( '\"' );
