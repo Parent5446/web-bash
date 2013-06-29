@@ -53,6 +53,7 @@ function WebBash( username ) {
 		var history = this.api.request( 'GET', '/users/' + this.username + '/history', {}, {}, false );
 
 		var homedir = info['responseJSON']['homedir'];
+		this.environment['USER'] = this.username;
 		this.environment['HOME'] = homedir;
 		this.environment['PWD'] = homedir;
 		terminal.prompt = this.username + '@ubuntu ' + homedir + ' $ ';
@@ -84,8 +85,10 @@ function WebBash( username ) {
 	 */
 	this.execute = function( text, terminal ) {
 		var deferred = $.Deferred();
-		var argv = this.replaceVariables( this.splitText( text ) );
-		setTimeout( $.proxy( function() { this.executeCommand( argv, terminal, deferred ); }, this ), 0 );
+		setTimeout( $.proxy( function() {
+			var argv = this.replaceVariables( this.splitText( text ) );
+			this.executeCommand( argv, terminal, deferred );
+		}, this ), 0 );
 		return deferred.promise();
 	};
 
@@ -96,6 +99,7 @@ function WebBash( username ) {
 	 * @param {jQuery.Deferred} deferred
 	 */
 	this.executeCommand = function( argv, terminal, deferred ) {
+		var retval;
 		if ( typeof WebBash['commands'][argv[0]] !== 'undefined' ) {
 			var fds = [ new IoStream(), new IoStream(), new IoStream() ];
 			fds[1].flush = function( text ) {
@@ -106,15 +110,23 @@ function WebBash( username ) {
 			};
 
 			var argc = argv.length;
-			this.environment['?'] = WebBash['commands'][argv[0]]( fds, argc, argv, this.environment ).toString();
+			retval = WebBash['commands'][argv[0]]( fds, argc, argv, this.environment );
 		} else if ( argv[0] !== undefined && argv[0] !== '' ) {
 			deferred.notify( ["error: unknown command " + argv[0]] );
-			this.environment['?'] = '127';
+			retval = '127';
 		}
 
-		this.environment._ = argv[argv.length - 1];
-		terminal.prompt = this.username + '@ubuntu ' + this.environment['PWD'] + ' $ ';
-		deferred.resolve();
+		updateFunc = $.proxy( function( retcode ) {
+			this.environment['?'] = retcode.toString();
+			terminal.prompt = this.username + '@ubuntu ' + this.environment['PWD'] + ' $ ';
+			deferred.resolve();
+		}, this );
+
+		if ( $.type( retval ) === 'object' && retval.then !== undefined ) {
+			retval.then( updateFunc );
+		} else {
+			updateFunc();
+		}
 	};
 
 	/**
