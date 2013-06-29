@@ -55,7 +55,8 @@ class FileController
 			->addHeader( 'Last-Accessed', $file->getATime() )
 			->addHeader( 'Creation-Time', $file->getCTime() )
 			->addHeader( 'File-Owner', $file->getOwner()->getName() )
-			->addHeader( 'File-Group', $file->getGroup()->getName() );
+			->addHeader( 'File-Group', $file->getGroup()->getName() )
+			->addHeader( 'File-Type', array_search( $file->getFiletype(), self::$fileTypes ) );
 	}
 
 	public function head( array $params ) {
@@ -74,7 +75,8 @@ class FileController
 			->addHeader( 'Last-Accessed', $file->getATime() )
 			->addHeader( 'Creation-Time', $file->getCTime() )
 			->addHeader( 'File-Owner', $file->getOwner()->getName() )
-			->addHeader( 'File-Group', $file->getGroup()->getName() );
+			->addHeader( 'File-Group', $file->getGroup()->getName() )
+			->addHeader( 'File-Type', array_search( $file->getFiletype(), self::$fileTypes ) );
 	}
 
 	public function post( array $params ) {
@@ -94,7 +96,8 @@ class FileController
 			->addHeader( 'Last-Accessed', $file->getATime() )
 			->addHeader( 'Creation-Time', $file->getCTime() )
 			->addHeader( 'File-Owner', $file->getOwner()->getName() )
-			->addHeader( 'File-Group', $file->getGroup()->getName() );
+			->addHeader( 'File-Group', $file->getGroup()->getName() )
+			->addHeader( 'File-Type', array_search( $file->getFiletype(), self::$fileTypes ) );
 	}
 
 	public function put( array $params, $data ) {
