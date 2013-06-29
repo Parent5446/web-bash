@@ -26,13 +26,13 @@
 		}
 
 		var req = api.request( 'GET', '/files' + newDir, {}, {}, false );
-		if ( req.status === 200 ) {
+		if ( req['status'] === 200 ) {
 			env['PWD'] = newDir;
 			return 0;
-		} else if ( req.status === 404 ) {
+		} else if ( req['status'] === 404 ) {
 			fds[2].write( 'cd: ' + newDir + ': No such file or directory' );
 			return 1;
-		} else if ( req.status === 403 ) {
+		} else if ( req['status'] === 403 ) {
 			fds[2].write( 'cd: ' + newDir + ': Permission denied' );
 			return 1;
 		} else {
@@ -256,6 +256,29 @@
 	 * @return {number} Retcode, 0 for success
 	 */
 	WebBash['commands']['chgrp'] = function( fds, argc, argv, env ) {
+		if ( argc < 3 ) {
+			fds[2].write( 'chown: needs at least 2 parameters' );
+			return 1;
+		}
+
+		var retcode = 0;
+		for ( var i = 2; i < argc; i++ ) {
+			var req = api.request( 'PATCH', '/files' + argv[i], '', {
+				'File-Group': argv[1]
+			}, false );
+
+			if ( req['status'] === 404 ) {
+				fds[2].write( 'chown: cannot access ' + argv[i] + ': No such file or directory' );
+				retcode = 1;
+			} else if ( req['status'] === 403 ) {
+				fds[2].write( 'chown: changing ownership of ' + argv[i] + ': Permission denied' );
+				retcode = 1;
+			} else if ( req['status'] >= 400 && req['responseJSON'] === 'Invalid group' ) {
+				fds[2].write( 'chown: invalid group: ' + argv[1] );
+				return 1;
+			}
+		}
+
 		return 0;
 	};
 
@@ -268,6 +291,29 @@
 	 * @return {number} Retcode, 0 for success
 	 */
 	WebBash['commands']['chown'] = function( fds, argc, argv, env ) {
+		if ( argc < 3 ) {
+			fds[2].write( 'chown: needs at least 2 parameters' );
+			return 1;
+		}
+
+		var retcode = 0;
+		for ( var i = 2; i < argc; i++ ) {
+			var req = api.request( 'PATCH', '/files' + argv[i], '', {
+				'File-Owner': argv[1]
+			}, false );
+
+			if ( req['status'] === 404 ) {
+				fds[2].write( 'chown: cannot access ' + argv[i] + ': No such file or directory' );
+				retcode = 1;
+			} else if ( req['status'] === 403 ) {
+				fds[2].write( 'chown: changing ownership of ' + argv[i] + ': Permission denied' );
+				retcode = 1;
+			} else if ( req['status'] >= 400 && req['responseJSON'] === 'Invalid owner' ) {
+				fds[2].write( 'chown: invalid user: ' + argv[1] );
+				return 1;
+			}
+		}
+
 		return 0;
 	};
 } )( jQuery, WebBash );

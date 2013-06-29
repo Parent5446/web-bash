@@ -104,7 +104,7 @@ class Router
 				case 'get':
 				case 'head':
 				case 'delete':
-					$data = array();
+					$data = null;
 					break;
 
 				case 'post':
@@ -113,6 +113,7 @@ class Router
 						break;
 					}
 
+				case 'patch':
 				case 'put':
 					if ( $contentType === 'application/json' ) {
 						$data = json_decode( $rawData, true );

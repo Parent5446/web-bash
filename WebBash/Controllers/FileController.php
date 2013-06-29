@@ -132,6 +132,50 @@ class FileController
 		$file->save();
 		$file->setContents( $data );
 	}
+	
+	public function patch( array $params, $data ) {
+		$file = $this->deps->fileCache->get( 'path', "/{$params['path']}" );
+
+		static $fileTypes = array(
+			'file' => 'f',
+			'directory' => 'd',
+			'link' => 'l'
+		);
+		
+		if ( isset( $params['type'] ) && !isset( $fileTypes[$params['type']] ) ) {
+			throw new HttpException( 400, 'Invalid file type' );
+		} elseif ( !$file->exists() ) {
+			throw new HttpException( 404 );
+		} elseif ( !$file->isAllowed( $this->deps->currentUser, FileInfo::ACTION_WRITE ) ) {
+			throw new HttpException( 403 );
+		}
+		
+		if ( isset( $params['owner'] ) ) {
+			$owner = $this->deps->userCache->get( 'name', $params['owner'] );
+			if ( !$owner->exists() ) {
+				throw new HttpException( 400, 'Invalid owner' );
+			}
+			$file->setOwner( $owner );
+		}
+		
+		if ( isset( $params['group'] ) ) {
+			$group = $this->deps->groupCache->get( 'name', $params['group'] );
+			if ( !$group->exists() ) {
+				throw new HttpException( 400, 'Invalid group' );
+			}
+			$file->setGroup( $group );
+		}
+
+		if ( isset( $params['type'] ) ) {
+			$file->setFiletype( $fileTypes[$params['type']] );
+		}
+
+		if ( $data ) {
+			$file->setContents( $data );
+		}
+
+		$file->save();
+	}
 
 	public function delete( array $params ) {
 		$file = $this->deps->fileCache->get( 'path', "/{$params['path']}" );
