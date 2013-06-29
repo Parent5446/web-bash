@@ -291,6 +291,41 @@
 	};
 
 	/**
+	 * Output a file to the terminal
+	 * @param {Array.<IoStream>} fds Input/output streams
+	 * @param {number} argc Number of arguments
+	 * @param {Array.<string>} Arguments passed to command
+	 * @param {Array.<string>} Environment variables
+	 * @return {number} Retcode, 0 for success
+	 */
+	WebBash['commands']['cat'] = function( fds, argc, argv, env ) {
+		var newDir = '';
+		if ( argc <= 1 ) {
+			fds[2].write( 'cat: invalid number of parameters' );
+			return 1;
+		}
+
+		for ( var i = 1; i < argc; i++ ) {
+			var path = $.realpath( argv[i], env['PWD'], env['HOME'] );
+			req = api.request( 'GET', '/files' + path, '', {}, false );
+
+			if ( req['status'] === 200 ) {
+				if ( req.getResponseHeader( 'File-Type' ) === 'directory' ) {
+					fds[2].write( 'cat: ' + path + ': Is a directory' );
+				} else {
+					fds[1].write( req['responseText'] );
+				}
+			} else if ( req['status'] === 404 ) {
+				fds[2].write( 'cat: ' + path + ': No such file or directory' );
+			} else if ( req['status'] === 403 ) {
+				fds[2].write( 'cat: ' + path + ': Permission denied' );
+			}
+		}
+
+		return 0;
+	};
+
+	/**
 	 * Make a new directory
 	 * @param {Array.<IoStream>} fds Input/output streams
 	 * @param {number} argc Number of arguments
@@ -403,6 +438,17 @@
 	 * @return {number} Retcode, 0 for success
 	 */
 	WebBash['commands']['rm'] = function( fds, argc, argv, env ) {
+		for ( var i = 1; i < argc; i++ ) {
+			var path = $.realpath( argv[i], env['PWD'], env['HOME'] );
+			req = api.request( 'DELETE', '/files' + path, '', {}, false );
+
+			if ( req['status'] === 404 ) {
+				fds[2].write( 'mv: cannot remove ' + src + ': No such file or directory' );
+			} else if ( req['status'] === 403 ) {
+				fds[2].write( 'mv: cannot remove ' + src + ': Permission denied' );
+			}
+		}
+
 		return 0;
 	};
 

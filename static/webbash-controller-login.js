@@ -28,6 +28,12 @@ function WebBashLogin() {
 	};
 
 	/**
+	 * Shutdown function
+	 * @param {Terminal} terminal
+	 */
+	this.shutdown = function( terminal ) {};
+
+	/**
 	 * Execute a command given an array of arguments
 	 * @param {string} argv Arguments typed
 	 * @param {Object} jQuery node to output to
