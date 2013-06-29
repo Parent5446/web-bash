@@ -39,7 +39,7 @@
 		}
 	};
 
-	/** 
+	/**
 	 * print the file info with options to the provided output stream
 	 * @param {<IoStream} fd Output stream
 	 * @param responseJSON  {object} responseJSON AJAX response object
@@ -63,7 +63,7 @@
 	 			}
 	 		}
 	 	}
-*/	 	
+*/
 
 	 	//if( name[0] !== '.' || printDot )
 		 	fd.write( responseJSON + "\n" );
@@ -93,7 +93,7 @@
 			}
 		}
 
-		argc = newArgv.length;			
+		argc = newArgv.length;
 		opts = $.normalizeopts( opts );
 
 		if ( argc === 1 ) {
@@ -248,7 +248,7 @@
 		if ( argc !== 3 ) {
 			fds[2].write( 'mv: invalid number of parameters' );
 		}
-		
+
 		var src = $.realpath( argv[1], env['PWD'], env['HOME'] );
 		var dst = $.realpath( argv[2], env['PWD'], env['HOME'] );
 
@@ -268,7 +268,7 @@
 		}
 
 		req = api.request( 'DELETE', '/files' + src, '', {}, false );
-		
+
 		if ( req['status'] === 403 ) {
 			fds[2].write( 'mv: cannot remove ' + src + ': Permission denied' );
 			return 1;

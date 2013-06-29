@@ -10,7 +10,7 @@ use \WebBash\Models\FileInfo;
 class FileController
 {
 	private $deps;
-	
+
 	private static $fileTypes = array(
 		'file' => 'f',
 		'directory' => 'd',
@@ -76,7 +76,7 @@ class FileController
 			->addHeader( 'File-Owner', $file->getOwner()->getName() )
 			->addHeader( 'File-Group', $file->getGroup()->getName() );
 	}
-	
+
 	public function post( array $params ) {
 		$file = $this->deps->fileCache->get( 'path', "/{$params['path']}" );
 		if( !$file->exists() ) {
@@ -96,7 +96,7 @@ class FileController
 			->addHeader( 'File-Owner', $file->getOwner()->getName() )
 			->addHeader( 'File-Group', $file->getGroup()->getName() );
 	}
-	
+
 	public function put( array $params, $data ) {
 		$file = $this->deps->fileCache->get( 'path', "/{$params['path']}" );
 
@@ -105,18 +105,18 @@ class FileController
 		} else {
 			$owner = $this->deps->currentUser;
 		}
-		
+
 		if ( isset( $params['group'] ) ) {
 			$group = $this->deps->groupCache->get( 'name', $params['group'] );
 		} else {
 			$groups = $this->deps->currentUser->getGroups();
 			$group = $this->deps->groupCache->get( 'name', $groups[0] );
 		}
-		
+
 		if ( !isset( $params['type'] ) ) {
 			$params['type'] = 'file';
 		}
-		
+
 		if ( !isset( self::$fileTypes[$params['type']] ) ) {
 			throw new HttpException( 400, 'Invalid file type' );
 		} elseif ( !$file->exists() && !$file->getParent()->exists() ) {
@@ -135,7 +135,7 @@ class FileController
 		$file->save();
 		$file->setContents( $data );
 	}
-	
+
 	public function patch( array $params, $data ) {
 		$file = $this->deps->fileCache->get( 'path', "/{$params['path']}" );
 
@@ -146,7 +146,7 @@ class FileController
 		} elseif ( !$file->isAllowed( $this->deps->currentUser, FileInfo::ACTION_WRITE ) ) {
 			throw new HttpException( 403 );
 		}
-		
+
 		if ( isset( $params['owner'] ) ) {
 			$owner = $this->deps->userCache->get( 'name', $params['owner'] );
 			if ( !$owner->exists() ) {
@@ -154,7 +154,7 @@ class FileController
 			}
 			$file->setOwner( $owner );
 		}
-		
+
 		if ( isset( $params['group'] ) ) {
 			$group = $this->deps->groupCache->get( 'name', $params['group'] );
 			if ( !$group->exists() ) {

@@ -121,7 +121,7 @@ class FileInfo implements Model
 			$this->load();
 		}
 	}
-	
+
 	function delete() {
 		$this->load();
 
@@ -138,7 +138,7 @@ class FileInfo implements Model
 				unlink( $finalPath );
 			}
 		}
-		
+
 		$stmt = $this->deps->stmtCache->prepare( 'DELETE FROM file WHERE id = :id' );
 		$stmt->bindParam( ':id', $this->id );
 		return $stmt->execute();
@@ -314,7 +314,7 @@ class FileInfo implements Model
 		$this->load();
 		$this->owner = $user->getId();
 	}
-	
+
 	public function getGroup() {
 		$this->load();
 		return $this->deps->groupCache->get( 'id', (int)$this->grp );
@@ -385,7 +385,7 @@ class FileInfo implements Model
 		$this->load();
 		return $this->filetype;
 	}
-	
+
 	public function isDir() {
 		$this->load();
 		return $this->filetype === 'd';
