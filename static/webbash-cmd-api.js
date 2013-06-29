@@ -370,14 +370,18 @@
 			return 1;
 		}
 
-		var req = api.request( 'PUT', '/useradd/' + argv[1], {
+		var req = api.request( 'PUT', '/users/' + argv[1], {
 				'password': argv[2],
 				'email': argv[3],
 				'home_directory': "/"+argv[1]
 			}, '', false );
 
-		if( req['status'] == 400 || req['status'] == 403 ) {
+		if( req['status'] == 400 || req['status'] == 403 || req['status'] == 404 ) {
 			fds[2].write( 'count not create user: '+req['responseJSON'] );
+			return 1;
+		}
+		else if ( req['status'] == 500 ) {
+			fds[2].write( 'count not create user: server timed out' );
 			return 1;
 		}
 		else {

@@ -40,6 +40,9 @@ class UserController
 
 		$user = $this->deps->userCache->get( 'name', $params['name'] );
 
+		if( $user->exists() )
+			throw new HttpException( 403, "user already exists" );
+
 		$homedir = $this->deps->fileCache->get( 'path', $data['home_directory'] );
 
 		$admins = $this->deps->groupCache->get( 'name', 'admin' );
@@ -63,6 +66,11 @@ class UserController
 		//$homedir->setGroup( $group );
 		$homedir->perms = octdec( '0755' );
 		$homedir->save();
+
+		// cant create directory without user already existing. cant save homedir if it doesn't already exist
+		// as such, create/save the user, create/save the homedir, and then update the user
+		$user->setHomeDirectory( $homedir );
+		$user->save();
 
 		return $this->get( $params );
 	}
