@@ -30,13 +30,13 @@
 			env['PWD'] = newDir;
 			return 0;
 		} else if ( req['status'] === 404 ) {
-			fds[2].write( 'cd: ' + newDir + ': No such file or directory' );
+			fds[1].write( 'cd: ' + newDir + ': No such file or directory' );
 			return 1;
 		} else if ( req['status'] === 403 ) {
-			fds[2].write( 'cd: ' + newDir + ': Permission denied' );
+			fds[1].write( 'cd: ' + newDir + ': Permission denied' );
 			return 1;
 		} else {
-			fds[2].write( 'cd: ' + newDir + ': An internal error occurred' );
+			fds[1].write( 'cd: ' + newDir + ': An internal error occurred' );
 			return 1;
 		}
 	};
@@ -77,7 +77,6 @@
 				break;
 	 
 			} // switch
-	 
 		}
 
 		return str;
@@ -89,14 +88,12 @@
 	 * @param responseJSON  {object} responseJSON AJAX response object
 	 * @param opts {Array.<string>} opts
 	 */
-	 function printFile( fd, responseJSON, opts ) {
-	 	var output = responseJSON[6] + "\t\t";
-	 	var counter;
+	 var printFile = function( fd, responseJSON, opts, counter, lastOutput ) {
+	 	var output = lastOutput + responseJSON[6] + "\t\t";
 
 	 	var useCounter = true;
 	 	var printDot = false;
 
-	 	console.log( responseJSON );
 	 	for ( var option in opts ) {
 	 		if ( opts.hasOwnProperty( option) ) {
 	 			switch ( opts[option] ) {
@@ -149,26 +146,23 @@
 	 		}
 	 	}
 
-	 	if ( typeof counter === 'undefined' ) {
-	 		counter = 0;
-	 	}
-	 	else {
-	 		counter++;
-	 	}
-
-		 if ( useCounter ) {
-		 	if ( counter % 4 ) {
-		 		counter = 0;
-		 		output += "\n";
-		 	}
-		 }
-		 else {
-		 	output += "\n";
-		 }
-
-
-	 	if( (name[0] !== '.' && name !== '..')  || printDot )
-		 	fd.write( output );
+	 	if( (responseJSON[6] !== '.' && responseJSON[6] !== '..')  || printDot ) {
+	 		if ( useCounter ) {
+	 			output += "\n   ";
+			 	if ( !(counter % 4) ) {
+			 		fd.write( output );
+			 		fd.clear();
+			 	}else {
+			 		return output;
+			 	}
+			 }
+			 else {
+			 	output += "\n";
+			 	fd.write( output );
+			 	fd.clear();
+			 	return "";
+			 }
+		}
 	 };
 
 
@@ -205,12 +199,15 @@
 		}
 
 		var fileSystemPath = '/files' + env['PWD'];
+		var lastOutput = "";
 
 		for ( var i = 1; i < argc; i++ ) {
 			var req = api.request( 'GET', fileSystemPath + newArgv[i], {}, {}, false );
 			if ( req['responseJSON'] instanceof Array ) {
+				var counter = req['responseJSON'].length - 1;
 				for ( var j = 0; j < req['responseJSON'].length; j++ ) {
-					printFile( fds[1], req['responseJSON'][j], opts);
+					lastOutput = printFile( fds[1], req['responseJSON'][j], opts, counter, lastOutput );
+					counter--;
 				}
 			}
 			else if ( typeof req['responseJSOn'] === 'string' ) {
@@ -223,7 +220,6 @@
 				fds[1].write( "Failed to find the following path " + pathsNotFound[path] + "\n" );
 			}
 		}
-
 
 		return 0;
 	};

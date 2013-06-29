@@ -46,6 +46,10 @@ function IoStream() {
 		}
 	};
 
+	this.clear = function() {
+		this.buffer = '';
+	}
+
 	/**
 	 * Function to flush the buffer to its final destination. Should be
 	 * overridden to control functionality

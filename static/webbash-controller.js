@@ -107,8 +107,6 @@ function WebBash( username ) {
 			window.open('', '_self', '');
 			window.close();
 			self.close();
-			document.location.reload(true);
-			retval = '0';
 		} else if ( argv[0] === "clear" ) {
 			terminal.clear();
 		} else if ( typeof WebBash['commands'][argv[0]] !== 'undefined' ) {
