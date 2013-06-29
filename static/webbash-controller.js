@@ -59,11 +59,9 @@ function WebBash( username ) {
 		terminal.prompt = this.username + '@ubuntu ' + homedir + ' $ ';
 
 		if ( history['status'] === 200 ) {
-			if( typeof history['responseJSON'] !== 'undefined' ) {
-				terminal.cmdHistory = history['responseJSON'];
-				terminal.currHistoryPos = history['responseJSON'].length;
-				this.historyMarker = history['responseJSON'].length;
-			}
+			terminal.cmdHistory = history['responseJSON'];
+			terminal.currHistoryPos = history['responseJSON'].length;
+			this.historyMarker = history['responseJSON'].length;
 		}
 	};
 
