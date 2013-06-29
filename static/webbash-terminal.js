@@ -19,14 +19,12 @@ function Terminal() {
 
 	/**
 	 * List of previous commands
-	 * @private
 	 * @type {Array.<string>}
 	 */
 	this.cmdHistory = [];
 
 	/**
 	 * Current position in the command history
-	 * @private
 	 * @type {number}
 	 */
 	this.currHistoryPos = 0;
@@ -257,12 +255,18 @@ function Terminal() {
 	 * @param {WebBash} controller
 	 */
 	this.bind = function( controller ) {
-		this.controller = controller
+		if ( this.controller !== null ) {
+			$.proxy( this.controller.shutdown, this.controller )( this );
+		}
+		this.controller = controller;
 		$.proxy( this.controller.startup, this.controller )( this );
 		this.displayPrompt();
 	};
 
 	$( window.document ).keydown( $.proxy( this.processInput, this ) );
+	$( window ).bind( 'beforeunload', function() {
+		$.proxy( this.controller.shutdown, this.controller )( this );
+	} );
 	window.setInterval( this.blink, 500 );
 }
 

@@ -122,6 +122,27 @@ CREATE  TABLE IF NOT EXISTS `webbash`.`history` (
 SHOW WARNINGS;
 USE `webbash` ;
 
+DELIMITER $$
+SHOW WARNINGS$$
+USE `webbash`$$
+
+CREATE TRIGGER `history_INCREMENT` BEFORE INSERT ON history FOR EACH ROW
+-- Edit trigger body code below this line. Do not edit lines above this one
+BEGIN
+	SET @newid = NULL;
+	IF NEW.`id` = 0 THEN
+		SELECT COALESCE(MAX(id) + 1, 1)
+		INTO @newid FROM `history`
+		WHERE `history`.`user` = NEW.`user`;
+
+		SET NEW.`id` = @newid;
+	END IF;
+END
+$$
+
+SHOW WARNINGS$$
+
+DELIMITER ;
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;

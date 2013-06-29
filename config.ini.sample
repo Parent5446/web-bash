@@ -8,3 +8,4 @@
 [webbash]
 	fileroot = ${root}/filesystem
 	bcryptrounds = 20
+	historylimit = 50

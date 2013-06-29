@@ -29,17 +29,50 @@ function WebBash( username ) {
 	this.username = username;
 
 	/**
-	 * Startup function (does nothing here)
+	 * Marker for where the API loaded the history from
+	 * @private
+	 * @type {number}
+	 */
+	this.historyMarker = 0;
+
+	/**
+	 * API object for making API calls
+	 * @type {WebBashApi}
+	 * @private
+	 * @cosnt
+	 */
+	this.api = new WebBashApi();
+
+	/**
+	 * Startup function
 	 * @param {Terminal} terminal
 	 */
 	this.startup = function( terminal ) {
-		var api = new WebBashApi();
-		var info = api.request( 'GET', '/users/' + this.username, {}, {}, false );
+		// @TODO: Make this and the shutdown function asynchronous
+		var info = this.api.request( 'GET', '/users/' + this.username, {}, {}, false );
+		var history = this.api.request( 'GET', '/users/' + this.username + '/history', {}, {}, false );
 
 		var homedir = info['responseJSON']['homedir'];
 		this.environment['HOME'] = homedir;
 		this.environment['PWD'] = homedir;
 		terminal.prompt = this.username + '@ubuntu ' + homedir + ' $ ';
+
+		if ( history['status'] === 200 ) {
+			terminal.cmdHistory = history['responseJSON'];
+			terminal.currHistoryPos = history['responseJSON'].length;
+			this.historyMarker = history['responseJSON'].length;
+		}
+	};
+
+	/**
+	 * Shutdown function
+	 * @param {Terminal} terminal
+	 */
+	this.shutdown = function( terminal ) {
+		this.api.request( 'PATCH', '/users/' + this.username + '/history',
+			{ 'history': terminal.cmdHistory.slice( this.historyMarker ) }
+		);
+		this.historyMarker = terminal.cmdHistory.length;
 	};
 
 	/**
@@ -77,6 +110,7 @@ function WebBash( username ) {
 			this.environment['?'] = '127';
 		}
 
+		this.shutdown( terminal );
 		this.environment._ = argv[argv.length - 1];
 		terminal.prompt = this.username + '@ubuntu ' + this.environment['PWD'] + ' $ ';
 		deferred.resolve();
