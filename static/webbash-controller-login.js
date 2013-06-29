@@ -54,16 +54,20 @@ function WebBashLogin() {
 		if ( this.username === '' ) {
 			this.username = text;
 			if ( text !== '' ) {
+				terminal.togglePasswordMode();
 				terminal.prompt = 'Password: ';
 			}
 			deferred.resolve();
+			terminal.togglePasswordMode();
 		} else {
 			this.api.login( this.username, text ).done( $.proxy( function() {
 				terminal.bind( new WebBash( this.username ) );
 			}, this ) ).fail( $.proxy ( function( e ) {
 				deferred.notify( e.responseText );
 				this.username = '';
+				terminal.togglePasswordMode();
 				terminal.prompt = 'Username: ';
+				terminal.togglePasswordMode();
 				deferred.resolve();
 			}, this ) );
 		}

@@ -24,3 +24,8 @@ body > ul {
 .userinput {
 	display: inline;
 }
+
+#hiddentext {
+	display: none;
+	visibility: hidden;
+}

@@ -30,13 +30,32 @@ function Terminal() {
 	this.currHistoryPos = 0;
 
 	/**
+	 * Password typing mode (divs are hidden)
+	 * @type {bool}
+	 */
+    this.passwordMode = false;
+
+    /**
+     * toggles the password mode on/off
+     */
+    this.togglePasswordMode = function () {
+    	this.passwordMode = true;
+    }
+
+	/**
 	 * Reset the cursor position
 	 */
 	this.resetCursor = function() {
 		$( '#cursor' ).remove();
 		$( "body > ul > li:last-child" ).append( $( '<div id="cursor" class="userinput">&nbsp;</div>' ) );
-		$( '#cursor' ).before( $( '<div class="userinput"></div>' ) );
-		$( '#cursor' ).after( $( '<div class="userinput"></div>' ) );
+
+		if ( this.passwordMode ) {
+			$( '#cursor' ).before( $( '<div id="hiddentext" class="userinput"></div>' ) );
+			$( '#cursor' ).after( $( '<div id="hiddentext" class="userinput></div>' ) );			
+		} else {		
+			$( '#cursor' ).before( $( '<div class="userinput"></div>' ) );
+			$( '#cursor' ).after( $( '<div class="userinput"></div>' ) );
+		}
 		$( window ).scrollTop( $( document ).height() );
 	};
 
@@ -60,7 +79,12 @@ function Terminal() {
 	 * @param {string} txt Command entered
 	 */
 	this.appendOutput = function( txt ) {
-		var output = $( '<div class="system_output"></div>' );
+		var output;
+		if ( this.passwordMode ) {
+			output = $( '<div id="hiddentext" class="userinput></div>' );
+		} else {
+			output = $( '<div id="system_output"></div>' );
+		}
 		output.text( txt );
 		$( "body > ul > li:last-child" ).append( output );
 		this.resetCursor();
