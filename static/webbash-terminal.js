@@ -42,6 +42,13 @@ function Terminal() {
 	};
 
 	/**
+	 * clear the page content
+	 */
+	this.clear = function() {
+		$( "body > ul" ).empty();
+	}
+
+	/**
 	 * Display a new prompt line and reset the cursor
 	 */
 	this.displayPrompt = function() {

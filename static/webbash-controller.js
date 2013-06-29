@@ -61,7 +61,12 @@ function WebBash( username ) {
 	 * @param {jQuery.Deferred} deferred
 	 */
 	this.executeCommand = function( argv, terminal, deferred ) {
-		if ( typeof WebBash['commands'][argv[0]] !== 'undefined' ) {
+		if ( argv[0] === "clear" ) {
+			terminal.clear();
+			terminal.prompt = this.username + '@ubuntu ' + this.environment['PWD'] + ' $ ';
+			deferred.resolve();
+		}
+		else if ( typeof WebBash['commands'][argv[0]] !== 'undefined' ) {
 			var fds = [ new IoStream(), new IoStream(), new IoStream() ];
 			fds[1].flush = function( text ) {
 				deferred.notify( [text] );

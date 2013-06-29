@@ -24,6 +24,12 @@ class FileController
 		}
 
 		if ( $file->isDir() ) {
+			/* TODO: REMOVE ONCE PERMISSIONS ARE FIXED
+			if( !$file->isAllowed( $this->deps->currentUser, FileInfo::ACTION_EXECUTE ) ) {
+				throw new HttpException( 403 );
+			}
+*/
+
 			$response = new Response( $file->getChildren() );
 		} elseif ( $file->isLink() ) {
 			$target = $file->getLinkTarget();

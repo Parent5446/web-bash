@@ -18,7 +18,7 @@
 	WebBash['commands']['cd'] = function( fds, argc, argv, env ) {
 		var newDir = '';
 		if ( argc <= 1 ) {
-			newDir = env['HOME'];
+			newDir = env['PWD'];
 		} else if ( argv[1][0] === '/' ) {
 			newDir = $.realpath( argv[1] );
 		} else {
