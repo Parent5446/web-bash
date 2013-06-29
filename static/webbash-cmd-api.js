@@ -53,14 +53,56 @@
 
 	 	var useCounter = true;
 	 	var printDot = false;
+	 	console.log( responseJSON );
 
 	 	for ( var option in opts ) {
+	 		console.log( opts[option] );
 	 		if ( opts.hasOwnProperty( option) ) {
-	 			switch ( option ) {
+	 			switch ( opts[option] ) {
 	 				case 'a':
 	 					printDot = true;
 	 					break;
 	 				case 'l':
+	 					if( responseJSON[0] === 'd' ) {
+	 						output = 'd';
+	 					}
+	 					else {
+	 						output = '-';
+	 					}
+
+	 					var mask = 1 << 8;
+	 					for ( var i = 0; i < 3; i++ ) {
+	 						if ( mask & responseJSON[1]  ) {
+	 							output += 'r'
+	 						}
+	 						else {
+	 							output += '-';
+	 						}
+
+	 						mask >>= 1;
+	 						if( mask & responseJSON[1] ) {
+	 							output += 'w';
+	 						}
+	 						else {
+	 							output += '-';
+	 						}
+
+	 						mask >>= 1;
+	 						if ( mask & responseJSON[1] ) {
+	 							output += 'x';
+	 						}
+	 						else {
+	 							output += '-';
+	 						}
+	 					}
+
+	 					output += (' ' + responseJSON[2]); // owner
+	 					output += ('   '  + responseJSON[3]); // group
+	 					output += (' ' + responseJSON[4]); // size
+	 					// DO THE DATE HERE
+	 					output += (' ' + responseJSON[6]) //file name
+
+
 	 					useCounter = false;
 	 					break;
 
