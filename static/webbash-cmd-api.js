@@ -154,6 +154,20 @@
 	 * @return {number} Retcode, 0 for success
 	 */
 	WebBash['commands']['touch'] = function( fds, argc, argv, env ) {
+		for ( var i = 1; i < argc; i++ ) {
+			var req = api.request( 'POST', '/files' + argv[i], '', {}, false );
+
+			if ( req['status'] === 404 ) {
+				fds[2].write( 'touch: cannot touch ' + argv[i] + ': No such file or directory' );
+				return 1;
+			} else if ( req['status'] === 403 ) {
+				fds[2].write( 'touch: cannot touch ' + argv[i] + ': Permission denied' );
+				return 1;
+			} else if ( req['status'] >= 400 ) {
+				fds[2].write( 'touch: cannot touch ' + argv[i] + ': An internal error occurred' );
+				return 1;
+			}
+		}
 		return 0;
 	};
 

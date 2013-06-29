@@ -49,6 +49,45 @@ class FileController
 			->addHeader( 'File-Group', $file->getGroup()->getName() );
 	}
 
+	public function head( array $params ) {
+		$file = $this->deps->fileCache->get( 'path', "/{$params['path']}" );
+		if( !$file->exists() ) {
+			throw new HttpException( 404, 'File not found' );
+		} elseif ( !$file->getParent()->isAllowed( $this->deps->currentUser, FileInfo::ACTION_EXECUTE ) ) {
+			throw new HttpException( 403 );
+		}
+
+		$response = new Response( null );
+		return $response
+			->addHeader( 'Content-Length', $file->getSize() )
+			->addHeader( 'Content-Disposition', "attachment; filename=\"{$file->getFilename()}" )
+			->addHeader( 'Last-Modified', $file->getMTime() )
+			->addHeader( 'Last-Accessed', $file->getATime() )
+			->addHeader( 'Creation-Time', $file->getCTime() )
+			->addHeader( 'File-Owner', $file->getOwner()->getName() )
+			->addHeader( 'File-Group', $file->getGroup()->getName() );
+	}
+	
+	public function post( array $params ) {
+		$file = $this->deps->fileCache->get( 'path', "/{$params['path']}" );
+		if( !$file->exists() ) {
+			$this->put( $params, '' );
+		} elseif ( !$file->getParent()->isAllowed( $this->deps->currentUser, FileInfo::ACTION_EXECUTE ) ) {
+			throw new HttpException( 403 );
+		}
+
+		$file->save();
+		$response = new Response( null );
+		return $response
+			->addHeader( 'Content-Length', $file->getSize() )
+			->addHeader( 'Content-Disposition', "attachment; filename=\"{$file->getFilename()}" )
+			->addHeader( 'Last-Modified', $file->getMTime() )
+			->addHeader( 'Last-Accessed', $file->getATime() )
+			->addHeader( 'Creation-Time', $file->getCTime() )
+			->addHeader( 'File-Owner', $file->getOwner()->getName() )
+			->addHeader( 'File-Group', $file->getGroup()->getName() );
+	}
+	
 	public function put( array $params, $data ) {
 		$file = $this->deps->fileCache->get( 'path', "/{$params['path']}" );
 
@@ -69,6 +108,10 @@ class FileController
 		} else {
 			$groups = $this->deps->currentUser->getGroups();
 			$group = $this->deps->groupCache->get( 'name', $groups[0] );
+		}
+		
+		if ( !isset( $params['type'] ) ) {
+			$params['type'] = 'file';
 		}
 		
 		if ( !isset( $fileTypes[$params['type']] ) ) {
