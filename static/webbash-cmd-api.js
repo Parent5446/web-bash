@@ -19,6 +19,8 @@
 		var newDir = '';
 		if ( argc <= 1 ) {
 			newDir = env['HOME'];
+		} else if ( argv[1][0] === '/' ) {
+			newDir = $.realpath( argv[1] );
 		} else {
 			newDir = $.realpath( argv[1], env['PWD'], env['HOME'] );
 		}
@@ -40,33 +42,133 @@
 	};
 
 	/**
+	*
+	*  Javascript string pad
+	*  http://www.webtoolkit.info/
+	*
+	**/
+	 
+	var STR_PAD_LEFT = 1;
+	var STR_PAD_RIGHT = 2;
+	var STR_PAD_BOTH = 3;
+	 
+	function pad(str, len, pad, dir) {
+	 
+		if (typeof(len) == "undefined") { var len = 0; }
+		if (typeof(pad) == "undefined") { var pad = ' '; }
+		if (typeof(dir) == "undefined") { var dir = STR_PAD_RIGHT; }
+	 
+		if (len + 1 >= str.length) {
+	 
+			switch (dir){
+	 
+				case STR_PAD_LEFT:
+					str = Array(len + 1 - str.length).join(pad) + str;
+				break;
+	 
+				case STR_PAD_BOTH:
+					var right = Math.ceil((padlen = len - str.length) / 2);
+					var left = padlen - right;
+					str = Array(left+1).join(pad) + str + Array(right+1).join(pad);
+				break;
+	 
+				default:
+					str = str + Array(len + 1 - str.length).join(pad);
+				break;
+	 
+			} // switch
+	 
+		}
+
+		return str;
+	}
+
+	/** 
 	 * print the file info with options to the provided output stream
 	 * @param {<IoStream} fd Output stream
 	 * @param responseJSON  {object} responseJSON AJAX response object
 	 * @param opts {Array.<string>} opts
 	 */
 	 function printFile( fd, responseJSON, opts ) {
-	 	var name = responseJSON;
-	 	var output = name;
+	 	var output = responseJSON[6] + "\t\t";
+	 	var counter;
+
+	 	var useCounter = true;
 	 	var printDot = false;
-/*
-	 	foreach ( var option in opts ) {
+
+	 	for ( var option in opts ) {
 	 		if ( opts.hasOwnProperty( option) ) {
-	 			switch ( option ) {
+	 			switch ( opts[option] ) {
 	 				case 'a':
 	 					printDot = true;
 	 					break;
 	 				case 'l':
-	 					// add stuff here
+	 					if( responseJSON[0] === 'd' ) {
+	 						output = 'd';
+	 					}
+	 					else {
+	 						output = '-';
+	 					}
+
+	 					var mask = 1 << 8;
+	 					for ( var i = 0; i < 3; i++ ) {
+	 						if ( mask & responseJSON[1]  ) {
+	 							output += 'r'
+	 						}
+	 						else {
+	 							output += '-';
+	 						}
+
+	 						mask >>= 1;
+	 						if( mask & responseJSON[1] ) {
+	 							output += 'w';
+	 						}
+	 						else {
+	 							output += '-';
+	 						}
+
+	 						mask >>= 1;
+	 						if ( mask & responseJSON[1] ) {
+	 							output += 'x';
+	 						}
+	 						else {
+	 							output += '-';
+	 						}
+	 					}
+
+	 					output += (' ' + pad( responseJSON[2], 10, ' ', STR_PAD_LEFT )); // owner
+	 					output += (' ' + pad( responseJSON[3],  6, ' ', STR_PAD_LEFT )); // group
+	 					output += (' ' + pad( responseJSON[4].toString(), 6, ' ', STR_PAD_LEFT )); // size
+	 					output += (' ' + responseJSON[5]['date']); //date
+	 					output += (' ' + responseJSON[6]); //file name
+
+	 					useCounter = false;
 	 					break;
 
 	 			}
 	 		}
 	 	}
-*/
 
-	 	//if( name[0] !== '.' || printDot )
-		 	fd.write( responseJSON + "\n" );
+	 	if ( typeof counter === 'undefined' ) {
+	 		counter = 0;
+	 	}
+	 	else {
+	 		counter++;
+	 	}
+
+		 if ( useCounter ) {
+		 	if ( counter % 4 ) {
+		 		counter = 0;
+		 		output += "\n";
+		 	}
+		 }
+		 else {
+		 	output += "\n";
+		 }
+
+
+	 	if( (name[0] !== '.' && name !== '..')  || printDot )
+		 	fd.write( output );
 	 };
 
 
@@ -81,6 +183,7 @@
 	WebBash['commands']['ls'] = function( fds, argc, argv, env ) {
 		var opts = [];
 		var newArgv = [];
+		var pathsNotFound = [];
 
 		var optPattern = /-[\w]+/;
 
@@ -97,17 +200,31 @@
 		opts = $.normalizeopts( opts );
 
 		if ( argc === 1 ) {
-			newArgv[argc] = env['PWD'];
+			newArgv[argc] = "";
 			argc++;
 		}
 
+		var fileSystemPath = '/files' + env['PWD'];
+
 		for ( var i = 1; i < argc; i++ ) {
-			var req = api.request( 'GET', '/files' + newArgv[1], {}, {}, false );
-			for ( var j = 0; j < req['responseJSON'].length; j++ ) {
-				console.log( req['responseJSON'] );
-				printFile( fds[1], req['responseJSON'][j], opts);
+			var req = api.request( 'GET', fileSystemPath + newArgv[i], {}, {}, false );
+			if ( req['responseJSON'] instanceof Array ) {
+				for ( var j = 0; j < req['responseJSON'].length; j++ ) {
+					printFile( fds[1], req['responseJSON'][j], opts);
+				}
+			}
+			else if ( typeof req['responseJSOn'] === 'string' ) {
+				pathsNotFound[pathsNotFound.length] = newArgv[i];
 			}
 		}
+
+		for ( var path in pathsNotFound ) {
+			if( path.hasOwnProperty( path ) ) {
+				fds[1].write( "Failed to find the following path " + pathsNotFound[path] + "\n" );
+			}
+		}
+
+
 		return 0;
 	};
 
