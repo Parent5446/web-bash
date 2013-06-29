@@ -122,6 +122,26 @@
 	 * @return {number} Retcode, 0 for success
 	 */
 	WebBash['commands']['ln'] = function( fds, argc, argv, env ) {
+		if ( argc !== 3 ) {
+			fds[2].write( 'ln: invalid number of parameters' );
+		}
+
+		var req = api.request( 'PUT', '/files' + argv[2], '', {
+			'File-Type': 'link',
+			'Content-Location': argv[1]
+		}, false );
+
+		if ( req['status'] === 404 ) {
+			fds[2].write( 'ln: failed to create symbolic link ' + argv[2] + ': No such file or directory' );
+			return 1;
+		} else if ( req['status'] === 403 ) {
+			fds[2].write( 'ln: failed to create symbolic link ' + argv[2] + ': Permission denied' );
+			return 1;
+		} else if ( req['status'] >= 400 ) {
+			fds[2].write( 'ln: failed to create symbolic link ' + argv[2] + ': An internal error occurred' );
+			return 1;
+		}
+
 		return 0;
 	};
 
