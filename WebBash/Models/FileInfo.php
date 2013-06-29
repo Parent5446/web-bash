@@ -358,6 +358,10 @@ class FileInfo implements Model
 		}
 	}
 
+	public function getPermissions() {
+		return $this->perms;
+	}
+
 	public function getATime() {
 		$this->load();
 		date_default_timezone_set( 'UTC' );
@@ -441,9 +445,8 @@ class FileInfo implements Model
 		$stmt->execute();
 
 		for ( $row = $stmt->fetch(); $row; $row = $stmt->fetch() ) {
-			$this->children[] = $row['name'];
+			$this->children[] = $this->deps->fileCache->get( 'id', $row['id'] );
 		}
-
 		return $this->children;
 	}
 

@@ -39,7 +39,16 @@ class FileController
 		}
 
 		if ( $file->isDir() ) {
-			$response = new Response( $file->getChildren() );
+
+			$children = $file->getChildren();
+			$childrenArray = array();
+
+			foreach ( $children as $child ) { 
+				$childrenArray[] = array(  $child->getFiletype(), $child->getPermissions(), $child->getOwner()->getName(),  
+					                       $child->getGroup()->getName(), $child->getSize(), $child->getMTime(), $child->getFilename() );
+			}
+			
+			$response = new Response( $childrenArray );
 		} elseif ( $file->isLink() ) {
 			$target = $file->getLinkTarget();
 			$response = new Response( $target->getContents() );

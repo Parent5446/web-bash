@@ -108,6 +108,8 @@ function WebBash( username ) {
 			window.close();
 			self.close();
 			retval = '0';
+		} else if ( argv[0] === "clear" ) {
+			terminal.clear();
 		} else if ( typeof WebBash['commands'][argv[0]] !== 'undefined' ) {
 			var fds = [ new IoStream(), new IoStream(), new IoStream() ];
 			fds[1].flush = function( text ) {
