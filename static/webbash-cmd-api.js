@@ -209,7 +209,7 @@
 	 */
 	WebBash['commands']['cp'] = function( fds, argc, argv, env ) {
 		if ( argc !== 3 ) {
-			fds[2].write( 'ln: invalid number of parameters' );
+			fds[2].write( 'cp: invalid number of parameters' );
 		}
 
 		var req = api.request( 'PUT', '/files' + argv[2], argv[1], {
@@ -224,6 +224,7 @@
 			return 1;
 		} else if ( req['status'] >= 400 && req['responseJSON'] === 'Invalid file data source' ) {
 			fds[2].write( 'cp: cannot stat ' + argv[1] + ': No such file or directory' );
+			return 1;
 		}
 
 		return 0;
@@ -238,6 +239,32 @@
 	 * @return {number} Retcode, 0 for success
 	 */
 	WebBash['commands']['mv'] = function( fds, argc, argv, env ) {
+		if ( argc !== 3 ) {
+			fds[2].write( 'mv: invalid number of parameters' );
+		}
+
+		var req = api.request( 'PUT', '/files' + argv[2], argv[1], {
+			'Content-Type': 'application/vnd.webbash.filepath'
+		}, false );
+
+		if ( req['status'] === 404 ) {
+			fds[2].write( 'mv: cannot create regular file ' + argv[2] + ': No such file or directory' );
+			return 1;
+		} else if ( req['status'] === 403 ) {
+			fds[2].write( 'mv: cannot create regular file ' + argv[2] + ': Permission denied' );
+			return 1;
+		} else if ( req['status'] >= 400 && req['responseJSON'] === 'Invalid file data source' ) {
+			fds[2].write( 'mv: cannot stat ' + argv[1] + ': No such file or directory' );
+			return 1;
+		}
+
+		req = api.request( 'DELETE', '/files' + argv[1], '', {}, false );
+		
+		if ( req['status'] === 403 ) {
+			fds[2].write( 'mv: cannot remove ' + argv[2] + ': Permission denied' );
+			return 1;
+		}
+
 		return 0;
 	};
 

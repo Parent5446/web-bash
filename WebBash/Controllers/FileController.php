@@ -139,8 +139,6 @@ class FileController
 	public function patch( array $params, $data ) {
 		$file = $this->deps->fileCache->get( 'path', "/{$params['path']}" );
 
-
-		
 		if ( isset( $params['type'] ) && !isset( self::$fileTypes[$params['type']] ) ) {
 			throw new HttpException( 400, "Invalid file type {$params['type']}" );
 		} elseif ( !$file->exists() ) {
@@ -178,9 +176,13 @@ class FileController
 
 	public function delete( array $params ) {
 		$file = $this->deps->fileCache->get( 'path', "/{$params['path']}" );
+
 		if ( !$file->exists() ) {
 			throw new HttpException( 404, 'File does not exist' );
+		} elseif ( !$file->getParent()->isAllowed( $this->deps->currentUser, FileInfo::ACTION_WRITE ) ) {
+			throw new HttpException( 403 );
 		}
+
 		$file->delete();
 	}
 }

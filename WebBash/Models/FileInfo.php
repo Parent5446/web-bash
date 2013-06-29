@@ -121,6 +121,28 @@ class FileInfo implements Model
 			$this->load();
 		}
 	}
+	
+	function delete() {
+		$this->load();
+
+		$webRoot = $this->deps->config['webbash']['fileroot'];
+		$finalPath = realpath( $webRoot . $this->path );
+
+		if (
+			strpos( $finalPath, $webRoot ) === 0 ||
+			file_exists( $finalPath )
+		) {
+			if ( $this->isDir() ) {
+				rmdir( $finalPath );
+			} elseif ( $this->isFile() ) {
+				unlink( $finalPath );
+			}
+		}
+		
+		$stmt = $this->deps->stmtCache->prepare( 'DELETE FROM file WHERE id = :id' );
+		$stmt->bindParam( ':id', $this->id );
+		return $stmt->execute();
+	}
 
 	function merge( Model $other ) {
 		if ( !$other instanceof self ) {
