@@ -109,6 +109,61 @@
 	};
 
 	/**
+	 * Print the current user's username
+	 * @param {Array.<IoStream>} fds Input/output streams
+	 * @param {number} argc Number of arguments
+	 * @param {Array.<string>} Arguments passed to command
+	 * @param {Array.<string>} Environment variables
+	 * @return {number} Retcode, 0 for success
+	 */
+	WebBash['commands']['whoami'] = function( fds, argc, argv, env ) {
+		fds[1].write( env['USER'] );
+		return 0;
+	};
+	
+	/**
+	 * Print the current user's username
+	 * @param {Array.<IoStream>} fds Input/output streams
+	 * @param {number} argc Number of arguments
+	 * @param {Array.<string>} Arguments passed to command
+	 * @param {Array.<string>} Environment variables
+	 * @return {number} Retcode, 0 for success
+	 */
+	WebBash['commands']['sleep'] = function( fds, argc, argv, env ) {
+		if ( argv.length < 2 ) {
+			fds[2].write( 'sleep: missing operand' );
+			return 1;
+		}
+
+		var unit = argv[1][argv[1].length - 1];
+		var num = 0;
+		if ( [ 's', 'm', 'h', 'd' ].indexOf( unit ) === -1 ) {
+			num = parseInt( argv[1] );
+			unit = 's';
+		} else {
+			num = parseInt( argv[1].substr( 0, -1 ) );
+		}
+
+		switch ( unit ) {
+			case 'd':
+				num *= 24;
+			case 'h':
+				num *= 60;
+			case 'm':
+				num *= 60;
+			case 's':
+				num *= 1000;
+		}
+
+		var deferred = $.Deferred();
+		setTimeout( function() {
+			deferred.resolve( 0 );
+		}, num );
+
+		return deferred.promise();
+	};
+
+	/**
 	 * Format a date and output it to the command line
 	 * @param {Array.<IoStream>} fds Input/output streams
 	 * @param {number} argc Number of arguments

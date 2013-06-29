@@ -16,6 +16,7 @@ class User implements Model
 	public $token = null;
 	public $exists = null;
 	private $groups = null;
+	private $history = null;
 
 	public static function newFromName( DI $deps, $name ) {
 		$obj = new self( $deps );
@@ -225,6 +226,69 @@ class User implements Model
 		}
 
 		return $this->groups;
+	}
+
+	public function getHistory() {
+		if ( $this->history !== null ) {
+			return $this->history;
+		}
+
+		$this->load();
+		if ( !$this->exists ) {
+			throw new \RuntimeException( 'Cannot fetch history for unknown user.' );
+		}
+
+		$this->history = array();
+		$historyLimit = $this->deps->config['webbash']['historylimit'];
+		$stmt = $this->deps->stmtCache->prepare(
+			"SELECT command FROM history WHERE user = :id ORDER BY id DESC LIMIT $historyLimit"
+		);
+		$stmt->bindParam( ':id', $this->id );
+		$stmt->execute();
+
+		while ( $cmd = $stmt->fetchColumn() ) {
+			$this->history[] = $cmd;
+		}
+
+		$this->history = array_reverse( $this->history );
+
+		return $this->history;
+	}
+	
+	public function addHistory( array $cmds ) {
+		if ( !$cmds ) {
+			return true;
+		}
+
+		if ( $this->history !== null ) {
+			$this->history = array_merge( $this->history, $cmds );
+		}
+
+		$rowIds = array();
+		foreach ( $cmds as $key => $cmd ) {
+			$rowIds[] = "(:user, :command$key)";
+		}
+
+		$stmt = $this->deps->stmtCache->prepare(
+			'INSERT INTO history (user, command) VALUES ' . implode( ', ', $rowIds )
+		);
+
+		$stmt->bindParam( ':user', $this->id );
+		foreach ( $cmds as $key => &$cmd ) {
+			$stmt->bindParam( ":command$key", $cmd );
+		}
+
+		$stmt->execute();
+	}
+
+	public function clearHistory() {
+		$stmt = $this->deps->stmtCache->prepare(
+			'DELETE FROM history WHERE user = :user'
+		);
+		$stmt->bindParam( ':user', $this->id );
+		$stmt->execute();
+
+		$this->history = array();
 	}
 
 	public function exists() {

@@ -25,6 +25,7 @@ $di = new WebBash\DI( $db, $config );
 $router = new WebBash\Router( $di );
 $router->register( '/login', '\WebBash\Controllers\LoginController' );
 $router->register( '/users/:name', '\WebBash\Controllers\UserController' );
+$router->register( '/users/:name/history', '\WebBash\Controllers\CommandHistoryController' );
 $router->register(
 	'/files/:path+',
 	'\WebBash\Controllers\FileController',

@@ -29,17 +29,53 @@ function WebBash( username ) {
 	this.username = username;
 
 	/**
-	 * Startup function (does nothing here)
+	 * Marker for where the API loaded the history from
+	 * @private
+	 * @type {number}
+	 */
+	this.historyMarker = 0;
+
+	/**
+	 * API object for making API calls
+	 * @type {WebBashApi}
+	 * @private
+	 * @cosnt
+	 */
+	this.api = new WebBashApi();
+
+	/**
+	 * Startup function
 	 * @param {Terminal} terminal
 	 */
 	this.startup = function( terminal ) {
-		var api = new WebBashApi();
-		var info = api.request( 'GET', '/users/' + this.username, {}, {}, false );
+		// @TODO: Make this and the shutdown function asynchronous
+		var info = this.api.request( 'GET', '/users/' + this.username, {}, {}, false );
+		var history = this.api.request( 'GET', '/users/' + this.username + '/history', {}, {}, false );
 
 		var homedir = info['responseJSON']['homedir'];
+		this.environment['USER'] = this.username;
 		this.environment['HOME'] = homedir;
 		this.environment['PWD'] = homedir;
 		terminal.prompt = this.username + '@ubuntu ' + homedir + ' $ ';
+
+		if ( history['status'] === 200 ) {
+			terminal.cmdHistory = history['responseJSON'];
+			terminal.currHistoryPos = history['responseJSON'].length;
+			this.historyMarker = history['responseJSON'].length;
+		}
+	};
+
+	/**
+	 * Shutdown function
+	 * @param {Terminal} terminal
+	 */
+	this.shutdown = function( terminal ) {
+		if ( this.historyMarker < terminal.cmdHistory.length ) {
+			this.api.request( 'PATCH', '/users/' + this.username + '/history',
+				{ 'history': terminal.cmdHistory.slice( this.historyMarker ) }
+			);
+			this.historyMarker = terminal.cmdHistory.length;
+		}
 	};
 
 	/**
@@ -49,8 +85,10 @@ function WebBash( username ) {
 	 */
 	this.execute = function( text, terminal ) {
 		var deferred = $.Deferred();
-		var argv = this.replaceVariables( this.splitText( text ) );
-		setTimeout( $.proxy( function() { this.executeCommand( argv, terminal, deferred ); }, this ), 0 );
+		setTimeout( $.proxy( function() {
+			var argv = this.replaceVariables( this.splitText( text ) );
+			this.executeCommand( argv, terminal, deferred );
+		}, this ), 0 );
 		return deferred.promise();
 	};
 
@@ -61,10 +99,18 @@ function WebBash( username ) {
 	 * @param {jQuery.Deferred} deferred
 	 */
 	this.executeCommand = function( argv, terminal, deferred ) {
-		if ( argv[0] === "clear" ) {
+		var retval;
+
+		if ( argv[0] === 'exit' ) {
+			this.shutdown( terminal );
+			// Hopefully something here will close the window
+			window.open('', '_self', '');
+			window.close();
+			self.close();
+			retval = '0';
+		} else if ( argv[0] === "clear" ) {
 			terminal.clear();
-		}
-		else if ( typeof WebBash['commands'][argv[0]] !== 'undefined' ) {
+		} else if ( typeof WebBash['commands'][argv[0]] !== 'undefined' ) {
 			var fds = [ new IoStream(), new IoStream(), new IoStream() ];
 			fds[1].flush = function( text ) {
 				deferred.notify( [text] );
@@ -74,15 +120,23 @@ function WebBash( username ) {
 			};
 
 			var argc = argv.length;
-			this.environment['?'] = WebBash['commands'][argv[0]]( fds, argc, argv, this.environment ).toString();
+			retval = WebBash['commands'][argv[0]]( fds, argc, argv, this.environment );
 		} else if ( argv[0] !== undefined && argv[0] !== '' ) {
 			deferred.notify( ["error: unknown command " + argv[0]] );
-			this.environment['?'] = '127';
+			retval = '127';
 		}
 
-		this.environment._ = argv[argv.length - 1];
-		terminal.prompt = this.username + '@ubuntu ' + this.environment['PWD'] + ' $ ';
-		deferred.resolve();
+		updateFunc = $.proxy( function( retcode ) {
+			this.environment['?'] = retcode.toString();
+			terminal.prompt = this.username + '@ubuntu ' + this.environment['PWD'] + ' $ ';
+			deferred.resolve();
+		}, this );
+
+		if ( $.type( retval ) === 'object' && retval.then !== undefined ) {
+			retval.then( updateFunc );
+		} else {
+			updateFunc( retval );
+		}
 	};
 
 	/**
