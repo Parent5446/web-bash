@@ -1,5 +1,5 @@
 Options -Indexes +FollowSymLinks
-DirectoryIndex index.html  
+DirectoryIndex index.html
 <Files ~ "^\.(htaccess|htpasswd)$">
 	deny from all
 </Files>

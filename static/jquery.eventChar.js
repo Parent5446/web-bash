@@ -43,7 +43,7 @@
 				104: 56, // Numpad 8
 				105: 57, // Numpad 9
 				106: 42, // Numpad *
-				107: 43, // Numpad +
+				107: 43, // Numpad
 				109: 45, // Numpad -
 				110: 46, // Numpad .
 				111: 47, // Numpad /
