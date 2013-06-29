@@ -100,7 +100,15 @@ function WebBash( username ) {
 	 */
 	this.executeCommand = function( argv, terminal, deferred ) {
 		var retval;
-		if ( typeof WebBash['commands'][argv[0]] !== 'undefined' ) {
+
+		if ( argv[0] === 'exit' ) {
+			this.shutdown( terminal );
+			// Hopefully something here will close the window
+			window.open('', '_self', '');
+			window.close();
+			self.close();
+			retval = '0';
+		} else if ( typeof WebBash['commands'][argv[0]] !== 'undefined' ) {
 			var fds = [ new IoStream(), new IoStream(), new IoStream() ];
 			fds[1].flush = function( text ) {
 				deferred.notify( [text] );
