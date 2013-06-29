@@ -214,7 +214,7 @@ class Router
 		}
 
 		if ( $controller === null ) {
-			throw new HttpException( 404 );
+			throw new HttpException( 404, 'Controller not found' );
 		}
 
 		if ( !method_exists( $controller, $method ) ) {

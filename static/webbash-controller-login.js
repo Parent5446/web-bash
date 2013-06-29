@@ -54,12 +54,12 @@ function WebBashLogin() {
 		} else {
 			this.api.login( this.username, text ).done( $.proxy( function() {
 				terminal.bind( new WebBash( this.username ) );
-			}, this ) ).fail( function( e ) {
+			}, this ) ).fail( $.proxy ( function( e ) {
 				deferred.notify( e.responseText );
-				this.username = null;
+				this.username = '';
 				terminal.prompt = 'Username: ';
 				deferred.resolve();
-			} );
+			}, this ) );
 		}
 	}
 }

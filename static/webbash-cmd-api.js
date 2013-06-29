@@ -25,15 +25,52 @@
 			newDir = $.realpath( env['PWD'] + '/' + argv[1] );
 		}
 
-		var req = api.request( 'GET', '/files' + newDir, {}, false );
+		var req = api.request( 'GET', '/files' + newDir, {}, {}, false );
 		if ( req.status === 200 ) {
 			env['PWD'] = newDir;
 			return 0;
-		} else {
+		} else if ( req.status === 404 ) {
 			fds[2].write( 'cd: ' + newDir + ': No such file or directory' );
+			return 1;
+		} else if ( req.status === 403 ) {
+			fds[2].write( 'cd: ' + newDir + ': Permission denied' );
+			return 1;
+		} else {
+			fds[2].write( 'cd: ' + newDir + ': An internal error occurred' );
 			return 1;
 		}
 	};
+
+	/** 
+	 * print the file info with options to the provided output stream
+	 * @param {<IoStream} fd Output stream
+	 * @param responseJSON  {object} responseJSON AJAX response object
+	 * @param opts {Array.<string>} opts
+	 */
+	 function printFile( fd, responseJSON, opts ) {
+	 	var name = responseJSON;
+	 	var output = name;
+	 	var printDot = false;
+/*
+	 	foreach ( var option in opts ) {
+	 		if ( opts.hasOwnProperty( option) ) {
+	 			switch ( option ) {
+	 				case 'a':
+	 					printDot = true;
+	 					break;
+	 				case 'l':
+	 					// add stuff here
+	 					break;
+
+	 			}
+	 		}
+	 	}
+*/	 	
+
+	 	//if( name[0] !== '.' || printDot )
+		 	fd.write( responseJSON + "\n" );
+	 };
+
 
 	/**
 	 * List the elements of a directory
@@ -44,18 +81,35 @@
 	 * @return {number} Retcode, 0 for success
 	 */
 	WebBash['commands']['ls'] = function( fds, argc, argv, env ) {
+		var opts = [];
+		var newArgv = [];
+
+		var optPattern = /-[\w]+/;
+
+		for ( var index in argv ) {
+			if ( optPattern.test( argv[index] ) ) {
+				opts[opts.length] = argv[index];
+			}
+			else {
+				newArgv[newArgv.length] = argv[index];
+			}
+		}
+
+		argc = newArgv.length;			
+		opts = $.normalizeopts( opts );
+
 		if ( argc === 1 ) {
-			argv[argc] = env['HOME'];
+			newArgv[argc] = env['PWD'];
 			argc++;
 		}
 
 		for ( var i = 1; i < argc; i++ ) {
-			var req = api.request( 'GET', '/files' + argv[1], {}, false );
+			var req = api.request( 'GET', '/files' + newArgv[1], {}, {}, false );
 			for ( var j = 0; j < req['responseJSON'].length; j++ ) {
-				fds[1].write( req['responseJSON'][j] + "\n" );
+				console.log( req['responseJSON'] );
+				printFile( fds[1], req['responseJSON'][j], opts);
 			}
 		}
-
 		return 0;
 	};
 
@@ -92,6 +146,22 @@
 	 * @return {number} Retcode, 0 for success
 	 */
 	WebBash['commands']['mkdir'] = function( fds, argc, argv, env ) {
+		for ( var i = 1; i < argc; i++ ) {
+			var req = api.request( 'PUT', '/files' + argv[i], '', {
+				'File-Type': 'directory'
+			}, false );
+
+			if ( req['status'] === 404 ) {
+				fds[2].write( 'mkdir: cannot create directory ' + argv[i] + ': No such file or directory' );
+				return 1;
+			} else if ( req['status'] === 403 ) {
+				fds[2].write( 'mkdir: cannot create directory ' + argv[i] + ': Permission denied' );
+				return 1;
+			} else if ( req['status'] >= 400 ) {
+				fds[2].write( 'mkdir: cannot create directory ' + argv[i] + ': An internal error occurred' );
+				return 1;
+			}
+		}
 		return 0;
 	};
 
