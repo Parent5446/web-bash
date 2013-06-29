@@ -43,11 +43,11 @@ class FileController
 			$children = $file->getChildren();
 			$childrenArray = array();
 
-			foreach ( $children as $child ) {
-				$childrenArray[] = { $child->getFilename(), $child->getSize() }
+			foreach ( $children as $child ) { 
+				$childrenArray[] = array(  $child->getFiletype(), $child->getPermissions(), $child->getOwner()->getName(),  
+					                       $child->getGroup()->getName(), $child->getSize(), $child->getMTime(), $child->getFilename() );
 			}
-
-
+			
 			$response = new Response( $childrenArray );
 		} elseif ( $file->isLink() ) {
 			$target = $file->getLinkTarget();

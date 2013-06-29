@@ -48,27 +48,46 @@
 	 * @param opts {Array.<string>} opts
 	 */
 	 function printFile( fd, responseJSON, opts ) {
-	 	var name = responseJSON;
-	 	var output = name;
+	 	var output = responseJSON[6] + "\t\t";
+	 	var counter;
+
+	 	var useCounter = true;
 	 	var printDot = false;
-/*
-	 	foreach ( var option in opts ) {
+
+	 	for ( var option in opts ) {
 	 		if ( opts.hasOwnProperty( option) ) {
 	 			switch ( option ) {
 	 				case 'a':
 	 					printDot = true;
 	 					break;
 	 				case 'l':
-	 					// add stuff here
+	 					useCounter = false;
 	 					break;
 
 	 			}
 	 		}
 	 	}
-*/	 	
 
-	 	//if( name[0] !== '.' || printDot )
-		 	fd.write( responseJSON + "\n" );
+	 	if ( typeof counter === 'undefined' ) {
+	 		counter = 0;
+	 	}
+	 	else {
+	 		counter++;
+	 	}
+
+		 if ( useCounter ) {
+		 	if ( counter % 4 ) {
+		 		counter = 0;
+		 		output += "\n";
+		 	}
+		 }
+		 else {
+		 	output += "\n";
+		 }
+
+
+	 	if( (name[0] !== '.' && name !== '..')  || printDot )
+		 	fd.write( output );
 	 };
 
 
@@ -83,6 +102,7 @@
 	WebBash['commands']['ls'] = function( fds, argc, argv, env ) {
 		var opts = [];
 		var newArgv = [];
+		var pathsNotFound = [];
 
 		var optPattern = /-[\w]+/;
 
@@ -99,18 +119,31 @@
 		opts = $.normalizeopts( opts );
 
 		if ( argc === 1 ) {
-			newArgv[argc] = env['PWD'];
+			newArgv[argc] = "";
 			argc++;
 		}
 
+		var fileSystemPath = '/files' + env['PWD'];
+
 		for ( var i = 1; i < argc; i++ ) {
-			var req = api.request( 'GET', '/files' + newArgv[1], {}, {}, false );
-					console.log( req['responseJSON'] );
-			for ( var j = 0; j < req['responseJSON'].length; j++ ) {
-				console.log( req['responseJSON'] );
-				printFile( fds[1], req['responseJSON'][j], opts);
+			var req = api.request( 'GET', fileSystemPath + newArgv[i], {}, {}, false );
+			if ( req['responseJSON'] instanceof Array ) {
+				for ( var j = 0; j < req['responseJSON'].length; j++ ) {
+					printFile( fds[1], req['responseJSON'][j], opts);
+				}
+			}
+			else if ( typeof req['responseJSOn'] === 'string' ) {
+				pathsNotFound[pathsNotFound.length] = newArgv[i];
 			}
 		}
+
+		for ( var path in pathsNotFound ) {
+			if( path.hasOwnProperty( path ) ) {
+				fds[1].write( "Failed to find the following path " + pathsNotFound[path] + "\n" );
+			}
+		}
+
+
 		return 0;
 	};
 

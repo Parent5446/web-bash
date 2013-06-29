@@ -358,6 +358,10 @@ class FileInfo implements Model
 		}
 	}
 
+	public function getPermissions() {
+		return $this->perms;
+	}
+
 	public function getATime() {
 		$this->load();
 		date_default_timezone_set( 'UTC' );
