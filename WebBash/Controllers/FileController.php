@@ -39,15 +39,21 @@ class FileController
 		}
 
 		if ( $file->isDir() ) {
-
 			$children = $file->getChildren();
 			$childrenArray = array();
 
-			foreach ( $children as $child ) { 
-				$childrenArray[] = array(  $child->getFiletype(), $child->getPermissions(), $child->getOwner()->getName(),  
-					                       $child->getGroup()->getName(), $child->getSize(), $child->getMTime(), $child->getFilename() );
+			foreach ( $children as $child ) {
+				$childrenArray[] = array(
+					$child->getFiletype(),
+					$child->getPermissions(),
+					$child->getOwner()->getName(),
+					$child->getGroup()->getName(),
+					$child->getSize(),
+					$child->getMTime(),
+					$child->getFilename()
+				);
 			}
-			
+
 			$response = new Response( $childrenArray );
 		} elseif ( $file->isLink() ) {
 			$target = $file->getLinkTarget();
@@ -56,6 +62,9 @@ class FileController
 		} else {
 			$response = new Response( $file->getContents() );
 		}
+
+		$file->updateATime();
+		$file->save();
 
 		return $response
 			->addHeader( 'Content-Length', $file->getSize() )
@@ -90,13 +99,16 @@ class FileController
 
 	public function post( array $params ) {
 		$file = $this->deps->fileCache->get( 'path', "/{$params['path']}" );
-		if( !$file->exists() ) {
+		if ( !$file->exists() ) {
 			$this->put( $params, '' );
 		} elseif ( !$file->getParent()->isAllowed( $this->deps->currentUser, FileInfo::ACTION_EXECUTE ) ) {
 			throw new HttpException( 403 );
 		}
 
+		$file->updateATime();
+		$file->updateMTime();
 		$file->save();
+
 		$response = new Response( null );
 		return $response
 			->addHeader( 'Content-Length', $file->getSize() )
@@ -133,8 +145,10 @@ class FileController
 			throw new HttpException( 400, 'Invalid file type' );
 		} elseif ( !$file->exists() && !$file->getParent()->exists() ) {
 			throw new HttpException( 404 );
+		} elseif ( !$file->getParent()->isDir() ) {
+			throw new HttpException( 400, 'Not a directory' );
 		} elseif ( !$file->isAllowed( $this->deps->currentUser, FileInfo::ACTION_WRITE ) ) {
-			throw new HttpException( 403 );
+			throw new HttpException( 403, 'Cannot make the directory' );
 		} elseif ( !$owner->exists() ) {
 			throw new HttpException( 400, 'Invalid owner' );
 		} elseif ( !$group->exists() ) {
@@ -144,9 +158,13 @@ class FileController
 		$file->setFiletype( self::$fileTypes[$params['type']] );
 		$file->setOwner( $owner );
 		$file->setGroup( $group );
-		$file->setPermissions( FileInfo::SOURCE_OWNER, FileInfo::ACTION_READ, true);
-		$file->setPermissions( FileInfo::SOURCE_OWNER, FileInfo::ACTION_WRITE, true);
-		$file->setPermissions( FileInfo::SOURCE_OWNER, FileInfo::ACTION_EXECUTE, true);
+
+		$file->setPermissions( FileInfo::SOURCE_OWNER, FileInfo::ACTION_READ, true );
+		$file->setPermissions( FileInfo::SOURCE_OWNER, FileInfo::ACTION_WRITE, true );
+		if ( $file->isDir() ) {
+			$file->setPermissions( FileInfo::SOURCE_OWNER, FileInfo::ACTION_EXECUTE, true );
+		}
+
 		$file->updateATime();
 		$file->updateMTime();
 		$file->save();

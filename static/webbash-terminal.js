@@ -7,7 +7,7 @@ function Terminal() {
 
 	/**
 	 * Controller object to use to process commands
-	 * @type {WebBash}
+	 * @type {WebBash|WebBashLogin}
 	 */
 	this.controller = null;
 
@@ -51,7 +51,7 @@ function Terminal() {
 	 */
 	this.clear = function() {
 		$( "body > ul" ).empty();
-	}
+	};
 
 	/**
 	 * Display a new prompt line and reset the cursor
@@ -205,6 +205,15 @@ function Terminal() {
 			e.preventDefault();
 			$( '#cursor' ).next().append( '^C' );
 			this.displayPrompt();
+		} else if ( e.ctrlKey && !e.metaKey && !e.shiftKey && e.which === 68 ) {
+			// Ctrl-D: exit the terminal
+			e.preventDefault();
+			this.controller.shutdown( this );
+			this.controller.api.logout();
+			// Hopefully something here will close the window
+			window.open( '', '_self', '' );
+			window.close();
+			self.close();
 		} else if ( e.which === 46 ) {
 			// Delete key
 			elem = $( '#cursor' );
@@ -276,20 +285,20 @@ function Terminal() {
 
 	/**
 	 * Bind this terminal to a window and controller
-	 * @param {WebBash} controller
+	 * @param {WebBash|WebBashLogin} controller
 	 */
 	this.bind = function( controller ) {
 		if ( this.controller !== null ) {
-			$.proxy( this.controller.shutdown, this.controller )( this );
+			this.controller.shutdown.call( this.controller, this );
 		}
 		this.controller = controller;
-		$.proxy( this.controller.startup, this.controller )( this );
+		this.controller.startup.call( this.controller, this );
 		this.displayPrompt();
 	};
 
 	$( window.document ).keydown( $.proxy( this.processInput, this ) );
 	$( window ).bind( 'beforeunload', function() {
-		$.proxy( this.controller.shutdown, this.controller )( this );
+		this.controller.shutdown.call( this.controller, this );
 	} );
 	window.setInterval( this.blink, 500 );
 	window.setInterval( $.proxy( function() {
