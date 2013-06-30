@@ -205,6 +205,15 @@ function Terminal() {
 			e.preventDefault();
 			$( '#cursor' ).next().append( '^C' );
 			this.displayPrompt();
+		} else if ( e.ctrlKey && !e.metaKey && !e.shiftKey && e.which === 68 ) {
+			// Ctrl-D: exit the terminal
+			e.preventDefault();
+			this.controller.shutdown( this );
+			this.controller.api.logout();
+			// Hopefully something here will close the window
+			window.open( '', '_self', '' );
+			window.close();
+			self.close();
 		} else if ( e.which === 46 ) {
 			// Delete key
 			elem = $( '#cursor' );
