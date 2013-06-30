@@ -49,7 +49,7 @@ function Terminal() {
 		$( '#cursor' ).remove();
 		$( "body > ul > li:last-child" ).append( $( '<div id="cursor" class="userinput">&nbsp;</div>' ) );
 
-		if ( this.passwordMode ) {
+		if ( this.prompt !== 'Password: ' ) {
 			$( '#cursor' ).before( $( '<div class="userinput"></div>' ) );
 			$( '#cursor' ).after( $( '<div class="userinput></div>' ) );			
 		} else {		
@@ -79,12 +79,8 @@ function Terminal() {
 	 * @param {string} txt Command entered
 	 */
 	this.appendOutput = function( txt ) {
-		var output;
-		if ( !this.passwordMode ) {
-			output = $( '<div class="userinput></div>' );
-		} else {
-			output = $( '<div id="hiddentext" id="system_output"></div>' );
-		}
+		var output = $( '<div id="system_output"></div>' );
+
 		output.text( txt );
 		$( "body > ul > li:last-child" ).append( output );
 		this.resetCursor();
