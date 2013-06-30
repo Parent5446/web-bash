@@ -389,7 +389,7 @@ class FileInfo implements Model
 	public function updateATime() {
 		$this->load();
 		date_default_timezone_set( 'UTC' );
-		$this->mtime = date_format( new \DateTime(), 'Y-m-d H:i:s' );
+		$this->atime = date_format( new \DateTime(), 'Y-m-d H:i:s' );
 	}
 
 	public function exists() {
