@@ -30,13 +30,13 @@
 			env['PWD'] = newDir;
 			return 0;
 		} else if ( req['status'] === 404 ) {
-			fds[1].write( 'cd: ' + newDir + ': No such file or directory' );
+			fds[2].write( 'cd: ' + newDir + ': No such file or directory' );
 			return 1;
 		} else if ( req['status'] === 403 ) {
-			fds[1].write( 'cd: ' + newDir + ': Permission denied' );
+			fds[2].write( 'cd: ' + newDir + ': Permission denied' );
 			return 1;
 		} else {
-			fds[1].write( 'cd: ' + newDir + ': An internal error occurred' );
+			fds[2].write( 'cd: ' + newDir + ': An internal error occurred' );
 			return 1;
 		}
 	};
@@ -217,7 +217,7 @@
 
 		for ( var path in pathsNotFound ) {
 			if( path.hasOwnProperty( path ) ) {
-				fds[1].write( "Failed to find the following path " + pathsNotFound[path] + "\n" );
+				fds[2].write( "Failed to find the following path " + pathsNotFound[path] + "\n" );
 			}
 		}
 

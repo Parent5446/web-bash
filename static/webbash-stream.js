@@ -55,5 +55,7 @@ function IoStream() {
 	 * overridden to control functionality
 	 * @param {str} text Text to flush
 	 */
-	this.flush = function( text ) {};
+	this.flush = function( text ) {
+		this.buffer = '';
+	};
 }
