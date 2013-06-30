@@ -50,14 +50,8 @@ class UserController
 
 
 		$homedir = $this->deps->fileCache->get( 'path', $data['home_directory'] );
-		if ( $homedir->exists() && !$homedir->isDir() ) {
+		if ( !$homedir->exists() || !$homedir->isDir() ) {
 			throw new HttpException( 400, 'Home directory is not a directory' );
-		} elseif ( !$homedir->exists() ) {
-			$fileController = new FileController( $this->deps );
-			$fileController->put( array(
-				'path' => $data['home_directory'],
-				'type' => 'directory'
-			), null );
 		}
 
 		$user->setEmail( $data['email'] );

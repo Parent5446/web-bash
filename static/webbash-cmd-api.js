@@ -316,6 +316,26 @@
 		if ( 'd' in opts ) {
 			homedir = opts['d'];
 		}
+		homedir = $.realpath( homedir, env['PWD'], env['HOME'] );
+
+		var req;
+
+		if ( 'm' in opts && !( 'M' in opts ) ) {
+			req = api.request( 'PUT', '/files' + homedir, '', {
+				'File-Type': 'directory'
+			}, false );
+
+			if ( req['status'] === 404 ) {
+				fds[2].write( 'useradd: cannot create directory ' + path + ': No such file or directory' );
+				return 1;
+			} else if ( req['status'] === 403 ) {
+				fds[2].write( 'useradd: cannot create directory ' + path + ': Permission denied' );
+				return 1;
+			} else if ( req['status'] >= 400 ) {
+				fds[2].write( 'useradd: cannot create directory ' + path + ': An internal error occurred' );
+				return 1;
+			}
+		}
 
 		var req = api.request( 'PUT', '/users/' + argv[1], {
 				'password': '!',
@@ -333,6 +353,10 @@
 			fds[2].write( 'count not create user: server timed out' );
 			return 1;
 		}
+
+		req = api.request( 'PATCH', '/files' + homedir, '', {
+			'File-Owner': argv[1]
+		}, false );
 
 		return 0;
 	}
