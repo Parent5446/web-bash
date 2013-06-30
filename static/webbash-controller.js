@@ -122,7 +122,7 @@ function WebBash( username ) {
 				deferred.notify( [text] );
 			};
 			fds[2].flush = function( stream ) {
-				var text = stream.read( stream );
+				var text = stream.read();
 				deferred.notify( [text] );
 			};
 
