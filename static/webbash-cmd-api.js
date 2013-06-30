@@ -150,7 +150,7 @@
 				req['responseJSON'] = [req['responseJSON']];
 			}
 
-			if( req['responseJSON'] === null || req['responseJSON'] === undefined )
+			if( req['responseJSON'] === null || req['responseJSON'] === undefined || req['responseJSON'] == "" )
 			{
 				req['responseJSON'] = [];
 			}
