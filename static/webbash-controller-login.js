@@ -56,7 +56,6 @@ function WebBashLogin() {
 			if ( text !== '' ) {
 				terminal.prompt = 'Password: ';
 			}
-			terminal.togglePasswordMode();
 			deferred.resolve();
 		} else {
 			this.api.login( this.username, text ).done( $.proxy( function() {

@@ -30,19 +30,6 @@ function Terminal() {
 	this.currHistoryPos = 0;
 
 	/**
-	 * Password typing mode (divs are hidden)
-	 * @type {bool}
-	 */
-    this.passwordMode = false;
-
-    /**
-     * toggles the password mode on/off
-     */
-    this.togglePasswordMode = function () {
-    	this.passwordMode = true;
-    }
-
-	/**
 	 * Reset the cursor position
 	 */
 	this.resetCursor = function() {
