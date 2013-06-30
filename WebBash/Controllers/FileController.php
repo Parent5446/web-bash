@@ -144,7 +144,7 @@ class FileController
 		if ( !isset( self::$fileTypes[$params['type']] ) ) {
 			throw new HttpException( 400, 'Invalid file type' );
 		} elseif ( !$file->exists() && !$file->getParent()->exists() ) {
-			throw new HttpException( 404 );
+			throw new HttpException( 404, 'Cannot find file or directory' );
 		} elseif ( !$file->getParent()->isDir() ) {
 			throw new HttpException( 400, 'Not a directory' );
 		} elseif ( $file->exists() && !$file->isAllowed( $this->deps->currentUser, FileInfo::ACTION_WRITE ) ) {
