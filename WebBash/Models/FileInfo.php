@@ -466,12 +466,10 @@ class FileInfo implements Model
 		$webRoot = $this->deps->config['webbash']['fileroot'];
 		$finalPath = realpath( $webRoot . $this->path );
 
-		if (
-			strpos( $finalPath, $webRoot ) !== 0 ||
-			!is_file( $finalPath ) ||
-			!is_readable( $finalPath )
-		) {
+		if ( strpos( $finalPath, $webRoot ) !== 0 ) {
 			$contents = null;
+		} elseif ( !is_file( $finalPath ) || !is_readable( $finalPath ) ) {
+			throw new RuntimeException( "Error while accessing contents of $finalPath" );
 		} elseif ( $length === -1 ) {
 			$contents = file_get_contents( $finalPath );
 		} else {
@@ -491,12 +489,10 @@ class FileInfo implements Model
 		$webRoot = $this->deps->config['webbash']['fileroot'];
 		$finalPath = realpath( $webRoot . $this->path );
 
-		if (
-			strpos( $finalPath, $webRoot ) !== 0 ||
-			file_exists( $finalPath ) &&
-			!is_writeable( $finalPath )
-		) {
+		if ( strpos( $finalPath, $webRoot ) !== 0 ) {
 			return false;
+		} elseif ( file_exists( $finalPath ) && !is_writeable( $finalPath ) ) {
+			throw new RuntimeException( "Error while overwriting contents of $finalPath" );
 		} elseif ( $this->isDir() && !is_dir( $finalPath ) ) {
 			unlink( $finalPath );
 			return mkdir( $finalPath, $this->perms );
