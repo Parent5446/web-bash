@@ -147,6 +147,8 @@ class FileController
 		$file->setPermissions( FileInfo::SOURCE_OWNER, FileInfo::ACTION_READ, true);
 		$file->setPermissions( FileInfo::SOURCE_OWNER, FileInfo::ACTION_WRITE, true);
 		$file->setPermissions( FileInfo::SOURCE_OWNER, FileInfo::ACTION_EXECUTE, true);
+		$file->updateATime();
+		$file->updateMTime();
 		$file->save();
 		$file->setContents( $data );
 	}
