@@ -152,18 +152,17 @@
 			 	if ( !(counter % 4) ) {
 			 		fd.write( output );
 			 		fd.clear();
-					return "";
-			 	}else {
-			 		return output;
+					output = "";
 			 	}
 			 }
 			 else {
 			 	output += "\n";
 			 	fd.write( output );
 			 	fd.clear();
-			 	return "";
+			 	output = "";
 			 }
 		}
+		return output;
 	 };
 
 
