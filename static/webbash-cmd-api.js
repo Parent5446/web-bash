@@ -92,9 +92,9 @@
 							}
 						}
 
-						output += ( ' ' + $.pad( responseJSON[2], 10, ' ', $.pad.STR_PAD_LEFT ) ); // owner
-						output += ( ' ' + $.pad( responseJSON[3], 6, ' ', $.pad.STR_PAD_LEFT ) ); // group
-						output += ( ' ' + $.pad( responseJSON[4].toString(), 6, ' ', $.pad.STR_PAD_LEFT ) ); // size
+						output += ( ' ' + $.pad( responseJSON[2], 10 ) ); // owner
+						output += ( ' ' + $.pad( responseJSON[3], 6 ) ); // group
+						output += ( ' ' + $.pad( responseJSON[4].toString(), 6 ) ); // size
 						output += ( ' ' + responseJSON[5]['date'] ); //date
 						output += ( ' ' + responseJSON[6] ); //file name
 
@@ -320,6 +320,48 @@
 		}
 
 		return 0;
+	}
+
+	/**
+	 * Change the current user's password
+	 * @param {Array.<IoStream>} fds Input/output streams
+	 * @param {number} argc Number of arguments
+	 * @param {Array.<string>} argv Arguments passed to command
+	 * @param {Array.<string>} env Environment variables
+	 * @return {number} Retcode, 0 for success
+	 */
+	WebBash['commands']['passwd'] = function( fds, argc, argv, env ) {
+		if ( argc < 2 ) {
+			argv.push( env['USER'] );
+			++argc;
+		}
+
+		var deferred = $.Deferred();
+
+		fds[0].readBlocking().progress( function( stream ) {
+			var password = stream.read();
+
+			var req = api.request( 'PATCH', '/users/' + argv[1], {
+					'password': password
+				}, {}, false );
+				
+			if ( req['status'] === 400 ) {
+				fds[2].write( 'useradd: invalid home directory' );
+				deferred.resolve( 1 );
+			} else if ( req['status'] === 403 ) {
+				fds[2].write( 'useradd: cannot create user: Permission denied' );
+				deferred.resolve( 1 );
+			} else if ( req['status'] == 500 ) {
+				fds[2].write( 'count not create user: server timed out' );
+				deferred.resolve( 1 );
+			} else {
+				deferred.resolve( 0 );
+			}
+		} );
+
+		fds[1].write( 'Password: ' );
+
+		return deferred;
 	}
 
 	/**

@@ -246,8 +246,10 @@ function Terminal() {
 			}
 		} else if ( e.which === 13 ) {
 			// Enter key: submit command
-			var cmd = $( '#cursor' ).parent().children( '.userinput' ).text();
+			var children = $( '#cursor' ).parent().children( '.userinput' ).not( '.completed' );
+			var cmd = children.text();
 			cmd = cmd.substr( 0, cmd.length - 1 );
+			children.addClass( 'completed' );
 
 			cmd = $.trim( cmd );
 

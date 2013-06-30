@@ -9,6 +9,7 @@ java -jar ../lib/compiler.jar \
     --js ../static/jquery.realpath.js \
 	--js ../static/jquery.pad.js \
 	--js ../static/jquery.getopt.js \
+	--js ../static/jquery.splitArgs.js \
     --js ../static/webbash-terminal.js \
     --js ../static/webbash-controller.js \
     --js ../static/webbash-controller-login.js \
@@ -17,4 +18,5 @@ java -jar ../lib/compiler.jar \
     --js ../static/webbash-cmd-internal.js \
     --js ../static/webbash-cmd-api.js \
     --compilation_level ADVANCED_OPTIMIZATIONS \
+	--formatting PRETTY_PRINT \
     --js_output_file ../static/webbash-compiled.js

@@ -24,7 +24,7 @@ function IoStream() {
 	 * @private
 	 * @type {object}
 	 */
-	this.deferred = null;
+	this.deferred = $.Deferred();
 
 	/**
 	 * Write to the buffer
@@ -64,7 +64,6 @@ function IoStream() {
 	 * @return {object}
 	 */
 	this.readBlocking = function() {
-		this.deferred = $.Deferred();
 		return this.deferred.promise();
 	};
 
