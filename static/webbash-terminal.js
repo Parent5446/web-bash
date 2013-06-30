@@ -248,15 +248,8 @@ function Terminal() {
 			// Enter key: submit command
 			var children = $( '#cursor' ).parent().children( '.userinput' ).not( '.completed' );
 			var cmd = children.text();
-			cmd = cmd.substr( 0, cmd.length - 1 );
+			cmd = $.trim( cmd.substr( 0, cmd.length - 1 ) );
 			children.addClass( 'completed' );
-
-			cmd = $.trim( cmd );
-
-			if ( cmd.length > 0 ) {
-				this.cmdHistory[this.cmdHistory.length] = cmd;
-				this.currHistoryPos = this.cmdHistory.length;
-			}
 
 			$( '#cursor' ).prev().append( $( '#cursor' ).text() );
 			$( '#cursor' ).next().after( $( ' <br> ') );
@@ -264,6 +257,9 @@ function Terminal() {
 			if ( this.promise !== null ) {
 				this.promise.stdin.write( cmd );
 			} else if ( cmd.length > 0 ) {
+				this.cmdHistory[this.cmdHistory.length] = cmd;
+				this.currHistoryPos = this.cmdHistory.length;
+
 				this.promise = this.controller.execute( $.trim( cmd ), this );
 				this.promise
 					.progress( $.proxy( this.appendOutput, this ) )

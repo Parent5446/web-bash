@@ -18,5 +18,4 @@ java -jar ../lib/compiler.jar \
     --js ../static/webbash-cmd-internal.js \
     --js ../static/webbash-cmd-api.js \
     --compilation_level ADVANCED_OPTIMIZATIONS \
-	--formatting PRETTY_PRINT \
     --js_output_file ../static/webbash-compiled.js

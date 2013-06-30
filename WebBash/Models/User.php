@@ -149,6 +149,7 @@ class User implements Model
 	}
 
 	public function setEmail( $email ) {
+		$this->load();
 		$this->email = $email;
 	}
 
@@ -158,6 +159,7 @@ class User implements Model
 	}
 
 	public function setEmailConfirmed( $val ) {
+		$this->load();
 		$this->email_confirmed = (bool)$val;
 	}
 
@@ -167,10 +169,12 @@ class User implements Model
 	}
 
 	public function setToken() {
+		$this->load();
 		$this->token = Util\urandom( 64 );
 	}
 
 	public function matchToken( $token, $salt = 'default' ) {
+		$this->load();
 		return Util\secureCompare( $token, $this->getToken( $salt ) );
 	}
 
@@ -184,6 +188,7 @@ class User implements Model
 	}
 
 	public function setPassword( $plaintext ) {
+		$this->load();
 		$this->password = Util\bcrypt(
 			$plaintext,
 			false,
