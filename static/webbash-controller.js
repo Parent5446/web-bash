@@ -121,7 +121,7 @@ function WebBash( username ) {
 				var text = stream.read();
 				deferred.notify( [text] );
 			};
-			fds[2].flush = function() {
+			fds[2].flush = function( stream ) {
 				var text = stream.read( stream );
 				deferred.notify( [text] );
 			};

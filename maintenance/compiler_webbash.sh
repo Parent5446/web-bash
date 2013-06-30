@@ -1,15 +1,15 @@
 #!/bin/bash
 
 java -jar ../lib/compiler.jar \
-	--accept_const_keyword \
-	--process_jquery_primitives \
-	--use_types_for_optimization \
+    --accept_const_keyword \
+    --process_jquery_primitives \
+    --use_types_for_optimization \
     --externs ../lib/jquery-1.9-externs.js \
     --js ../static/jquery.eventChar.js \
     --js ../static/jquery.realpath.js \
-	--js ../static/jquery.pad.js \
-	--js ../static/jquery.getopt.js \
-	--js ../static/jquery.splitArgs.js \
+    --js ../static/jquery.pad.js \
+    --js ../static/jquery.getopt.js \
+    --js ../static/jquery.splitArgs.js \
     --js ../static/webbash-terminal.js \
     --js ../static/webbash-controller.js \
     --js ../static/webbash-controller-login.js \
