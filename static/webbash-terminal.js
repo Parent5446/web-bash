@@ -279,9 +279,10 @@ function Terminal() {
 			elem = $( '#cursor' ).prev();
 			elem.append( '\'' );
 			this.moveCursorRight( 1 );
-		} else {
+		} else if ( !e.ctrlKey && !e.metaKey ) {
 			// Regular text: output to screen
 			elem = $( '#cursor' ).prev();
+			e.preventDefault();
 
 			var ch = e.getChar();
 			if ( ch ) {
