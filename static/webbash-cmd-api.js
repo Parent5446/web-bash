@@ -299,21 +299,31 @@
 	 * @return {number} Retcode, 0 for success
 	 */
 	WebBash['commands']['useradd'] = function( fds, argc, argv, env ) {
-		if ( argc !== 2 ) {
-			fds[2].write( 'error in usage: useradd LOGIN [EMAIL]' );
+		var info = $.getopt( argv, 'd:g:G:mM' );
+		var opts = info[0];
+		argv = info[1];
+		argc = argv.length;
+
+		if ( argc < 2 ) {
+			fds[2].write( 'error in usage: useradd [OPTIONS] LOGIN [EMAIL]' );
 			return 1;
 		} else if ( argc !== 3 ) {
 			argv.push( argv[1] + '@localhost' );
 			++argc;
 		}
 
+		var homedir = '/home/' + argv[1];
+		if ( 'd' in opts ) {
+			homedir = opts['d'];
+		}
+
 		var req = api.request( 'PUT', '/users/' + argv[1], {
 				'password': '!',
 				'email': argv[2],
-				'home_directory': "/" + argv[1]
+				'home_directory': homedir
 			}, {}, false );
 
-		if ( req['status'] === 400 ) {
+		if ( req['status'] === 400 || req['status'] === 404 && req['responseJSON'] === 'Cannot find file or directory' ) {
 			fds[2].write( 'useradd: invalid home directory' );
 			return 1;
 		} else if ( req['status'] === 403 ) {

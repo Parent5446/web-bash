@@ -57,7 +57,7 @@ class UserController
 			$fileController->put( array(
 				'path' => $data['home_directory'],
 				'type' => 'directory'
-			) );
+			), null );
 		}
 
 		$user->setEmail( $data['email'] );
