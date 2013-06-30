@@ -152,6 +152,7 @@
 			 	if ( !(counter % 4) ) {
 			 		fd.write( output );
 			 		fd.clear();
+					return "";
 			 	}else {
 			 		return output;
 			 	}
