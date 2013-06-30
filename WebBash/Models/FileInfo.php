@@ -390,6 +390,12 @@ class FileInfo implements Model
 		return new \DateTime( $this->ctime );
 	}
 
+	public function updateCTime() {
+		$this->load();
+		date_default_timezone_set( 'UTC' );
+		$this->ctime = date_format( new \DateTime(), 'Y-m-d H:i:s' );
+	}
+
 	public function updateMTime() {
 		$this->load();
 		date_default_timezone_set( 'UTC' );
