@@ -370,7 +370,7 @@
 				'password': argv[2],
 				'email': argv[3],
 				'home_directory': "/"+argv[1]
-			}, '', false );
+			}, {}, false );
 
 		if( req['status'] == 400 || req['status'] == 403 || req['status'] == 404 ) {
 			fds[2].write( 'count not create user: '+req['responseJSON'] );
