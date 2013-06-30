@@ -47,6 +47,7 @@
 				109: 45, // Numpad -
 				110: 46, // Numpad .
 				111: 47, // Numpad /
+				173: 45, // -
 				186: 59, // ;
 				187: 61, // =
 				188: 44, // ,
@@ -72,9 +73,6 @@
 		}
 
 		var ch = String.fromCharCode( code );
-		if (code == 173 && ch != '-') {
-			ch = '-';
-		}
 
 		if ( this.shiftKey ) {
 			// Translate shifted special chars

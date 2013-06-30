@@ -40,11 +40,6 @@ class UserController
 
 		$user = $this->deps->userCache->get( 'name', $params['name'] );
 
-		if( $user->exists() )
-			throw new HttpException( 403, "user already exists" );
-
-		$homedir = $this->deps->fileCache->get( 'path', $data['home_directory'] );
-
 		$admins = $this->deps->groupCache->get( 'name', 'admin' );
 		if (
 			!$admins->isMember( $this->deps->currentUser ) &&
@@ -53,24 +48,25 @@ class UserController
 			throw new HttpException( 403, "user not allowed to create groups" );
 		}
 
+
+		$homedir = $this->deps->fileCache->get( 'path', $data['home_directory'] );
+		if ( $homedir->exists() && !$homedir->isDir() ) {
+			throw new HttpException( 400, 'Home directory is not a directory' );
+		} elseif ( !$homedir->exists() ) {
+			$fileController = new FileController( $this->deps );
+			$fileController->put( array(
+				'path' => $data['home_directory'],
+				'type' => 'directory'
+			) );
+		}
+
 		$user->setEmail( $data['email'] );
 		$user->setPassword( $data['password'] );
 		$user->setHomeDirectory( $homedir );
 		$user->save();
 
-
-		$homedir->setFileType( 'd' );
 		$homedir->setOwner( $user );
-		//$groups = $user->getGroups();
-		//$group = $this->deps->groupCache->get( 'name', $groups[0] );
-		//$homedir->setGroup( $group );
-		$homedir->perms = octdec( '0755' );
 		$homedir->save();
-
-		// cant create directory without user already existing. cant save homedir if it doesn't already exist
-		// as such, create/save the user, create/save the homedir, and then update the user
-		$user->setHomeDirectory( $homedir );
-		$user->save();
 
 		return $this->get( $params );
 	}

@@ -21,7 +21,7 @@
 	 * Echo strings to the screen
 	 * @param {Array.<IoStream>} fds Input/output streams
 	 * @param {number} argc Number of arguments
-	 * @param {Array.<string>} Arguments passed to command
+	 * @param {Array.<string>} argv Arguments passed to command
 	 * @return {number} Retcode, 0 for success
 	 */
 	WebBash['commands']['echo'] = function( fds, argc, argv ) {
@@ -34,8 +34,8 @@
 	 * Change an environment variable
 	 * @param {Array.<IoStream>} fds Input/output streams
 	 * @param {number} argc Number of arguments
-	 * @param {Array.<string>} Arguments passed to command
-	 * @param {Array.<string>} Environment variables
+	 * @param {Array.<string>} argv Arguments passed to command
+	 * @param {Array.<string>} env Environment variables
 	 * @return {number} Retcode, 0 for success
 	 */
 	WebBash['commands']['export'] = function( fds, argc, argv, env ) {
@@ -50,8 +50,8 @@
 	 * Unset an environment variable
 	 * @param {Array.<IoStream>} fds Input/output streams
 	 * @param {number} argc Number of arguments
-	 * @param {Array.<string>} Arguments passed to command
-	 * @param {Array.<string>} Environment variables
+	 * @param {Array.<string>} argv Arguments passed to command
+	 * @param {Array.<string>} env Environment variables
 	 * @return {number} Retcode, 0 for success
 	 */
 	WebBash['commands']['unset'] = function( fds, argc, argv, env ) {
@@ -65,21 +65,18 @@
 	 * Print the current working directory
 	 * @param {Array.<IoStream>} fds Input/output streams
 	 * @param {number} argc Number of arguments
-	 * @param {Array.<string>} Arguments passed to command
-	 * @param {Array.<string>} Environment variables
+	 * @param {Array.<string>} argv Arguments passed to command
+	 * @param {Array.<string>} env Environment variables
 	 * @return {number} Retcode, 0 for success
 	 */
 	WebBash['commands']['pwd'] = function( fds, argc, argv, env ) {
 		fds[1].write( env['PWD'] );
 		return 0;
-	}
+	};
 
 	/**
 	 * Print a brief help message
-	 * @param {Array.<IoStream>} fds Input/output streams
-	 * @param {number} argc Number of arguments
-	 * @param {Array.<string>} Arguments passed to command
-	 * @param {Array.<string>} Environment variables
+	 * @param {Array.<IoStream>} fds Input/output streamss
 	 * @return {number} Retcode, 0 for success
 	 */
 	WebBash['commands']['help'] = function( fds ) {
@@ -92,8 +89,8 @@
 	 * Write out all available commands
 	 * @param {Array.<IoStream>} fds Input/output streams
 	 * @param {number} argc Number of arguments
-	 * @param {Array.<string>} Arguments passed to command
-	 * @param {Array.<string>} Environment variables
+	 * @param {Array.<string>} argv Arguments passed to command
+	 * @param {Array.<string>} env Environment variables
 	 * @return {number} Retcode, 0 for success
 	 */
 	WebBash['commands']['commands'] = function( fds, argc, argv, env ) {
@@ -112,8 +109,8 @@
 	 * Print the current user's username
 	 * @param {Array.<IoStream>} fds Input/output streams
 	 * @param {number} argc Number of arguments
-	 * @param {Array.<string>} Arguments passed to command
-	 * @param {Array.<string>} Environment variables
+	 * @param {Array.<string>} argv Arguments passed to command
+	 * @param {Array.<string>} env Environment variables
 	 * @return {number} Retcode, 0 for success
 	 */
 	WebBash['commands']['whoami'] = function( fds, argc, argv, env ) {
@@ -125,12 +122,12 @@
 	 * Print the current user's username
 	 * @param {Array.<IoStream>} fds Input/output streams
 	 * @param {number} argc Number of arguments
-	 * @param {Array.<string>} Arguments passed to command
-	 * @param {Array.<string>} Environment variables
+	 * @param {Array.<string>} argv Arguments passed to command
+	 * @param {Array.<string>} env Environment variables
 	 * @return {number} Retcode, 0 for success
 	 */
 	WebBash['commands']['sleep'] = function( fds, argc, argv, env ) {
-		if ( argv.length < 2 ) {
+		if ( argc < 2 ) {
 			fds[2].write( 'sleep: missing operand' );
 			return 1;
 		}
@@ -138,10 +135,10 @@
 		var unit = argv[1][argv[1].length - 1];
 		var num = 0;
 		if ( [ 's', 'm', 'h', 'd' ].indexOf( unit ) === -1 ) {
-			num = parseInt( argv[1] );
+			num = parseInt( argv[1], 10 );
 			unit = 's';
 		} else {
-			num = parseInt( argv[1].substr( 0, -1 ) );
+			num = parseInt( argv[1].substr( 0, -1 ), 10 );
 		}
 
 		switch ( unit ) {

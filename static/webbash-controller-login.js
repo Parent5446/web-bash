@@ -35,8 +35,8 @@ function WebBashLogin() {
 
 	/**
 	 * Execute a command given an array of arguments
-	 * @param {string} argv Arguments typed
-	 * @param {Object} jQuery node to output to
+	 * @param {string} text Arguments typed
+	 * @param {Terminal} terminal Terminal that command was typed on
 	 */
 	this.execute = function( text, terminal ) {
 		var deferred = $.Deferred();
@@ -68,6 +68,6 @@ function WebBashLogin() {
 			}, this ) );
 		}
 	}
-}
+};
 
 window['WebBashLogin'] = WebBashLogin;
