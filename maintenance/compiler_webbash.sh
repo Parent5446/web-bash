@@ -9,6 +9,7 @@ java -jar ../lib/compiler.jar \
     --js ../static/jquery.realpath.js \
 	--js ../static/jquery.pad.js \
 	--js ../static/jquery.getopt.js \
+	--js ../static/jquery.splitArgs.js \
     --js ../static/webbash-terminal.js \
     --js ../static/webbash-controller.js \
     --js ../static/webbash-controller-login.js \

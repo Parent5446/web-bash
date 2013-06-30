@@ -6,6 +6,7 @@
 	password = password
 
 [webbash]
+	hostname = localhost
 	fileroot = ${root}/filesystem
 	bcryptrounds = 5
 	historylimit = 50

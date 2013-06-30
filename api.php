@@ -2,9 +2,12 @@
 
 error_reporting( E_ALL | E_STRICT );
 
+define( 'WEBBASH', 1.0 );
+
 // Parse configuration and load database
 $config = parse_ini_file( 'config.ini', true );
 $config['webbash'] += array(
+	'hostname' => 'localhost',
 	'root' => __DIR__,
 	'bcryptrounds' => 5,
 	'historylimit' => 50,
@@ -26,6 +29,7 @@ spl_autoload_register( array( $autoloader, 'autoload' ) );
 // Make a DI container and setup the router
 $di = new WebBash\DI( $db, $config );
 $router = new WebBash\Router( $di );
+$router->register( '/', '\WebBash\Controllers\ServerController' );
 $router->register( '/login', '\WebBash\Controllers\LoginController' );
 $router->register( '/users/:name', '\WebBash\Controllers\UserController' );
 $router->register( '/users/:name/history', '\WebBash\Controllers\CommandHistoryController' );

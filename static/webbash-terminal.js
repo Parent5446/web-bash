@@ -30,6 +30,13 @@ function Terminal() {
 	this.currHistoryPos = 0;
 
 	/**
+	 * The current command promise being executed
+	 * @type {object}
+	 * @private
+	 */
+	this.promise = null;
+
+	/**
 	 * Reset the cursor position
 	 */
 	this.resetCursor = function() {
@@ -57,6 +64,7 @@ function Terminal() {
 	 * Display a new prompt line and reset the cursor
 	 */
 	this.displayPrompt = function() {
+		this.promise = null;
 		$( "body > ul" ).append( '<li>' + this.prompt + '</li>' );
 		this.resetCursor();
 	};
@@ -238,21 +246,22 @@ function Terminal() {
 			}
 		} else if ( e.which === 13 ) {
 			// Enter key: submit command
-			var cmd = $( '#cursor' ).parent().children( '.userinput' ).text();
-			cmd = cmd.substr( 0, cmd.length - 1 );
-
-			cmd = $.trim( cmd );
-
-			if ( cmd.length > 0 ) {
-				this.cmdHistory[this.cmdHistory.length] = cmd;
-				this.currHistoryPos = this.cmdHistory.length;
-			}
+			var children = $( '#cursor' ).parent().children( '.userinput' ).not( '.completed' );
+			var cmd = children.text();
+			cmd = $.trim( cmd.substr( 0, cmd.length - 1 ) );
+			children.addClass( 'completed' );
 
 			$( '#cursor' ).prev().append( $( '#cursor' ).text() );
 			$( '#cursor' ).next().after( $( ' <br> ') );
 
-			if ( cmd.length > 0 ) {
-				this.controller.execute( $.trim( cmd ), this )
+			if ( this.promise !== null ) {
+				this.promise.stdin.write( cmd );
+			} else if ( cmd.length > 0 ) {
+				this.cmdHistory[this.cmdHistory.length] = cmd;
+				this.currHistoryPos = this.cmdHistory.length;
+
+				this.promise = this.controller.execute( $.trim( cmd ), this );
+				this.promise
 					.progress( $.proxy( this.appendOutput, this ) )
 					.always( $.proxy( this.displayPrompt, this ) );
 			} else {

@@ -71,6 +71,53 @@ class UserController
 		return $this->get( $params );
 	}
 
+	public function patch( array $params, $data ) {
+		if ( !is_array( $data ) ) {
+			throw new HttpException( 400, 'Expecting an array as input' );
+		}
+
+		$user = $this->deps->userCache->get( 'name', $params['name'] );
+
+		$admins = $this->deps->groupCache->get( 'name', 'admin' );
+		if (
+			!$admins->isMember( $this->deps->currentUser ) &&
+			$user->getName() !== $this->deps->currentUser->getName()
+		) {
+			throw new HttpException( 403, "user not allowed to create groups" );
+		}
+
+		$homedir = null;
+		if ( isset( $data['home_directory'] ) ) {
+			$homedir = $this->deps->fileCache->get( 'path', $data['home_directory'] );
+			if ( $homedir->exists() && !$homedir->isDir() ) {
+				throw new HttpException( 400, 'Home directory is not a directory' );
+			} elseif ( !$homedir->exists() ) {
+				$fileController = new FileController( $this->deps );
+				$fileController->put( array(
+					'path' => $data['home_directory'],
+					'type' => 'directory'
+				) );
+			}
+
+			$user->setHomeDirectory( $homedir );
+		}
+		if ( isset( $data['email'] ) ) {
+			$user->setEmail( $data['email'] );
+		}
+		if ( isset( $data['password'] ) ) {
+			$user->setPassword( $data['password'] );
+		}
+
+		$user->save();
+
+		if ( $homedir ) {
+			$homedir->setOwner( $user );
+			$homedir->save();
+		}
+
+		return $this->get( $params );
+	}
+
 	public function delete( array $params ) {
 		$user = $this->deps->userCache->get( 'name', $params['name'] );
 		$admins = $this->deps->groupCache->get( 'name', 'admin' );

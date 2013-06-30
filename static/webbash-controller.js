@@ -85,11 +85,16 @@ function WebBash( username ) {
 	 */
 	this.execute = function( text, terminal ) {
 		var deferred = $.Deferred();
+		deferred.stdin = new IoStream();
+
 		setTimeout( $.proxy( function() {
-			var argv = this.replaceVariables( this.splitText( text ) );
+			var argv = this.replaceVariables( $.splitArgs( text ) );
 			this.executeCommand( argv, terminal, deferred );
 		}, this ), 0 );
-		return deferred.promise();
+
+		var promise = deferred.promise();
+		promise.stdin = deferred.stdin;
+		return promise;
 	};
 
 	/**
@@ -111,11 +116,13 @@ function WebBash( username ) {
 		} else if ( argv[0] === "clear" ) {
 			terminal.clear();
 		} else if ( typeof WebBash['commands'][argv[0]] !== 'undefined' ) {
-			var fds = [ new IoStream(), new IoStream(), new IoStream() ];
-			fds[1].flush = function( text ) {
+			var fds = [ deferred.stdin, new IoStream(), new IoStream() ];
+			fds[1].flush = function( stream ) {
+				var text = stream.read();
 				deferred.notify( [text] );
 			};
-			fds[2].flush = function( text ) {
+			fds[2].flush = function() {
+				var text = stream.read( stream );
 				deferred.notify( [text] );
 			};
 
@@ -173,69 +180,6 @@ function WebBash( username ) {
 		}
 
 		return argv;
-	};
-
-	/**
-	 * Split a command into an argument array
-	 * @private
-	 * @param {string} txt
-	 * @return {Array.<string>}
-	 */
-	this.splitText = function( txt ) {
-		var cmd = "",
-			split_text = [],
-			inQuote = false,
-			inDoubleQuote = false,
-			backslash = false;
-
-		for ( var i = 0; i < txt.length; i++ ) {
-			if ( txt[i] === ' ' && ( inQuote || inDoubleQuote ) ) {
-				cmd += txt[i];
-			} else if ( txt[i] === ' ' && !( inQuote || inDoubleQuote ) ) {
-				if ( cmd.length > 0 ) {
-					split_text.push(cmd);
-					cmd = "";
-				}
-				continue;
-			} else if ( txt[i] === '\\' ) {
-				if ( backslash || inQuote ) {
-					cmd += '\\';
-					backslash = false;
-				} else {
-					backslash = true;
-				}
-			} else if ( txt[i] === '\'' ) {
-				if ( backslash ) {
-					cmd += '\'';
-					backslash = false;
-				} else if ( inDoubleQuote ) {
-					cmd += '\'';
-				} else {
-					inQuote = !inQuote;
-				}
-			} else if ( txt[i] === '\"' ) {
-				if ( backslash ) {
-					cmd += '\"';
-					backslash = false;
-				} else if ( inQuote ) {
-					cmd += '\"';
-				} else {
-					inDoubleQuote = !inDoubleQuote;
-				}
-			} else if ( txt[i] === '$' && inQuote ) {
-				cmd += '\\$';
-			} else {
-				cmd += txt[i];
-				backslash = false;
-			}
-		}
-
-		cmd = $.trim( cmd );
-		if ( cmd !== '' ) {
-			split_text.push( cmd );
-		}
-
-		return split_text;
 	};
 }
 
