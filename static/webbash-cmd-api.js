@@ -299,21 +299,64 @@
 	 * @return {number} Retcode, 0 for success
 	 */
 	WebBash['commands']['useradd'] = function( fds, argc, argv, env ) {
-		if ( argc !== 2 ) {
-			fds[2].write( 'error in usage: useradd LOGIN [EMAIL]' );
+		var info = $.getopt( argv, 'd:g:G:mM' );
+		var opts = info[0];
+		argv = info[1];
+		argc = argv.length;
+
+		if ( argc < 2 ) {
+			fds[2].write( 'error in usage: useradd [OPTIONS] LOGIN [EMAIL]' );
 			return 1;
 		} else if ( argc !== 3 ) {
 			argv.push( argv[1] + '@localhost' );
 			++argc;
 		}
 
-		var req = api.request( 'PUT', '/users/' + argv[1], {
+		var req = api.request( 'GET', '/users/' + argv[1], '', {}, false );
+		if ( req['status'] !== 404 ) {
+			fds[2].write( 'useradd: User ' + argv[1] + ' already exists' );
+			return 1;
+		}
+
+		var homedir = '/home/' + argv[1];
+		if ( 'd' in opts ) {
+			homedir = opts['d'];
+		}
+		homedir = $.realpath( homedir, env['PWD'], env['HOME'] );
+
+		if ( 'm' in opts && !( 'M' in opts ) ) {
+			req = api.request( 'PUT', '/files' + homedir, '', {
+				'File-Type': 'directory'
+			}, false );
+
+			if ( req['status'] === 404 ) {
+				fds[2].write( 'useradd: cannot create directory ' + path + ': No such file or directory' );
+				return 1;
+			} else if ( req['status'] === 403 ) {
+				fds[2].write( 'useradd: cannot create directory ' + path + ': Permission denied' );
+				return 1;
+			} else if ( req['status'] >= 400 ) {
+				fds[2].write( 'useradd: cannot create directory ' + path + ': An internal error occurred' );
+				return 1;
+			}
+		}
+
+		var groups = [];
+		if ( 'g' in opts ) {
+			groups.push( opts['g'] );
+		}
+		if ( 'G' in opts ) {
+			groups = $.merge( groups, opts['G'].split( ',' ) );
+		}
+
+		req = api.request( 'PUT', '/users/' + argv[1], {
 				'password': '!',
 				'email': argv[2],
-				'home_directory': "/" + argv[1]
+				'home_directory': homedir,
+				'groups': groups
 			}, {}, false );
 
-		if ( req['status'] === 400 ) {
+		if ( req['status'] === 400 || req['status'] === 404 && req['responseJSON'] === 'Cannot find file or directory' ) {
 			fds[2].write( 'useradd: invalid home directory' );
 			return 1;
 		} else if ( req['status'] === 403 ) {
@@ -323,6 +366,10 @@
 			fds[2].write( 'count not create user: server timed out' );
 			return 1;
 		}
+
+		req = api.request( 'PATCH', '/files' + homedir, '', {
+			'File-Owner': argv[1]
+		}, false );
 
 		return 0;
 	}
@@ -458,9 +505,9 @@
 			req = api.request( 'DELETE', '/files' + path, '', {}, false );
 
 			if ( req['status'] === 404 ) {
-				fds[2].write( 'mv: cannot remove ' + src + ': No such file or directory' );
+				fds[2].write( 'mv: cannot remove ' + path + ': No such file or directory' );
 			} else if ( req['status'] === 403 ) {
-				fds[2].write( 'mv: cannot remove ' + src + ': Permission denied' );
+				fds[2].write( 'mv: cannot remove ' + path + ': Permission denied' );
 			}
 		}
 
