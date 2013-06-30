@@ -505,4 +505,36 @@
 
 		return 0;
 	};
+
+	/**
+	 * Change the ownership of one or more files
+	 * @param {Array.<IoStream>} fds Input/output streams
+	 * @param {number} argc Number of arguments
+	 * @param {Array.<string>} argv Arguments passed to command
+	 * @return {number} Retcode, 0 for success
+	 */
+	WebBash['commands']['uname'] = function( fds, argc, argv ) {
+		var info = $.getopt( argv, 'asnr' );
+		var opts = info[0];
+
+		var req = api.request( 'GET', '/', '', {}, false );
+		if ( req['status'] !== 200 ) {
+			fds[2].write( 'uname: cannot access server' );
+			return 1;
+		}
+
+		var output = '';
+		if ( 's' in opts || 'a' in opts ) {
+			output += req['responseJSON']['kernel'] + ' ';
+		}
+		if ( 'n' in opts || 'a' in opts ) {
+			output += req['responseJSON']['hostname'] + ' ';
+		}
+		if ( 'r' in opts || 'a' in opts ) {
+			output += req['responseJSON']['version'] + ' ';
+		}
+
+		fds[1].write( output );
+		return 0;
+	};
 } )( jQuery, WebBash );

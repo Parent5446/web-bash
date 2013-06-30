@@ -25,7 +25,7 @@ function IoStream() {
 	 */
 	this.write = function( str ) {
 		this.buffer += str;
-		this.flush( this.buffer );
+		this.flush.call( this, this.buffer );
 	};
 
 	/**

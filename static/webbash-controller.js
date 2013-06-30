@@ -114,9 +114,11 @@ function WebBash( username ) {
 			var fds = [ new IoStream(), new IoStream(), new IoStream() ];
 			fds[1].flush = function( text ) {
 				deferred.notify( [text] );
+				this.buffer = '';
 			};
 			fds[2].flush = function( text ) {
 				deferred.notify( [text] );
+				this.buffer = '';
 			};
 
 			var argc = argv.length;
