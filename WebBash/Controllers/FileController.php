@@ -144,6 +144,9 @@ class FileController
 		$file->setFiletype( self::$fileTypes[$params['type']] );
 		$file->setOwner( $owner );
 		$file->setGroup( $group );
+		$file->setPermissions( FileInfo::SOURCE_OWNER, FileInfo::ACTION_READ, true);
+		$file->setPermissions( FileInfo::SOURCE_OWNER, FileInfo::ACTION_WRITE, true);
+		$file->setPermissions( FileInfo::SOURCE_OWNER, FileInfo::ACTION_EXECUTE, true);
 		$file->save();
 		$file->setContents( $data );
 	}
