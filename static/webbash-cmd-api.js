@@ -145,11 +145,16 @@
 			var path = $.realpath( argv[i], env['PWD'], env['HOME'] );
 			var req = api.request( 'GET', '/files' + path, {}, {}, false );
 
-			if ( req['status'] === 404 ) {
+			if ( req === null || req['status'] !== 200 ) {
 				fds[2].write( 'ls: cannot access ' + path + ': No such file or directory' );
 				continue;
 			} else if ( typeof req['responseJSON'] === 'string' ) {
 				req['responseJSON'] = [req['responseJSON']];
+			}
+
+			if( req['responseJSON'] === null || req['responseJSON'] === undefined )
+			{
+				req['responseJSON'] = [];
 			}
 
 			var lastOutput = '';
