@@ -248,7 +248,7 @@
 			if ( req['status'] === 200 ) {
 				if ( req.getResponseHeader( 'File-Type' ) === 'directory' ) {
 					fds[2].write( 'cat: ' + path + ': Is a directory' );
-				} else {
+				} else if ( req['responseText'] != '""' ) {
 					fds[1].write( req['responseText'] );
 				}
 			} else if ( req['status'] === 404 ) {
