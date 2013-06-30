@@ -272,7 +272,13 @@
 	WebBash['commands']['mkdir'] = function( fds, argc, argv, env ) {
 		for ( var i = 1; i < argc; i++ ) {
 			var path = $.realpath( argv[i], env['PWD'], env['HOME'] );
-			var req = api.request( 'PUT', '/files' + path, '', {
+
+			var req = api.request( 'GET', '/files' + path, '', {}, false );
+			if ( req['status'] !== 404 ) {
+				fds[2].write( 'mkdir: cannot create directory ' + path + ': File exists' );
+			}
+
+			req = api.request( 'PUT', '/files' + path, '', {
 				'File-Type': 'directory'
 			}, false );
 
