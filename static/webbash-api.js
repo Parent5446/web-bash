@@ -31,7 +31,7 @@ function WebBashApi() {
 
 		return this.request( 'GET', '/login' ).then(
 			$.proxy( function( data ) {
-				return this.request( 'POST', '/login', {
+				return this.request( 'PUT', '/login', {
 					'username': this.username,
 					'password': this.password,
 					'token': data['token']
@@ -39,6 +39,14 @@ function WebBashApi() {
 			}, this )
 		);
 	};
+
+	/**
+	 * Logout of the API
+	 * @return {jQuery.jqXHR} jQuery AJAX object
+	 */
+	this.logout = function() {
+		return this.request( 'DELETE', '/login' );
+	}
 
 	/**
 	 * Perform an API request

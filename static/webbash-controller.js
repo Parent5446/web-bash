@@ -103,8 +103,9 @@ function WebBash( username ) {
 
 		if ( argv[0] === 'exit' ) {
 			this.shutdown( terminal );
+			this.api.logout();
 			// Hopefully something here will close the window
-			window.open('', '_self', '');
+			window.open( '', '_self', '' );
 			window.close();
 			self.close();
 		} else if ( argv[0] === "clear" ) {
