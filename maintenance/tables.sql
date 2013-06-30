@@ -153,7 +153,10 @@ SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
 -- -----------------------------------------------------
 START TRANSACTION;
 USE `webbash`;
-INSERT INTO `webbash`.`file` (`id`, `name`, `filetype`, `owner`, `grp`, `perms`) VALUES (1, 'root', 'd', NULL, NULL, 493);
+INSERT INTO `webbash`.`file` (`parent`, `id`, `name`, `filetype`, `owner`, `grp`, `perms`) VALUES (NULL, 1, 'root', 'd', NULL, NULL, 493);
+INSERT INTO `webbash`.`file` (`parent`, `id`, `name`, `filetype`, `owner`, `grp`, `perms`) VALUES (NULL, 2, 'etc', 'd', NULL, NULL, 493);
+INSERT INTO `webbash`.`file` (`parent`, `id`, `name`, `filetype`, `owner`, `grp`, `perms`) VALUES (3, 4, 'hostname', 'f', NULL, NULL, 420);
+INSERT INTO `webbash`.`file` (`parent`, `id`, `name`, `filetype`, `owner`, `grp`, `perms`) VALUES (1, 5, 'welcome', 'f', NULL, NULL, 420);
 INSERT INTO `webbash`.`user` (`id`, `name`, `homedir`, `email`, `email_confirmed`, `password`, `token`) VALUES (1, 'root', 1, 'root@localhost', true, 0x243279243132243031323334353637383961626364656624242424242E734D71736A77696F344C6C484172772F78336C653569694943374E51685032, NULL);
 
 INSERT INTO `webbash`.`grp` (`id`, `name`) VALUES (1, 'root');
