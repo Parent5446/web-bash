@@ -13,6 +13,13 @@ class ServerController
 	}
 
 	public function get( array $params ) {
+		$hostnameFile = $this->deps->fileCache->get( 'path', '/etc/hostname' );
+		if ( $hostnameFile->exists() ) {
+			$hostname = trim( $hostnameFile->getContents() );
+		} else {
+			$hostname = $this->deps->config['webbash']['hostname']
+		}
+
 		return array(
 			'kernel' => 'WebBash',
 			'version' => number_format( WEBBASH, 1 ),
