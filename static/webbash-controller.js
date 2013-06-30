@@ -80,8 +80,8 @@ function WebBash( username ) {
 
 	/**
 	 * Execute a command given an array of arguments
-	 * @param {string} argv Arguments typed
-	 * @param {Object} jQuery node to output to
+	 * @param {string} text Arguments typed
+	 * @param {Terminal} terminal
 	 */
 	this.execute = function( text, terminal ) {
 		var deferred = $.Deferred();
@@ -94,7 +94,7 @@ function WebBash( username ) {
 
 	/**
 	 * Actually execute the command (this should be called asynchronously)
-	 * @param {string} text The command
+	 * @param {string} argv The command
 	 * @param {Terminal} terminal
 	 * @param {jQuery.Deferred} deferred
 	 */
@@ -126,7 +126,7 @@ function WebBash( username ) {
 			retval = '127';
 		}
 
-		updateFunc = $.proxy( function( retcode ) {
+		var updateFunc = $.proxy( function( retcode ) {
 			this.environment['?'] = retcode.toString();
 			terminal.prompt = this.username + '@ubuntu ' + this.environment['PWD'] + ' $ ';
 			deferred.resolve();
@@ -184,7 +184,6 @@ function WebBash( username ) {
 	this.splitText = function( txt ) {
 		var cmd = "",
 			split_text = [],
-			inString = false,
 			inQuote = false,
 			inDoubleQuote = false,
 			backslash = false;
