@@ -458,9 +458,9 @@
 			req = api.request( 'DELETE', '/files' + path, '', {}, false );
 
 			if ( req['status'] === 404 ) {
-				fds[2].write( 'mv: cannot remove ' + src + ': No such file or directory' );
+				fds[2].write( 'mv: cannot remove ' + path + ': No such file or directory' );
 			} else if ( req['status'] === 403 ) {
-				fds[2].write( 'mv: cannot remove ' + src + ': Permission denied' );
+				fds[2].write( 'mv: cannot remove ' + path + ': Permission denied' );
 			}
 		}
 
