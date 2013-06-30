@@ -16,22 +16,19 @@ abstract class ProcessCache
 		$this->deps = $deps;
 	}
 
-	public function get( $field, $value ) {
-		if ( !isset( $cache[$field][$value] ) ) {
-			$cache[$field][$value] = $this->create( $field, $value );
+	public function &get( $field, $value ) {
+		if ( !isset( $this->cache[$field][$value] ) ) {
+			$this->cache[$field][$value] = $this->create( $field, $value );
 		}
-		return $cache[$field][$value];
+		return $this->cache[$field][$value];
 	}
 
-	public function update( $obj, $info ) {
+	public function update( &$obj, $info ) {
 		foreach ( $info as $field => $value ) {
-			if (
-				isset( $this->cache[$field][$value] ) &&
-				$obj !== $this->cache[$field][$value]
-			) {
+			if ( isset( $this->cache[$field][$value] ) ) {
 				$obj->merge( $this->cache[$field][$value] );
 			}
-			$this->cache[$field][$value] = $obj;
+			$this->cache[$field][$value] = &$obj;
 		}
 	}
 
