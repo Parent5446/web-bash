@@ -380,6 +380,18 @@ class FileInfo implements Model
 		return new \DateTime( $this->ctime );
 	}
 
+	public function updateMTime() {
+		$this->load();
+		date_default_timezone_set( 'UTC' );
+		$this->mtime = date_format( new \DateTime(), 'Y-m-d H:i:s' );
+	}
+
+	public function updateATime() {
+		$this->load();
+		date_default_timezone_set( 'UTC' );
+		$this->mtime = date_format( new \DateTime(), 'Y-m-d H:i:s' );
+	}
+
 	public function exists() {
 		$this->load();
 		return $this->exists;
