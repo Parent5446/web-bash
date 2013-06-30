@@ -210,7 +210,7 @@
 					counter--;
 				}
 			}
-			else if ( typeof req['responseJSOn'] === 'string' ) {
+			else if ( typeof req['responseJSOn'] === 'string' || req['status'] == 404 ) {
 				pathsNotFound[pathsNotFound.length] = newArgv[i];
 			}
 		}
