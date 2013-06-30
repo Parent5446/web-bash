@@ -72,6 +72,9 @@
 		}
 
 		var ch = String.fromCharCode( code );
+		if (code == 173 && ch != '-') {
+			ch = '-';
+		}
 
 		if ( this.shiftKey ) {
 			// Translate shifted special chars
