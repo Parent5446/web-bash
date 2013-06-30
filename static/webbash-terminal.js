@@ -232,6 +232,8 @@ function Terminal() {
 			var cmd = $( '#cursor' ).parent().children( '.userinput' ).text();
 			cmd = cmd.substr( 0, cmd.length - 1 );
 
+			cmd = $.trim( cmd );
+
 			if ( cmd.length > 0 ) {
 				this.cmdHistory[this.cmdHistory.length] = cmd;
 				this.currHistoryPos = this.cmdHistory.length;
@@ -240,9 +242,13 @@ function Terminal() {
 			$( '#cursor' ).prev().append( $( '#cursor' ).text() );
 			$( '#cursor' ).next().after( $( ' <br> ') );
 
-			this.controller.execute( $.trim( cmd ), this )
-				.progress( $.proxy( this.appendOutput, this ) )
-				.always( $.proxy( this.displayPrompt, this ) );
+			if ( cmd.length > 0 ) {
+				this.controller.execute( $.trim( cmd ), this )
+					.progress( $.proxy( this.appendOutput, this ) )
+					.always( $.proxy( this.displayPrompt, this ) );
+			} else {
+				this.displayPrompt();
+			}
 		} else if ( e.which === 222 && e.shiftKey) {
 			// double quote: Needs special handling
 			e.preventDefault();
