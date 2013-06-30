@@ -38,6 +38,17 @@ class UserController
 			}
 		}
 
+		$groups = array();
+		if ( isset( $data['groups'] ) ) {
+			foreach ( $data['groups'] as $group ) {
+				$groupObj = $this->deps->groupCache->get( 'name', $group );
+				if ( !$groupObj->exists() ) {
+					throw new HttpException( 400, 'Invalid group name ' . $group );
+				}
+				$groups[] = $groupObj;
+			}
+		}
+		
 		$user = $this->deps->userCache->get( 'name', $params['name'] );
 
 		$admins = $this->deps->groupCache->get( 'name', 'admin' );
@@ -57,10 +68,25 @@ class UserController
 		$user->setEmail( $data['email'] );
 		$user->setPassword( $data['password'] );
 		$user->setHomeDirectory( $homedir );
+		
+		$this->deps->db->beginTransaction();
 		$user->save();
+
+		foreach ( $user->getGroups() as $group ) {
+			$group->removeMember( $user );
+			if ( !in_array( $group, $groups ) ) {
+				$group->save();
+			}
+		}
+		foreach ( $groups as $group ) {
+			$group->addMember( $user );
+			$group->save();
+		}
 
 		$homedir->setOwner( $user );
 		$homedir->save();
+
+		$this->deps->db->commit();
 
 		return $this->get( $params );
 	}
@@ -101,6 +127,20 @@ class UserController
 		if ( isset( $data['password'] ) ) {
 			$user->setPassword( $data['password'] );
 		}
+		
+		$this->deps->db->beginTransaction();
+		
+		$groups = array();
+		if ( isset( $data['groups'] ) ) {
+			foreach ( $data['groups'] as $group ) {
+				$groupObj = $this->deps->groupCache->get( 'name', $group );
+				if ( !$groupObj->exists() ) {
+					throw new HttpException( 400, 'Invalid group name ' . $group );
+				}
+				$groupObj->addMember( $user );
+				$groupObj->save();
+			}
+		}
 
 		$user->save();
 
@@ -108,6 +148,8 @@ class UserController
 			$homedir->setOwner( $user );
 			$homedir->save();
 		}
+		
+		$this->deps->db->commit();
 
 		return $this->get( $params );
 	}

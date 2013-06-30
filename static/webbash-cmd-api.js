@@ -312,13 +312,17 @@
 			++argc;
 		}
 
+		var req = api.request( 'GET', '/users/' + argv[1], '', {}, false );
+		if ( req['status'] !== 404 ) {
+			fds[2].write( 'useradd: User ' + argv[1] + ' already exists' );
+			return 1;
+		}
+
 		var homedir = '/home/' + argv[1];
 		if ( 'd' in opts ) {
 			homedir = opts['d'];
 		}
 		homedir = $.realpath( homedir, env['PWD'], env['HOME'] );
-
-		var req;
 
 		if ( 'm' in opts && !( 'M' in opts ) ) {
 			req = api.request( 'PUT', '/files' + homedir, '', {
@@ -337,10 +341,19 @@
 			}
 		}
 
-		var req = api.request( 'PUT', '/users/' + argv[1], {
+		var groups = [];
+		if ( 'g' in opts ) {
+			groups.push( opts['g'] );
+		}
+		if ( 'G' in opts ) {
+			groups = $.merge( groups, opts['G'].split( ',' ) );
+		}
+
+		req = api.request( 'PUT', '/users/' + argv[1], {
 				'password': '!',
 				'email': argv[2],
-				'home_directory': homedir
+				'home_directory': homedir,
+				'groups': groups
 			}, {}, false );
 
 		if ( req['status'] === 400 || req['status'] === 404 && req['responseJSON'] === 'Cannot find file or directory' ) {
