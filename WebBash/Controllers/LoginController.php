@@ -24,7 +24,7 @@ class LoginController
 		);
 	}
 
-	public function post( array $params, $data ) {
+	public function put( array $params, $data ) {
 		if (
 			!isset( $data['username'] ) ||
 			!isset( $data['password'] ) ||
@@ -58,5 +58,20 @@ class LoginController
 
 		$userController = new UserController( $this->deps );
 		return $userController->get( array( 'name' => $user->getName() ) );
+	}
+
+	public function delete( array $params, $data ) {
+		session_unset();
+
+		if ( init_get( 'session.use_cookies' ) ) {
+			$params = session_get_cookie_params();
+			setcookie(
+				session_name(), '', time() - 42000,
+				$params["path"], $params["domain"],
+				$params["secure"], $params["httponly"]
+			);
+		}
+
+		session_destroy();
 	}
 }

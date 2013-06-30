@@ -4,9 +4,12 @@ error_reporting( E_ALL | E_STRICT );
 
 // Parse configuration and load database
 $config = parse_ini_file( 'config.ini', true );
-if ( !isset( $config['webbash']['root'] ) ) {
-	$config['webbash']['root'] = __DIR__;
-}
+$config['webbash'] += array(
+	'root' => __DIR__,
+	'bcryptrounds' => 5,
+	'historylimit' => 50,
+);
+
 $db = new PDO(
 	"{$config['db']['type']}:dbname={$config['db']['name']};host={$config['db']['host']}",
 	$config['db']['user'],
