@@ -147,8 +147,10 @@ class FileController
 			throw new HttpException( 404 );
 		} elseif ( !$file->getParent()->isDir() ) {
 			throw new HttpException( 400, 'Not a directory' );
-		} elseif ( !$file->isAllowed( $this->deps->currentUser, FileInfo::ACTION_WRITE ) ) {
-			throw new HttpException( 403, 'Cannot make the directory' );
+		} elseif ( $file->exists() && !$file->isAllowed( $this->deps->currentUser, FileInfo::ACTION_WRITE ) ) {
+			throw new HttpException( 403, 'Cannot write to file' );
+		} elseif ( !$file->exists() && !$file->getParent()->isAllowed( $this->deps->currentUser, FileInfo::ACTION_WRITE ) ) {
+			throw new HttpException( 403, 'Cannot create file since dont have write access to parent directory' );
 		} elseif ( !$owner->exists() ) {
 			throw new HttpException( 400, 'Invalid owner' );
 		} elseif ( !$group->exists() ) {
