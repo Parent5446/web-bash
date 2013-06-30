@@ -141,7 +141,11 @@ class FileInfo implements Model
 
 		$stmt = $this->deps->stmtCache->prepare( 'DELETE FROM file WHERE id = :id' );
 		$stmt->bindParam( ':id', $this->id );
-		return $stmt->execute();
+		if ( $stmt->execute() ) {
+			$this->exists = false;
+		} else {
+			throw new RuntimeException( 'Could not delete file' );
+		}
 	}
 
 	function merge( Model $other ) {
@@ -278,13 +282,19 @@ class FileInfo implements Model
 	}
 
 	public function getParent() {
-		if ( $this->parent !== null ) {
+		if ( $this->parent ) {
 			return $this->deps->fileCache->get( 'id', $this->parent );
 		} elseif ( $this->path !== null ) {
 			return $this->deps->fileCache->get( 'path', dirname( $this->path ) );
 		} else {
 			$this->load();
-			return $this->deps->fileCache->get( 'id', $this->parent );
+			if ( $this->parent === null ) {
+				return $this->deps->fileCache->get( 'path', '/' );
+			} elseif ( $this->exists() ) {
+				return $this->deps->fileCache->get( 'id', $this->parent );
+			} else {
+				return $this->deps->fileCache->get( 'path', dirname( $this->path ) );
+			}
 		}
 	}
 
