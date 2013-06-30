@@ -26,18 +26,21 @@
 		}
 
 		var req = api.request( 'GET', '/files' + newDir, {}, {}, false );
-		if ( req['status'] === 200 ) {
-			env['PWD'] = newDir;
-			return 0;
+		if ( req.getResponseHeader( 'File-Type' ) !== 'directory' ) {
+			fds[2].write( 'cd: ' + newDir + ': Not a directory' );
+			return 1;
 		} else if ( req['status'] === 404 ) {
 			fds[2].write( 'cd: ' + newDir + ': No such file or directory' );
 			return 1;
 		} else if ( req['status'] === 403 ) {
 			fds[2].write( 'cd: ' + newDir + ': Permission denied' );
 			return 1;
-		} else {
+		} else if ( req['status'] !== 200 ) {
 			fds[2].write( 'cd: ' + newDir + ': An internal error occurred' );
 			return 1;
+		} else {
+			env['PWD'] = newDir;
+			return 0;
 		}
 	};
 
@@ -148,10 +151,7 @@
 				continue;
 			} else if ( typeof req['responseJSON'] === 'string' ) {
 				req['responseJSON'] = [req['responseJSON']];
-			}
-
-			if( req['responseJSON'] === null || req['responseJSON'] === undefined )
-			{
+			} else if ( req['responseJSON'] === null || req['responseJSON'] === undefined ) {
 				req['responseJSON'] = [];
 			}
 
