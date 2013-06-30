@@ -85,11 +85,16 @@ function WebBash( username ) {
 	 */
 	this.execute = function( text, terminal ) {
 		var deferred = $.Deferred();
+		deferred.stdin = new IoStream();
+
 		setTimeout( $.proxy( function() {
 			var argv = this.replaceVariables( this.splitText( text ) );
 			this.executeCommand( argv, terminal, deferred );
 		}, this ), 0 );
-		return deferred.promise();
+
+		var promise = deferred.promise();
+		promise.stdin = deferred.stdin;
+		return promise;
 	};
 
 	/**
@@ -111,7 +116,7 @@ function WebBash( username ) {
 		} else if ( argv[0] === "clear" ) {
 			terminal.clear();
 		} else if ( typeof WebBash['commands'][argv[0]] !== 'undefined' ) {
-			var fds = [ new IoStream(), new IoStream(), new IoStream() ];
+			var fds = [ deferred.stdin, new IoStream(), new IoStream() ];
 			fds[1].flush = function( text ) {
 				deferred.notify( [text] );
 				this.buffer = '';
