@@ -60,7 +60,12 @@ class FileController
 			$response = new Response( $target->getContents() );
 			$response->addHeader( 'Content-Location', '/files' . $file->getLinkPath() );
 		} else {
-			$response = new Response( $file->getContents() );
+			$contents = $file->getContents();
+			if( $contents == null )
+			{
+				$contents = '';
+			}
+			$response = new Response( $contents );
 		}
 
 		$file->updateATime();
