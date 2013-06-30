@@ -117,13 +117,13 @@ function WebBash( username ) {
 			terminal.clear();
 		} else if ( typeof WebBash['commands'][argv[0]] !== 'undefined' ) {
 			var fds = [ deferred.stdin, new IoStream(), new IoStream() ];
-			fds[1].flush = function( text ) {
+			fds[1].flush = function( stream ) {
+				var text = stream.read();
 				deferred.notify( [text] );
-				this.buffer = '';
 			};
-			fds[2].flush = function( text ) {
+			fds[2].flush = function() {
+				var text = stream.read( stream );
 				deferred.notify( [text] );
-				this.buffer = '';
 			};
 
 			var argc = argv.length;

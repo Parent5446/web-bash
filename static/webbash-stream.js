@@ -20,12 +20,22 @@ function IoStream() {
 	this.buffer = '';
 
 	/**
+	 * A deferred that is waiting on this stream
+	 * @private
+	 * @type {object}
+	 */
+	this.deferred = null;
+
+	/**
 	 * Write to the buffer
 	 * @param {string} str What to write
 	 */
 	this.write = function( str ) {
 		this.buffer += str;
-		this.flush.call( this, this.buffer );
+		this.flush( this );
+		if ( this.deferred !== null ) {
+			this.deferred.notify( this );
+		}
 	};
 
 	/**
@@ -34,31 +44,35 @@ function IoStream() {
 	 * @return {string}
 	 */
 	this.read = function( limit ) {
+		var text = '';
+
 		if ( this.inptr >= this.buffer.length ) {
-			return false;
+			text = '';
 		} else if ( limit === undefined ) {
+			text = this.buffer.substr( this.inptr );
 			this.inptr = this.buffer.length;
-			return this.inbuffer;
 		} else {
-			var text = this.buffer.substr( this.inptr, limit );
+			text = this.buffer.substr( this.inptr, limit );
 			this.inptr += limit;
-			return text;
 		}
+
+		return text;
 	};
 
 	/**
-	 * Clears the buffer
+	 * Get a deferred that will be notified when there is something to read
+	 * @return {object}
 	 */
-	this.clear = function() {
-		this.buffer = '';
+	this.readBlocking = function() {
+		this.deferred = $.Deferred();
+		return this.deferred.promise();
 	};
 
 	/**
 	 * Function to flush the buffer to its final destination. Should be
 	 * overridden to control functionality
-	 * @param {str} text Text to flush
+	 * @param {IoStream} stream The current stream
 	 */
-	this.flush = function( text ) {
-		this.buffer = '';
+	this.flush = function( stream ) {
 	};
 }

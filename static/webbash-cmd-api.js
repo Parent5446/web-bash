@@ -109,13 +109,11 @@
 				output += "\n   ";
 				if ( counter % 4 === 0 ) {
 					fd.write( output );
-					fd.clear();
 					output = "";
 				}
 			} else {
 				output += "\n";
 				fd.write( output );
-				fd.clear();
 				output = "";
 			}
 		}
