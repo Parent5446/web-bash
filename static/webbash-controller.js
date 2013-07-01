@@ -13,6 +13,13 @@ function WebBash( username ) {
 	this.environment = { '?': '0' };
 
 	/**
+	 * Terminal alias commands
+	 * @private
+	 * @type {Object.<string>}
+	 */
+	this.aliasCommands = {  };
+
+	/**
 	 * Regular expression for validating environment variable names
 	 * @private
 	 * @const
@@ -98,6 +105,16 @@ function WebBash( username ) {
 	};
 
 	/**
+	 * check if command is an alias
+	 * @param {string} cmd The command
+	 */
+	this.checkIsAlias = function( cmd ) {
+		if( this.aliasCommands.hasOwnProperty( cmd ) ) {
+			return true;
+		}
+	}
+
+	/**
 	 * Actually execute the command (this should be called asynchronously)
 	 * @param {string} argv The command
 	 * @param {Terminal} terminal
@@ -105,6 +122,15 @@ function WebBash( username ) {
 	 */
 	this.executeCommand = function( argv, terminal, deferred ) {
 		var retval;
+
+		if( this.checkIsAlias( argv[0] ) ) {
+			var transformed = this.aliasCommands[ argv[0] ];
+			var splitTransformed = $.splitArgs( transformed );
+			for( var i = 1; i < argv.length; i++ ) {
+				splitTransformed.push( argv[i] );
+			}
+			argv = splitTransformed;
+		}
 
 		if ( argv[0] === 'exit' ) {
 			this.shutdown( terminal );
