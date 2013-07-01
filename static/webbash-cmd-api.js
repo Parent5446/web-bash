@@ -53,71 +53,39 @@
 	 * @param {string} lastOutput
 	 */
 	function printFile( fd, responseJSON, opts, counter, lastOutput ) {
-		var output = lastOutput + responseJSON[6] + "\t\t";
-
-		var useCounter = true;
-		var printDot = false;
-
-		for ( var option in opts ) {
-			if ( opts.hasOwnProperty( option ) ) {
-
-				if ( option === 'l' ) {
-					if( responseJSON[0] === 'd' ) {
-						output = 'd';
-					} else {
-						output = '-';
-					}
-
-					var mask = 1 << 8;
-					for ( var i = 0; i < 3; i++ ) {
-						if ( mask & responseJSON[1]  ) {
-							output += 'r';
-						} else {
-							output += '-';
-						}
-
-						mask >>= 1;
-						if ( mask & responseJSON[1] ) {
-							output += 'w';
-						} else {
-							output += '-';
-						}
-
-						mask >>= 1;
-						if ( mask & responseJSON[1] ) {
-							output += 'x';
-						} else {
-							output += '-';
-						}
-
-						if ( option === 'la' ) {
-							printdot = true;
-						}
-					}
-
-					output += ( ' ' + $.pad( responseJSON[2], 10 ) ); // owner
-					output += ( ' ' + $.pad( responseJSON[3], 6 ) ); // group
-					output += ( ' ' + $.pad( responseJSON[4].toString(), 6 ) ); // size
-					output += ( ' ' + responseJSON[5]['date'] ); //date
-					output += ( ' ' + responseJSON[6] ); //file name
-
-					useCounter = false;
-				}
-				if ( option === 'a' ) {
-					printDot = true;
-				}
-			}
+		if ( ( responseJSON[6] === '.' || responseJSON[6] === '..' ) && !( 'a' in opts ) ) {
+			return lastOutput;
 		}
 
-		if ( ( responseJSON[6] !== '.' && responseJSON[6] !== '..' ) || printDot ) {
-			if ( useCounter ) {
-				output += "\n   ";
-				if ( counter % 4 === 0 ) {
-					fd.write( output );
-					output = "";
-				}
+		var output = lastOutput + responseJSON[6] + "\t\t";
+
+		if ( 'l' in opts ) {
+			if( responseJSON[0] === 'd' ) {
+				output = 'd';
 			} else {
-				output += "\n";
+				output = '-';
+			}
+
+			for ( var i = 0, mask = 1 << 8; i < 3; i++ ) {
+				output += mask & responseJSON[1] ? 'r' : '-';
+				mask >>= 1;
+				output += mask & responseJSON[1] ? 'w' : '-';
+				mask >>= 1;
+				output += mask & responseJSON[1] ? 'x' : '-';
+			}
+
+			output += ( ' ' + $.pad( responseJSON[2], 10 ) ); // owner
+			output += ( ' ' + $.pad( responseJSON[3], 6 ) ); // group
+			output += ( ' ' + $.pad( responseJSON[4].toString(), 6 ) ); // size
+			output += ( ' ' + responseJSON[5]['date'] ); //date
+			output += ( ' ' + responseJSON[6] ); //file name
+
+			output += "\n";
+			fd.write( output );
+			output = "";
+		} else {
+			output += "\n   ";
+			if ( counter % 4 === 0 ) {
 				fd.write( output );
 				output = "";
 			}

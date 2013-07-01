@@ -60,32 +60,24 @@ class FileController
 
 		// Generate response info about the file
 		if ( $file->isDir() ) {
-			$children = $file->getChildren();
-			$childrenArray = array();
+			// Add entries for . and ..
+			$childrenArray = array(
+				$this->getFileInfoArray( $file, '.' ),
+				$this->getFileInfoArray( $file->getParent(), '..' )
+			);
 
-			foreach ( $children as $child ) {
-				$childrenArray[] = array(
-					$child->getFiletype(),
-					$child->getPermissions(),
-					$child->getOwner()->getName(),
-					$child->getGroup()->getName(),
-					$child->getSize(),
-					$child->getMTime(),
-					$child->getFilename()
-				);
+			// Add entries for the children
+			foreach ( $file->getChildren() as $child ) {
+				$childrenArray[] = $this->getFileInfoArray( $child );
 			}
 
 			$response = new Response( $childrenArray );
 		} elseif ( $file->isLink() ) {
 			$target = $file->getLinkTarget();
-			$response = new Response( $target->getContents() );
+			$response = new Response( (string)$target->getContents() );
 			$response->addHeader( 'Content-Location', '/files' . $file->getLinkPath() );
 		} else {
-			$contents = $file->getContents();
-			if( $contents == null )
-			{
-				$contents = '';
-			}
+			$contents = (string)$file->getContents();
 			$response = new Response( $contents );
 		}
 
@@ -102,6 +94,24 @@ class FileController
 			->addHeader( 'File-Owner', $file->getOwner()->getName() )
 			->addHeader( 'File-Group', $file->getGroup()->getName() )
 			->addHeader( 'File-Type', array_search( $file->getFiletype(), self::$fileTypes ) );
+	}
+
+	/**
+	 * Get an array of primitive information about a file for use by the client
+	 *
+	 * @param \WebBash\Models\FileInfo $file File to get info about
+	 * @return array
+	 */
+	private function getFileInfoArray( \WebBash\Models\FileInfo $file, $name = null ) {
+		return array(
+			$file->getFiletype(),
+			$file->getPermissions(),
+			$file->getOwner()->getName(),
+			$file->getGroup()->getName(),
+			$file->getSize(),
+			$file->getMTime(),
+			$name ?: $file->getFilename()
+		);
 	}
 
 	/**
