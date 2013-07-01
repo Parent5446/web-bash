@@ -123,10 +123,10 @@ function WebBash( username ) {
 	this.executeCommand = function( argv, terminal, deferred ) {
 		var retval;
 
-		if( this.checkIsAlias( argv[0] ) ) {
+		if ( this.checkIsAlias( argv[0] ) ) {
 			var transformed = this.aliasCommands[ argv[0] ];
 			var splitTransformed = $.splitArgs( transformed );
-			for( var i = 1; i < argv.length; i++ ) {
+			for ( var i = 1; i < argv.length; i++ ) {
 				splitTransformed.push( argv[i] );
 			}
 			argv = splitTransformed;
@@ -141,6 +141,15 @@ function WebBash( username ) {
 			self.close();
 		} else if ( argv[0] === "clear" ) {
 			terminal.clear();
+		} else if ( argv[0] === "alias" ) {
+			for ( var i = 1; i < argv.length; ++i ) {
+				var splt = argv[i].split( '=', 2 );
+				if( splt.length != 2 ) {
+					continue;
+				}
+				this.aliasCommands[splt[0]] = splt[1];
+			}
+			retval = '0';
 		} else if ( typeof WebBash['commands'][argv[0]] !== 'undefined' ) {
 			var fds = [ deferred.stdin, new IoStream(), new IoStream() ];
 			fds[1].flush = function( stream ) {
