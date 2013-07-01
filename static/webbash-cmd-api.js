@@ -60,49 +60,50 @@
 
 		for ( var option in opts ) {
 			if ( opts.hasOwnProperty( option ) ) {
-				switch ( option ) {
-					case 'a':
-						printDot = true;
-						break;
+				if ( option === 'l' || option === 'la' || option === 'al' ) {
+					if( responseJSON[0] === 'd' ) {
+						output = 'd';
+					} else {
+						output = '-';
+					}
 
-					case 'l':
-						if( responseJSON[0] === 'd' ) {
-							output = 'd';
+					var mask = 1 << 8;
+					for ( var i = 0; i < 3; i++ ) {
+						if ( mask & responseJSON[1]  ) {
+							output += 'r';
 						} else {
-							output = '-';
+							output += '-';
 						}
 
-						var mask = 1 << 8;
-						for ( var i = 0; i < 3; i++ ) {
-							if ( mask & responseJSON[1]  ) {
-								output += 'r';
-							} else {
-								output += '-';
-							}
-
-							mask >>= 1;
-							if ( mask & responseJSON[1] ) {
-								output += 'w';
-							} else {
-								output += '-';
-							}
-
-							mask >>= 1;
-							if ( mask & responseJSON[1] ) {
-								output += 'x';
-							} else {
-								output += '-';
-							}
+						mask >>= 1;
+						if ( mask & responseJSON[1] ) {
+							output += 'w';
+						} else {
+							output += '-';
 						}
 
-						output += ( ' ' + $.pad( responseJSON[2], 10 ) ); // owner
-						output += ( ' ' + $.pad( responseJSON[3], 6 ) ); // group
-						output += ( ' ' + $.pad( responseJSON[4].toString(), 6 ) ); // size
-						output += ( ' ' + responseJSON[5]['date'] ); //date
-						output += ( ' ' + responseJSON[6] ); //file name
+						mask >>= 1;
+						if ( mask & responseJSON[1] ) {
+							output += 'x';
+						} else {
+							output += '-';
+						}
 
-						useCounter = false;
-						break;
+						if ( option === 'la' || option === 'al' ) {
+							printdot = true;
+						}
+					}
+
+					output += ( ' ' + $.pad( responseJSON[2], 10 ) ); // owner
+					output += ( ' ' + $.pad( responseJSON[3], 6 ) ); // group
+					output += ( ' ' + $.pad( responseJSON[4].toString(), 6 ) ); // size
+					output += ( ' ' + responseJSON[5]['date'] ); //date
+					output += ( ' ' + responseJSON[6] ); //file name
+
+					useCounter = false;
+				}
+				if ( option === 'a' ) {
+					printDot = true;
 				}
 			}
 		}
@@ -137,6 +138,10 @@
 		var opts = info[0];
 		argv = info[1];
 		argc = argv.length;
+
+		console.log( opts );
+		console.log( argv ); 
+
 
 		if ( argc === 1 ) {
 			argv[argc++] = "";
@@ -506,8 +511,12 @@
 	 * @return {number} Retcode, 0 for success
 	 */
 	WebBash['commands']['rm'] = function( fds, argc, argv, env ) {
+		var info = $.getopt( argv, 'r' );
+		var opts = info[0];
+		console.log( opts );
 		for ( var i = 1; i < argc; i++ ) {
 			var path = $.realpath( argv[i], env['PWD'], env['HOME'] );
+
 			req = api.request( 'DELETE', '/files' + path, '', {}, false );
 
 			if ( req['status'] === 404 ) {
@@ -614,6 +623,8 @@
 	WebBash['commands']['uname'] = function( fds, argc, argv ) {
 		var info = $.getopt( argv, 'asnr' );
 		var opts = info[0];
+		argv = info[1];
+		argc = argv.length;
 
 		var req = api.request( 'GET', '/', '', {}, false );
 		if ( req['status'] !== 200 ) {
