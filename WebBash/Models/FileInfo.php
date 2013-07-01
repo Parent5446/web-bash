@@ -2,7 +2,8 @@
 
 namespace WebBash\Models;
 
-use WebBash\DI;
+use \WebBash\DI;
+use \WebBash\Util;
 
 class FileInfo implements Model
 {
@@ -285,7 +286,7 @@ class FileInfo implements Model
 		if ( $this->parent ) {
 			return $this->deps->fileCache->get( 'id', $this->parent );
 		} elseif ( $this->path !== null ) {
-			return $this->deps->fileCache->get( 'path', dirname( $this->path ) );
+			return $this->deps->fileCache->get( 'path', Util\dirname( $this->path ) );
 		} else {
 			$this->load();
 			if ( $this->parent === null ) {
@@ -293,7 +294,7 @@ class FileInfo implements Model
 			} elseif ( $this->exists() ) {
 				return $this->deps->fileCache->get( 'id', $this->parent );
 			} else {
-				return $this->deps->fileCache->get( 'path', dirname( $this->path ) );
+				return $this->deps->fileCache->get( 'path', Util\dirname( $this->path ) );
 			}
 		}
 	}
@@ -302,7 +303,7 @@ class FileInfo implements Model
 		if ( $this->name !== null ) {
 			// Do nothing
 		} elseif ( $this->path !== null ) {
-			$this->name = basename( $this->path );
+			$this->name = Util\basename( $this->path );
 		} else {
 			$this->load();
 		}

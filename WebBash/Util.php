@@ -83,3 +83,29 @@ function urandom( $len ) {
 	$buffer = substr( $buffer, $len );
 	return $retval;
 }
+
+function dirname( $path ) {
+	if ( strlen( $path ) > 1 && substr( $path, -1 ) === '/' ) {
+		$path = substr( $path, 0, -1 );
+	}
+	$pos = strrpos( $path, '/' );
+	if ( $pos === false ) {
+		return '.';
+	} elseif ( $pos === 0 ) {
+		return '/';
+	} else {
+		return substr( $path, 0, $pos );
+	}
+}
+
+function basename( $path ) {
+	if ( strlen( $path ) > 1 && substr( $path, -1 ) === '/' ) {
+		$path = substr( $path, 0, -1 );
+	}
+	$pos = strrpos( $path, '/' );
+	if ( $pos === false ) {
+		return $path;
+	} else {
+		return substr( $path, $pos + 1 );
+	}
+}
