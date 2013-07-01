@@ -15,9 +15,9 @@ function WebBash( username ) {
 	/**
 	 * Terminal alias commands
 	 * @private
-	 * @type {Object.<string>}
+	 * @type {Object.<string, string>}
 	 */
-	this.aliasCommands = {  };
+	this.aliasCommands = {};
 
 	/**
 	 * Regular expression for validating environment variable names
@@ -105,16 +105,6 @@ function WebBash( username ) {
 	};
 
 	/**
-	 * check if command is an alias
-	 * @param {string} cmd The command
-	 */
-	this.checkIsAlias = function( cmd ) {
-		if( this.aliasCommands.hasOwnProperty( cmd ) ) {
-			return true;
-		}
-	}
-
-	/**
 	 * Actually execute the command (this should be called asynchronously)
 	 * @param {string} argv The command
 	 * @param {Terminal} terminal
@@ -123,13 +113,8 @@ function WebBash( username ) {
 	this.executeCommand = function( argv, terminal, deferred ) {
 		var retval;
 
-		if ( this.checkIsAlias( argv[0] ) ) {
-			var transformed = this.aliasCommands[ argv[0] ];
-			var splitTransformed = $.splitArgs( transformed );
-			for ( var i = 1; i < argv.length; i++ ) {
-				splitTransformed.push( argv[i] );
-			}
-			argv = splitTransformed;
+		if ( argv[0] in this.aliasCommands ) {
+			argv = $.merge( $.splitArgs( this.aliasCommands[argv[0]] ), argv.slice( 1 ) );
 		}
 
 		if ( argv[0] === 'exit' ) {
@@ -150,7 +135,7 @@ function WebBash( username ) {
 				this.aliasCommands[splt[0]] = splt[1];
 			}
 			retval = '0';
-		} else if ( typeof WebBash['commands'][argv[0]] !== 'undefined' ) {
+		} else if ( argv[0] in WebBash['commands'] ) {
 			var fds = [ deferred.stdin, new IoStream(), new IoStream() ];
 			fds[1].flush = function( stream ) {
 				var text = stream.read();
@@ -163,7 +148,7 @@ function WebBash( username ) {
 
 			var argc = argv.length;
 			retval = WebBash['commands'][argv[0]]( fds, argc, argv, this.environment );
-		} else if ( argv[0] !== undefined && argv[0] !== '' ) {
+		} else if ( argv[0] ) {
 			deferred.notify( ["error: unknown command " + argv[0]] );
 			retval = '127';
 		}
