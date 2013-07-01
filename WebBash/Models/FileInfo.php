@@ -82,6 +82,8 @@ class FileInfo implements Model
 		$this->load();
 
 		if ( !$this->exists ) {
+			date_default_timezone_set( 'UTC' );
+			$this->ctime = date_format( new \DateTime(), 'Y-m-d H:i:s' );
 			$stmt = $this->deps->stmtCache->prepare(
 				'INSERT INTO file SET parent = :parent, name = :name, size = :size, owner = :owner, ' .
 				'grp = :group, perms = :perms, mtime = :mtime, ctime = :ctime, filetype = :filetype, ' .
