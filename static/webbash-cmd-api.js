@@ -60,7 +60,7 @@
 
 		for ( var option in opts ) {
 			if ( opts.hasOwnProperty( option ) ) {
-				if ( option === 'l' || option === 'la' || option === 'al' ) {
+				if ( option === 'l' || option === 'la' ) {
 					if( responseJSON[0] === 'd' ) {
 						output = 'd';
 					} else {
@@ -89,7 +89,7 @@
 							output += '-';
 						}
 
-						if ( option === 'la' || option === 'al' ) {
+						if ( option === 'la' ) {
 							printdot = true;
 						}
 					}
@@ -138,10 +138,6 @@
 		var opts = info[0];
 		argv = info[1];
 		argc = argv.length;
-
-		console.log( opts );
-		console.log( argv ); 
-
 
 		if ( argc === 1 ) {
 			argv[argc++] = "";
@@ -513,16 +509,35 @@
 	WebBash['commands']['rm'] = function( fds, argc, argv, env ) {
 		var info = $.getopt( argv, 'r' );
 		var opts = info[0];
-		console.log( opts );
+		argv = info[1];
+		argc = argv.length;
+
+		var removedir = false;
+
+		for ( var option in opts ) {
+			if ( opts.hasOwnProperty( option ) ) { 
+				if ( option === 'r' ) {
+					removedir = true;
+				}
+			}
+		}
+
 		for ( var i = 1; i < argc; i++ ) {
 			var path = $.realpath( argv[i], env['PWD'], env['HOME'] );
 
-			req = api.request( 'DELETE', '/files' + path, '', {}, false );
+			var req = api.request( 'GET', '/files' + path, {}, {}, false );
 
-			if ( req['status'] === 404 ) {
-				fds[2].write( 'mv: cannot remove ' + path + ': No such file or directory' );
-			} else if ( req['status'] === 403 ) {
-				fds[2].write( 'mv: cannot remove ' + path + ': Permission denied' );
+			if ( req.getResponseHeader( 'File-Type' ) === 'directory' && !removedir ) {
+				fds[2].write( 'rm: cannot remove ' + path + ': File is a directory' );
+			} else {
+				console.log( 'hey' );
+				req = api.request( 'DELETE', '/files' + path, '', {}, false );
+
+				if ( req['status'] === 404 ) {
+					fds[2].write( 'rm: cannot remove ' + path + ': No such file or directory' );
+				} else if ( req['status'] === 403 ) {
+					fds[2].write( 'rm: cannot remove ' + path + ': Permission denied' );
+				}
 			}
 		}
 
