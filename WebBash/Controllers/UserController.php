@@ -5,14 +5,32 @@ namespace WebBash\Controllers;
 use \WebBash\DI;
 use \WebBash\HttpException;
 
+/**
+ * Controller for manipulating users of the application
+ */
 class UserController
 {
+	/**
+	 * Dependency injection container
+	 * @private \WebBash\DI
+	 */
 	private $deps;
 
+	/**
+	 * Construct the controller
+	 *
+	 * @param \WebBash\DI $deps Dependency injection container
+	 */
 	public function __construct( DI $deps ) {
 		$this->deps = $deps;
 	}
 
+	/**
+	 * Get information about the user
+	 *
+	 * @param array $params Request parameters
+	 * @return array|Response Response information
+	 */
 	public function get( array $params ) {
 		$user = $this->deps->userCache->get( 'name', $params['name'] );
 		if ( !$user->exists() ) {
@@ -26,6 +44,13 @@ class UserController
 		);
 	}
 
+	/**
+	 * Create a new user, or replace an existing one
+	 *
+	 * @param array $params Request parameters
+	 * @param mixed $data Request body data
+	 * @return mixed|Response Response information
+	 */
 	public function put( array $params, $data ) {
 		if ( !is_array( $data ) ) {
 			throw new HttpException( 400, 'Expecting an array as input' );
@@ -38,6 +63,7 @@ class UserController
 			}
 		}
 
+		// Get an array of groups to add
 		$groups = array();
 		if ( isset( $data['groups'] ) ) {
 			foreach ( $data['groups'] as $group ) {
@@ -51,6 +77,7 @@ class UserController
 		
 		$user = $this->deps->userCache->get( 'name', $params['name'] );
 
+		// Make sure the user is only changing their own info, or is an admin
 		$admins = $this->deps->groupCache->get( 'name', 'admin' );
 		if (
 			!$admins->isMember( $this->deps->currentUser ) &&
@@ -59,7 +86,7 @@ class UserController
 			throw new HttpException( 403, "user not allowed to create groups" );
 		}
 
-
+		// Get the intended home directory
 		$homedir = $this->deps->fileCache->get( 'path', $data['home_directory'] );
 		if ( !$homedir->exists() || !$homedir->isDir() ) {
 			throw new HttpException( 400, 'Home directory is not a directory' );
@@ -72,9 +99,10 @@ class UserController
 		$this->deps->db->beginTransaction();
 		$user->save();
 
+		// Remove all existing groups and add only the given groups
 		foreach ( $user->getGroups() as $group ) {
-			$group->removeMember( $user );
 			if ( !in_array( $group, $groups ) ) {
+				$group->removeMember( $user );
 				$group->save();
 			}
 		}
@@ -83,14 +111,23 @@ class UserController
 			$group->save();
 		}
 
+		// Set ownership of the home directory
 		$homedir->setOwner( $user );
 		$homedir->save();
 
 		$this->deps->db->commit();
 
+		// Give a response as if a GET request was made
 		return $this->get( $params );
 	}
 
+	/**
+	 * Update only certain information about a user
+	 *
+	 * @param array $params Request parameters
+	 * @param mixed $data Request body data
+	 * @return mixed|Response Response information
+	 */
 	public function patch( array $params, $data ) {
 		if ( !is_array( $data ) ) {
 			throw new HttpException( 400, 'Expecting an array as input' );
@@ -154,6 +191,12 @@ class UserController
 		return $this->get( $params );
 	}
 
+	/**
+	 * Delete an existing user
+	 *
+	 * @param array $params Request parameters
+	 * @return mixed|Response Response information
+	 */
 	public function delete( array $params ) {
 		$user = $this->deps->userCache->get( 'name', $params['name'] );
 		$admins = $this->deps->groupCache->get( 'name', 'admin' );

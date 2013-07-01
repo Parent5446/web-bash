@@ -5,14 +5,32 @@ namespace WebBash\Controllers;
 use \WebBash\DI;
 use \WebBash\HttpException;
 
+/**
+ * Controller for retrieving a user's command history
+ */
 class CommandHistoryController
 {
+	/**
+	 * Dependency injection container
+	 * @private \WebBash\DI
+	 */
 	private $deps;
 
+	/**
+	 * Construct the controller
+	 *
+	 * @param \WebBash\DI $deps Dependency injection container
+	 */
 	public function __construct( DI $deps ) {
 		$this->deps = $deps;
 	}
 
+	/**
+	 * Get the command history for a user
+	 *
+	 * @param array $params Request parameters
+	 * @return mixed|Response Response information
+	 */
 	public function get( array $params ) {
 		$user = $this->deps->userCache->get( 'name', $params['name'] );
 
@@ -25,6 +43,13 @@ class CommandHistoryController
 		return $user->getHistory();
 	}
 
+	/**
+	 * Add more command history for the user
+	 *
+	 * @param array $params Request parameters
+	 * @param mixed $data Request body data
+	 * @return mixed|Response Response information
+	 */
 	public function patch( array $params, $data ) {
 		$user = $this->deps->userCache->get( 'name', $params['name'] );
 
@@ -43,6 +68,12 @@ class CommandHistoryController
 		$user->addHistory( $data );
 	}
 
+	/**
+	 * Delete a user's command history
+	 *
+	 * @param array $params Request parameters
+	 * @return mixed|Response Response information
+	 */
 	public function delete( array $params ) {
 		$user = $this->deps->userCache->get( 'name', $params['name'] );
 		$admins = $this->deps->groupCache->get( 'name', 'admin' );

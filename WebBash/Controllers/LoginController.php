@@ -6,14 +6,33 @@ use \WebBash\Util;
 use \WebBash\DI;
 use \WebBash\HttpException;
 
+/**
+ * Controller for logging in and out of the application. The login state is considered a
+ * resource for the purposes of this application
+ */
 class LoginController
 {
+	/**
+	 * Dependency injection container
+	 * @private \WebBash\DI
+	 */
 	private $deps;
 
+	/**
+	 * Construct the controller
+	 *
+	 * @param \WebBash\DI $deps Dependency injection container
+	 */
 	public function __construct( DI $deps ) {
 		$this->deps = $deps;
 	}
 
+	/**
+	 * Get the login token
+	 *
+	 * @param array $params Request parameters
+	 * @return array|Response Response information
+	 */
 	public function get( array $params ) {
 		if ( !isset( $_SESSION['loginToken'] ) ) {
 			$_SESSION['loginToken'] = bin2hex( Util\urandom( 32 ) );
@@ -24,6 +43,13 @@ class LoginController
 		);
 	}
 
+	/**
+	 * Login to the application
+	 *
+	 * @param array $params Request parameters
+	 * @param mixed $data Request body data
+	 * @return mixed|Response Response information
+	 */
 	public function put( array $params, $data ) {
 		if (
 			!isset( $data['username'] ) ||
@@ -60,6 +86,12 @@ class LoginController
 		return $userController->get( array( 'name' => $user->getName() ) );
 	}
 
+	/**
+	 * Logout of the application
+	 *
+	 * @param array $params Request parameters
+	 * @return mixed|Response Response information
+	 */
 	public function delete( array $params, $data ) {
 		session_unset();
 
