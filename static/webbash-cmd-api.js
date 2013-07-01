@@ -500,6 +500,36 @@
 	};
 
 	/**
+	 * Delete one or more empty directories
+	 * @param {Array.<IoStream>} fds Input/output streams
+	 * @param {number} argc Number of arguments
+	 * @param {Array.<string>} argv Arguments passed to command
+	 * @param {Array.<string>} env Environment variables
+	 * @return {number} Retcode, 0 for success
+	 */
+	WebBash['commands']['rmdir'] = function( fds, argc, argv, env ) {
+		for ( var i = 1; i < argc; i++ ) {
+				var path = $.realpath( argv[i], env['PWD'], env['HOME'] );
+
+				var req = api.request( 'GET', '/files' + path, {}, {}, false );
+
+
+				if ( req['status'] === 404 ) {
+					fds[2].write( 'rmdir: cannot remove ' + path + ': No such directory' );
+				} else if ( req['status'] === 403 ) {
+					fds[2].write( 'rmdir: cannot remove ' + path + ': Permission denied' );
+				} else if ( req.getResponseHeader( 'File-Type' ) === 'directory' &&
+					        req['responseJSON'].length === 0 ) {
+					req = api.request( 'DELETE', '/files' + path, '', {}, false );
+				} else {
+					fds[2].write( 'rmdir: cannot remove ' + path + ': Non-empty directory' );
+				}
+			}
+
+			return 0;
+	}
+
+	/**
 	 * Delete one or more files
 	 * @param {Array.<IoStream>} fds Input/output streams
 	 * @param {number} argc Number of arguments
@@ -531,7 +561,6 @@
 			if ( req.getResponseHeader( 'File-Type' ) === 'directory' && !removedir ) {
 				fds[2].write( 'rm: cannot remove ' + path + ': File is a directory' );
 			} else {
-				console.log( 'hey' );
 				req = api.request( 'DELETE', '/files' + path, '', {}, false );
 
 				if ( req['status'] === 404 ) {
