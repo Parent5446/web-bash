@@ -7,8 +7,15 @@ use \WebBash\HttpException;
 use \WebBash\Response;
 use \WebBash\Models\FileInfo;
 
+/**
+ * Controller for changing information about files in the virtual file system
+ */
 class FileController
 {
+	/**
+	 * Dependency injection container
+	 * @private \WebBash\DI
+	 */
 	private $deps;
 
 	private static $fileTypes = array(
@@ -20,12 +27,25 @@ class FileController
 		'l' => 'l'
 	);
 
+	/**
+	 * Construct the controller
+	 *
+	 * @param \WebBash\DI $deps Dependency injection container
+	 */
 	public function __construct( DI $deps ) {
 		$this->deps = $deps;
 	}
 
+	/**
+	 * Get information and the contents for a file
+	 *
+	 * @param array $params Request parameters
+	 * @return array|Response Response information
+	 */
 	public function get( array $params ) {
 		$file = $this->deps->fileCache->get( 'path', "/{$params['path']}" );
+
+		// Check if the file exists and the user is allowed to access it
 		if( !$file->exists() ) {
 			throw new HttpException( 404, 'File not found' );
 		} elseif (
@@ -38,6 +58,7 @@ class FileController
 			throw new HttpException( 403 );
 		}
 
+		// Generate response info about the file
 		if ( $file->isDir() ) {
 			$children = $file->getChildren();
 			$childrenArray = array();
@@ -68,6 +89,7 @@ class FileController
 			$response = new Response( $contents );
 		}
 
+		// Update the access time
 		$file->updateATime();
 		$file->save();
 
@@ -82,6 +104,12 @@ class FileController
 			->addHeader( 'File-Type', array_search( $file->getFiletype(), self::$fileTypes ) );
 	}
 
+	/**
+	 * Retrieve only metadata (not contents) for a file
+	 *
+	 * @param array $params Request parameters
+	 * @return mixed|Response Response information
+	 */
 	public function head( array $params ) {
 		$file = $this->deps->fileCache->get( 'path', "/{$params['path']}" );
 		if( !$file->exists() ) {
@@ -102,9 +130,16 @@ class FileController
 			->addHeader( 'File-Type', array_search( $file->getFiletype(), self::$fileTypes ) );
 	}
 
+	/**
+	 * Update a file's metadata, and create it if it doesn't exist
+	 *
+	 * @param array $params Request parameters
+	 * @return mixed|Response Response information
+	 */
 	public function post( array $params ) {
 		$file = $this->deps->fileCache->get( 'path', "/{$params['path']}" );
 		if ( !$file->exists() ) {
+			// Create file if it doesn't exist
 			$this->put( $params, '' );
 		} elseif ( !$file->getParent()->isAllowed( $this->deps->currentUser, FileInfo::ACTION_EXECUTE ) ) {
 			throw new HttpException( 403 );
@@ -126,15 +161,24 @@ class FileController
 			->addHeader( 'File-Type', array_search( $file->getFiletype(), self::$fileTypes ) );
 	}
 
+	/**
+	 * Upload a new file resource (or replace an existing one
+	 *
+	 * @param array $params Request parameters
+	 * @param mixed $data Request body data
+	 * @return mixed|Response Response information
+	 */
 	public function put( array $params, $data ) {
 		$file = $this->deps->fileCache->get( 'path', "/{$params['path']}" );
 
+		// Fetch a user object for the intended owner
 		if ( isset( $params['owner'] ) ) {
 			$owner = $this->deps->userCache->get( 'name', $params['owner'] );
 		} else {
 			$owner = $this->deps->currentUser;
 		}
 
+		// Fetch a group object for the intended group
 		if ( isset( $params['group'] ) ) {
 			$group = $this->deps->groupCache->get( 'name', $params['group'] );
 		} else {
@@ -142,10 +186,12 @@ class FileController
 			$group = $this->deps->groupCache->get( 'name', $groups[0] );
 		}
 
+		// Get the file type
 		if ( !isset( $params['type'] ) ) {
 			$params['type'] = 'file';
 		}
 
+		// Validate the input and the user's access privileges
 		if ( !isset( self::$fileTypes[$params['type']] ) ) {
 			throw new HttpException( 400, 'Invalid file type' );
 		} elseif ( !$file->exists() && !$file->getParent()->exists() ) {
@@ -162,6 +208,7 @@ class FileController
 			throw new HttpException( 400, 'Invalid group' );
 		}
 
+		// Set all the file info
 		$file->setFiletype( self::$fileTypes[$params['type']] );
 		$file->setOwner( $owner );
 		$file->setGroup( $group );
@@ -178,6 +225,13 @@ class FileController
 		$file->setContents( $data );
 	}
 
+	/**
+	 * Change only certain metadata about a file
+	 *
+	 * @param array $params Request parameters
+	 * @param mixed $data Request body data
+	 * @return mixed|Response Response information
+	 */
 	public function patch( array $params, $data ) {
 		$file = $this->deps->fileCache->get( 'path', "/{$params['path']}" );
 
@@ -216,6 +270,12 @@ class FileController
 		$file->save();
 	}
 
+	/**
+	 * Delete a file
+	 *
+	 * @param array $params Request parameters
+	 * @return mixed|Response Response information
+	 */
 	public function delete( array $params ) {
 		$file = $this->deps->fileCache->get( 'path', "/{$params['path']}" );
 

@@ -24,21 +24,23 @@ $.getopt = function( argv, optstring ) {
 			break;
 		}
 
-		var opt = argv[i].substr( 1 );
-		var index = optstring.indexOf( opt );
+		for ( var j = 1; j < argv[i].length; j++ ) {
+			var opt = argv[i][j];
+			var index = optstring.indexOf( opt );
 
-		if ( index === -1 ) {
-			return "Unknown option -" + opt;
-		} else if ( optstring[index + 1] === ':' ) {
-			if ( argv[i + 1][0] !== '-' ) {
-				opts[opt] = argv[++i];
-			} else if ( optstring[index + 2] !== ':' ) {
-				return "Option -" + opt + " requires an argument";
+			if ( index === -1 ) {
+				return "Unknown option -" + opt;
+			} else if ( optstring[index + 1] === ':' ) {
+				if ( j === argv[i].length - 1 && argv[i + 1][0] !== '-' ) {
+					opts[opt] = argv[++i];
+				} else if ( optstring[index + 2] !== ':' ) {
+					return "Option -" + opt + " requires an argument";
+				} else {
+					opts[opt] = true;
+				}
 			} else {
 				opts[opt] = true;
 			}
-		} else {
-			opts[opt] = true;
 		}
 	}
 

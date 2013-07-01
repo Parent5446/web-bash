@@ -2,6 +2,13 @@
 
 namespace WebBash\Util;
 
+/**
+ * Securely compare two strings in a time-constant method
+ *
+ * @param string $internal The internal value of the string
+ * @param string $external The user-supplied value
+ * @return bool True if match, false if not
+ */
 function secureCompare( $internal, $external ) {
 	$internal .= chr( 0 );
 	$external .= chr( 0 );
@@ -17,11 +24,22 @@ function secureCompare( $internal, $external ) {
 	return $match === 0;
 }
 
+/**
+ * Hash a password using bcrypt and the given parameters
+ *
+ * @param string $password The plaintext to hash
+ * @param string|bool $salt Bcrypt-formatted salt value, or false to generate one
+ * @param int $rounds Number of bcrypt rounds to use
+ *
+ * @return string The hashed password
+ * @throws RuntimeException if bcrypt isn't installed
+ */
 function bcrypt( $password, $salt = false, $rounds = 12 ) {
 	if ( !defined( 'CRYPT_BLOWFISH' ) ) {
 		throw new RuntimeException( 'Bcrypt is not supported.' );
 	}
 
+	// Generate a salt if necessary
 	if ( $salt === false ) {
 		$salt = sprintf( '$2y$%02d$', $rounds );
 		$salt .= substr( strtr( base64_encode( urandom( 16 ) ), '+', '.' ), 0, 22 );
@@ -35,11 +53,19 @@ function bcrypt( $password, $salt = false, $rounds = 12 ) {
 	return $hash;
 }
 
+/**
+ * Generate random data from a secure source
+ *
+ * @param int $len The amount of data to generate in bytes
+ * @return string Random data
+ * @throws RuntimeException if there isn't enough entropy
+ */
 function urandom( $len ) {
 	static $buffer = '';
 
 	$remaining = $len - strlen( $buffer );
 
+	// Try mcrypt_create_iv
 	if ( $remaining > 0 && function_exists( 'mcrypt_create_iv' ) ) {
 		$iv = \mcrypt_create_iv( $remaining, MCRYPT_DEV_URANDOM );
 		if ( $iv !== false ) {
@@ -48,6 +74,7 @@ function urandom( $len ) {
 		}
 	}
 
+	// Try openssl_random_psuedo_bytes
 	if (
 		$remaining > 0 &&
 		function_exists( 'openssl_random_pseudo_bytes' ) &&
@@ -60,6 +87,7 @@ function urandom( $len ) {
 		}
 	}
 
+	// Try /dev/urandom
 	if (
 		$remaining > 0 &&
 		is_readable( '/dev/urandom' ) &&
@@ -84,6 +112,13 @@ function urandom( $len ) {
 	return $retval;
 }
 
+/**
+ * Return the parent directory name of a path (platform-independent)
+ *
+ * @param string $path Path to separate
+ * @return string
+ * @see dirname
+ */
 function dirname( $path ) {
 	if ( strlen( $path ) > 1 && substr( $path, -1 ) === '/' ) {
 		$path = substr( $path, 0, -1 );
@@ -98,6 +133,13 @@ function dirname( $path ) {
 	}
 }
 
+/**
+ * Return the file name name of a path (platform-independent)
+ *
+ * @param string $path Path to separate
+ * @return string
+ * @see basename
+ */
 function basename( $path ) {
 	if ( strlen( $path ) > 1 && substr( $path, -1 ) === '/' ) {
 		$path = substr( $path, 0, -1 );

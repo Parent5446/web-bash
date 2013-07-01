@@ -60,7 +60,8 @@
 
 		for ( var option in opts ) {
 			if ( opts.hasOwnProperty( option ) ) {
-				if ( option === 'l' || option === 'la' ) {
+
+				if ( option === 'l' ) {
 					if( responseJSON[0] === 'd' ) {
 						output = 'd';
 					} else {

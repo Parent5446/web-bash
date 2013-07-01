@@ -2,21 +2,44 @@
 
 namespace WebBash;
 
+/**
+ * Class to hold and execute routes for API URLs
+ */
 class Router
 {
+	/**
+	 * Routes that are registered
+	 * @private array
+	 */
 	private $routes;
 
+	/**
+	 * Construct the router
+	 *
+	 * @param \WebBash\DI $deps Dependency injection container
+	 */
 	public function __construct( DI $deps ) {
 		$this->deps = $deps;
 	}
 
-	public function register( $pattern, $controller, $queryParams = array(), $headerParams = array() ) {
+	/**
+	 * Register a route with the router.
+	 *
+	 * @param string $pattern Pseudo-regex pattern for the route
+	 * @param string $controller Fully qualified class name for the controller
+	 * @param array $queryParams Mapping of query parameter names
+	 * @param array $headerParams Mapping of header names to parameters
+	 */
+	public function register( $pattern, $controller, array $queryParams = array(), array $headerParams = array() ) {
 		// Replace variables with regex capture patterns
 		$pattern = preg_replace( '/:(\w+)\+/', '(?P<$1>.*)', $pattern );
 		$pattern = preg_replace( '/:(\w+)/', '(?P<$1>[^/]*)', $pattern );
 		$this->routes[$pattern] = array( $controller, $queryParams, $headerParams );
 	}
 
+	/**
+	 * Execute a route from the global state (i.e., $_SERVER and whatnot)
+	 */
 	public function executeMain() {
 		try {
 			list( $method, $url, $headers, $data ) = $this->getRequestInfo();
@@ -31,11 +54,12 @@ class Router
 				header( "$header: $value" );
 			}
 			echo json_encode( $e->getMessage() );
-
-			return false;
 		}
 	}
 
+	/**
+	 * Securely start the browser session
+	 */
 	private function startSession() {
 		// Fix the session ID if it's not cryptographically secure
 		if ( !isset( $_COOKIE[session_name()] ) && session_id() ) {
@@ -60,6 +84,11 @@ class Router
 		}
 	}
 
+	/**
+	 * Get the URL, HTTP method, headers, and body from the global state
+	 *
+	 * @return array Array of (method, URL, headers, body)
+	 */
 	private function getRequestInfo() {
 		$url = isset( $_SERVER['PATH_INFO'] ) ? $_SERVER['PATH_INFO'] : '/';
 		$method = strtolower( $_SERVER['REQUEST_METHOD'] );
@@ -87,7 +116,18 @@ class Router
 		return array( $method, $url, $headers, $rawData );
 	}
 
-	public function performRequest( $method, $url, $headers, $rawData ) {
+	/**
+	 * Perform a request based on the given method, URL, headers, and body
+	 *
+	 * @param string $method HTTP method
+	 * @param string $url URL
+	 * @param array $headers HTTP headers
+	 * @param string $rawData Raw data from the request body
+	 *
+	 * @return \WebBash\Response A response object
+	 * @throws HttpException for various errors in input data
+	 */
+	public function performRequest( $method, $url, array $headers, $rawData ) {
 		// Check the MD5 hash if available
 		if ( isset( $headers['CONTENT-MD5'] ) ) {
 			$hash = base64_decode( $headers['CONTENT-MD5'] );
@@ -219,17 +259,31 @@ class Router
 		foreach ( $response->getHeaders() as $key => $val ) {
 			header( "$key: $val" );
 		}
-		echo $responseData;
+		if ( $method !== 'HEAD' ) {
+			echo $responseData;
+		}
 
 		return true;
 	}
 
+	/**
+	 * Run a controller given request information using the internal routes
+	 *
+	 * @param string $method HTTP method
+	 * @param string $url URL
+	 * @param mixed $data Parsed data from the request body
+	 * @param array $headers HTTP headers
+	 *
+	 * @return \WebBash\Response A response object
+	 * @throws HttpException for various errors
+	 */
 	private function runController( $method, $url, $data, $headers ) {
 		$controller = null;
 		$matches = array();
 		$queryParamsDef = array();
 		$headerParamsDef = array();
 
+		// Find a matching route
 		foreach ( $this->routes as $pattern => $info ) {
 			list( $class, $queryParamsDef, $headerParamsDef ) = $info;
 			if ( preg_match( "!^{$pattern}$!", $url, $matches ) ) {
@@ -242,6 +296,7 @@ class Router
 			throw new HttpException( 404, 'Controller not found' );
 		}
 
+		// Check if the method is valid for this controller
 		if ( !method_exists( $controller, $method ) ) {
 			$allowedMethods = array_map( 'strtoupper', get_class_methods( $controllerClass ) );
 			$allowedMethods = array_intersect(
@@ -255,6 +310,7 @@ class Router
 			);
 		}
 
+		// Parse the query and generate a list of final parameters
 		$query = parse_url( "http:$url", PHP_URL_QUERY );
 		$rawParams = array();
 		parse_str( (string)$query, $rawParams );
@@ -270,6 +326,7 @@ class Router
 			}
 		}
 
+		// Run the controller
 		return $controller->$method( $matches, $data );
 	}
 }
