@@ -12,6 +12,9 @@ $config['webbash'] += array(
 	'bcryptrounds' => 5,
 	'historylimit' => 50,
 );
+if ( !isset( $config['webbash']['fileroot'] ) ) {
+	$config['webbash']['fileroot'] = "{$config['webbash']['root']}/filesystem";
+}
 
 $db = new PDO(
 	"{$config['db']['type']}:dbname={$config['db']['name']};host={$config['db']['host']}",

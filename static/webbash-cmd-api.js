@@ -218,8 +218,10 @@
 			if ( req['status'] === 200 ) {
 				if ( req.getResponseHeader( 'File-Type' ) === 'directory' ) {
 					fds[2].write( 'cat: ' + path + ': Is a directory' );
-				} else if ( req['responseText'] != '""' ) {
+				} else if ( req.getResponseHeader( 'Content-Type' ) !== 'application/json' ) {
 					fds[1].write( req['responseText'] );
+				} else {
+					fds[1].write( req['responseJSON'] );
 				}
 			} else if ( req['status'] === 404 ) {
 				fds[2].write( 'cat: ' + path + ': No such file or directory' );
@@ -338,7 +340,7 @@
 		} else if ( req['status'] === 403 ) {
 			fds[2].write( 'useradd: cannot create user: Permission denied' );
 			return 1;
-		} else if ( req['status'] == 500 ) {
+		} else if ( req['status'] === 500 ) {
 			fds[2].write( 'count not create user: server timed out' );
 			return 1;
 		}
