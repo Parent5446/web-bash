@@ -66,7 +66,7 @@
 				output = '-';
 			}
 
-			for ( var i = 0, mask = 1 << 8; i < 3; i++ ) {
+			for ( var i = 0, mask = 1 << 8; i < 3; i++, mask >>= 1 ) {
 				output += mask & responseJSON[1] ? 'r' : '-';
 				mask >>= 1;
 				output += mask & responseJSON[1] ? 'w' : '-';
@@ -551,6 +551,27 @@
 	 * @return {number} Retcode, 0 for success
 	 */
 	WebBash['commands']['chmod'] = function( fds, argc, argv, env ) {
+		if ( argc < 3 ) {
+			fds[2].write( 'chown: needs at least 2 parameters' );
+			return 1;
+		}
+
+		var retcode = 0;
+		for ( var i = 2; i < argc; i++ ) {
+			var path = $.realpath( argv[i], env['PWD'], env['HOME'] );
+			var req = api.request( 'PATCH', '/files' + path, '', {
+				'File-Permissions': argv[1]
+			}, false );
+
+			if ( req['status'] === 404 ) {
+				fds[2].write( 'chown: cannot access ' + path + ': No such file or directory' );
+				retcode = 1;
+			} else if ( req['status'] === 403 ) {
+				fds[2].write( 'chown: changing permissions of ' + path + ': Permission denied' );
+				retcode = 1;
+			}
+		}
+
 		return 0;
 	};
 

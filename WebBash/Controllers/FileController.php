@@ -201,6 +201,11 @@ class FileController
 			$params['type'] = 'file';
 		}
 
+		if ( !isset( $params['perms'] ) ) {
+			$params['perms'] = $params['type'] === 'directory' ? '0755' : '0644';
+		}
+		$perms = (int)octdec( $params['perms'] );
+
 		// Validate the input and the user's access privileges
 		if ( !isset( self::$fileTypes[$params['type']] ) ) {
 			throw new HttpException( 400, 'Invalid file type' );
@@ -212,6 +217,8 @@ class FileController
 			throw new HttpException( 403, 'Cannot write to file' );
 		} elseif ( !$file->exists() && !$file->getParent()->isAllowed( $this->deps->currentUser, FileInfo::ACTION_WRITE ) ) {
 			throw new HttpException( 403, 'Cannot create file since dont have write access to parent directory' );
+		} elseif ( $file->exists() && $file->getOwner()->getId() !== $this->deps->currentUser->getId() ) {
+			throw new HttpException( 403, 'Only the owner can change permissions' );
 		} elseif ( !$owner->exists() ) {
 			throw new HttpException( 400, 'Invalid owner' );
 		} elseif ( !$group->exists() ) {
@@ -222,12 +229,7 @@ class FileController
 		$file->setFiletype( self::$fileTypes[$params['type']] );
 		$file->setOwner( $owner );
 		$file->setGroup( $group );
-
-		$file->setPermissions( FileInfo::SOURCE_OWNER, FileInfo::ACTION_READ, true );
-		$file->setPermissions( FileInfo::SOURCE_OWNER, FileInfo::ACTION_WRITE, true );
-		if ( $file->isDir() ) {
-			$file->setPermissions( FileInfo::SOURCE_OWNER, FileInfo::ACTION_EXECUTE, true );
-		}
+		$$file->setPermissionsRaw( $perms );
 
 		$file->updateATime();
 		$file->updateMTime();
@@ -257,6 +259,8 @@ class FileController
 			$owner = $this->deps->userCache->get( 'name', $params['owner'] );
 			if ( !$owner->exists() ) {
 				throw new HttpException( 400, 'Invalid owner' );
+			} elseif ( $file->exists() && $file->getOwner()->getId() !== $this->deps->currentUser->getId() ) {
+				throw new HttpException( 403, 'Only the owner can change permissions' );
 			}
 			$file->setOwner( $owner );
 		}
@@ -265,8 +269,17 @@ class FileController
 			$group = $this->deps->groupCache->get( 'name', $params['group'] );
 			if ( !$group->exists() ) {
 				throw new HttpException( 400, 'Invalid group' );
+			} elseif ( $file->exists() && $file->getOwner()->getId() !== $this->deps->currentUser->getId() ) {
+				throw new HttpException( 403, 'Only the owner can change permissions' );
 			}
 			$file->setGroup( $group );
+		}
+
+		if ( isset( $params['perms'] ) ) {
+			if ( $file->exists() && $file->getOwner()->getId() !== $this->deps->currentUser->getId() ) {
+				throw new HttpException( 403, 'Only the owner can change permissions' );
+			}
+			$file->setPermissionsRaw( octdec( $params['perms'] ) );
 		}
 
 		if ( isset( $params['type'] ) ) {
