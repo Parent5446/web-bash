@@ -268,6 +268,8 @@ class FileInfo implements Model
 
 		$this->path = '/' . implode( '/',
 			array_filter( array_reverse( $stmt->fetch( \PDO::FETCH_NUM ) ) ) );
+
+		return true;
 	}
 
 	public function getPathname() {
@@ -369,6 +371,11 @@ class FileInfo implements Model
 		} else {
 			$this->perms &= ~ ( $action << $source );
 		}
+	}
+
+	public function setPermissionsRaw( $int ) {
+		$this->load();
+		$this->perms = $int;
 	}
 
 	public function getPermissions() {
