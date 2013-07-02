@@ -41,6 +41,7 @@ $router->register(
 		'FILE-OWNER' => 'owner',
 		'FILE-GROUP' => 'group',
 		'FILE-TYPE' => 'type',
+		'FILE-PERMISSIONS' => 'perms',
 	)
 );
 
