@@ -78,9 +78,8 @@ function Terminal() {
 		var pattern = /\n/g;
 
 		output.text( txt );
-		console.log( output.html() );
-		output.html( output.html().replace( pattern, "<BR/>") );
-		console.log( output.html() );
+		output.html( output.html().replace( pattern, "<br>") );
+
 		$( "body > ul > li:last-child" ).append( output );
 
 		this.resetCursor();
