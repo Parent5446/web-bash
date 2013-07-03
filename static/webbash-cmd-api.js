@@ -84,9 +84,9 @@
 			fd.write( output );
 			output = "";
 		} else {
-			output += "\n   ";
 			if ( counter % 4 === 0 ) {
 				fd.write( output );
+				output += "\n   ";
 				output = "";
 			}
 		}
