@@ -95,7 +95,10 @@ function WebBash( username ) {
 		deferred.stdin = new IoStream();
 
 		setTimeout( $.proxy( function() {
-			var argv = this.replaceVariables( $.splitArgs( text ) );
+			var argv = text;
+			if ( typeof argv === 'string' ) {
+				argv = this.replaceVariables( $.splitArgs( text ) );
+			}
 			this.executeCommand( argv, terminal, deferred );
 		}, this ), 0 );
 
@@ -111,13 +114,84 @@ function WebBash( username ) {
 	 * @param {jQuery.Deferred} deferred
 	 */
 	this.executeCommand = function( argv, terminal, deferred ) {
-		var retval;
-		var fds = [ deferred.stdin, new IoStream(), new IoStream() ];
-
+		// Check for aliases
 		if ( argv[0] in this.aliasCommands ) {
 			argv = $.merge( $.splitArgs( this.aliasCommands[argv[0]] ), argv.slice( 1 ) );
 		}
+		
+		// Setup the file descriptors
+		var retval = '0',
+			fds = [ deferred.stdin, new IoStream(), new IoStream() ],
+			foundStdout = false;
+			foundStderr = false,
+			nextCmd = null,
+			pipeIndex = argv.indexOf( '|' );
 
+		if ( pipeIndex !== -1 ) {
+			foundStdout = true;
+			var nextArgv = argv.splice( pipeIndex, argv.length - pipeIndex );
+			nextArgv.shift();
+
+			if ( nextArgv.length > 0 ) {
+				nextCmd = this.execute( nextArgv, terminal );
+				fds[1].getPromise().progress( function( stream ) {
+					nextCmd.stdin.write( stream.read() );
+				} );
+				fds[1].getPromise().done( function( stream ) {
+					nextCmd.stdin.write( stream.read() );
+					nextCmd.stdin.close();
+				} );
+
+				nextCmd.progress( function( text ) {
+					deferred.notify( text );
+				} );
+			}
+		}
+
+		// Look for file description redirection
+		for ( var i = argv.indexOf( '>' ); i !== -1; i = argv.indexOf( '>', i + 1 ) ) {
+			foundStdout = true;
+			var path = $.realpath( argv[i + 1], this.environment['PWD'], this.environment['HOME'] );
+			fds[1].getPromise().done( $.proxy( function( stream ) {
+				var txt = stream.read();
+				this.api.request( 'PATCH', '/files' + path, txt, { 'Content-Type': 'text/plain' } );
+			}, this ) );;
+			argv.splice( i, 2 );
+		}
+
+		for ( var i = argv.indexOf( '2>' ); i !== -1; i = argv.indexOf( '2>', i + 1 ) ) {
+			foundStderr = true;
+			var path = $.realpath( argv[i + 1], this.environment['PWD'], this.environment['HOME'] );
+			fds[2].getPromise().done( $.proxy( function( stream ) {
+				var txt = stream.read();
+				this.api.request( 'PATCH', '/files' + path, txt, { 'Content-Type': 'text/plain' } );
+			}, this ) );;
+			argv.splice( i, 2 );
+		}
+
+		for ( var i = argv.indexOf( '<' ); i !== -1; i = argv.indexOf( '<', i + 1 ) ) {
+			var path = $.realpath( argv[i + 1], this.environment['PWD'], this.environment['HOME'] );
+			fds[0] = new IoStream();
+			this.api.request( 'GET', '/files' + path ).done( function( txt ) {
+				fds[0].write( txt );
+				fds[0].close();
+			} );
+			argv.splice( i, 2 );
+		}
+
+		// If there was no redirection, output to the terminal
+		if ( !foundStdout ) {
+			fds[1].write = function( txt ) {
+				deferred.notify( [txt] );
+			};
+		}
+		if ( !foundStderr ) {
+			fds[2].write = function( txt ) {
+				deferred.notify( [txt] );
+			};
+		}
+
+		// Try and execute the command
 		if ( argv[0] === 'exit' ) {
 			this.shutdown( terminal );
 			this.api.logout();
@@ -137,50 +211,6 @@ function WebBash( username ) {
 			}
 			retval = '0';
 		} else if ( argv[0] in WebBash['commands'] ) {
-			var foundStdout = false;
-			var foundStderr = false;
-
-			for ( var i = argv.indexOf( '>' ); i !== -1; i = argv.indexOf( '>', i ) ) {
-				foundStdout = true;
-				var path = $.realpath( argv[i + 1], this.environment['PWD'], this.environment['HOME'] );
-				fds[1].getPromise().done( $.proxy( function( stream ) {
-					var txt = stream.read();
-					this.api.request( 'PATCH', '/files' + path, txt, { 'Content-Type': 'text/plain' } );
-				}, this ) );;
-				argv.splice( i, 2 );
-			}
-
-			for ( var i = argv.indexOf( '2>' ); i !== -1; i = argv.indexOf( '2>', i ) ) {
-				foundStderr = true;
-				var path = $.realpath( argv[i + 1], this.environment['PWD'], this.environment['HOME'] );
-				fds[2].getPromise().done( $.proxy( function( stream ) {
-					var txt = stream.read();
-					this.api.request( 'PATCH', '/files' + path, txt, { 'Content-Type': 'text/plain' } );
-				}, this ) );;
-				argv.splice( i, 2 );
-			}
-
-			for ( var i = argv.indexOf( '<' ); i !== -1; i = argv.indexOf( '<', i ) ) {
-				var path = $.realpath( argv[i + 1], this.environment['PWD'], this.environment['HOME'] );
-				fds[0] = new IoStream();
-				this.api.request( 'GET', '/files' + path ).done( function( txt ) {
-					fds[0].write( txt );
-					fds[0].close();
-				} );
-				argv.splice( i, 2 );
-			}
-
-			if ( !foundStdout ) {
-				fds[1].write = function( txt ) {
-					deferred.notify( [txt] );
-				};
-			}
-			if ( !foundStderr ) {
-				fds[2].write = function( txt ) {
-					deferred.notify( [txt] );
-				};
-			}
-			
 			var argc = argv.length;
 			retval = WebBash['commands'][argv[0]]( fds, argc, argv, this.environment );
 		} else if ( argv[0] ) {
@@ -191,16 +221,31 @@ function WebBash( username ) {
 		var updateFunc = $.proxy( function( retcode ) {
 			this.environment['?'] = retcode.toString();
 			terminal.prompt = this.username + '@ubuntu ' + this.environment['PWD'] + ' $ ';
-			fds[0].close();
-			fds[1].close();
-			fds[2].close();
-			deferred.resolve();
+			deferred.resolve( retcode );
 		}, this );
 
 		if ( $.type( retval ) === 'object' && retval.then !== undefined ) {
-			retval.then( updateFunc );
+			retval.then( function() {
+				fds[0].close();
+				fds[1].close();
+				fds[2].close();
+			} );
+
+			if ( nextCmd === null ) {
+				retval.then( updateFunc );
+			} else {
+				retval.then( function() { nextCmd.then( updateFunc ); } );
+			}
 		} else {
-			updateFunc( retval );
+			fds[0].close();
+			fds[1].close();
+			fds[2].close();
+
+			if ( nextCmd === null ) {
+				updateFunc( retval );
+			} else {
+				nextCmd.then( function() { updateFunc( retval ); } );
+			}
 		}
 	};
 
