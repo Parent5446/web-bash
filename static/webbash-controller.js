@@ -154,10 +154,11 @@ function WebBash( username ) {
 			var path = $.realpath( argv[i + 1], this.environment['PWD'], this.environment['HOME'] );
 			fds[1].getPromise().done( $.proxy( function( stream ) {
 				var txt = stream.read();
-				this.api.request( 'POST', '/files' + path, '', {} ).done( function () 
+				this.api.request( 'POST', '/files' + path, '', {} ).done( $.proxy( function () 
 								{
 									this.api.request( 'PATCH', '/files' + path, txt, { 'Content-Type': 'text/plain' } );
-								} );
+								}, 
+								this ) );
 			}, this ) );;
 			argv.splice( i, 2 );
 		}
@@ -167,10 +168,11 @@ function WebBash( username ) {
 			var path = $.realpath( argv[i + 1], this.environment['PWD'], this.environment['HOME'] );
 			fds[2].getPromise().done( $.proxy( function( stream ) {
 				var txt = stream.read();
-				this.api.request( 'POST', '/files' + path, '', {} ).done( function () 
+				this.api.request( 'POST', '/files' + path, '', {} ).done( $.proxy( function () 
 								{
 									this.api.request( 'PATCH', '/files' + path, txt, { 'Content-Type': 'text/plain' } );
-								} );
+								}, 
+								this ) );
 			}, this ) );;
 			argv.splice( i, 2 );
 		}
