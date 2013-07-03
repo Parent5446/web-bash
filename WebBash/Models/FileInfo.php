@@ -484,7 +484,7 @@ class FileInfo implements Model
 
 	public function getContents( $offset = 0, $length = -1 ) {
 		$webRoot = $this->deps->config['webbash']['fileroot'];
-		$finalPath = realpath( $webRoot . $this->path );
+		$finalPath = Util\realpath( $webRoot . $this->path );
 
 		if ( strpos( $finalPath, $webRoot ) !== 0 ) {
 			$contents = null;
@@ -507,19 +507,23 @@ class FileInfo implements Model
 
 	public function setContents( $data = null ) {
 		$webRoot = $this->deps->config['webbash']['fileroot'];
-		$finalPath = realpath( $webRoot . $this->path );
+		$finalPath = Util\realpath( $webRoot . $this->path );
 
 		if ( strpos( $finalPath, $webRoot ) !== 0 ) {
 			return false;
 		} elseif ( file_exists( $finalPath ) && !is_writeable( $finalPath ) ) {
 			throw new RuntimeException( "Error while overwriting contents of $finalPath" );
-		} elseif ( $this->isDir() && !is_dir( $finalPath ) ) {
-			unlink( $finalPath );
-			return mkdir( $finalPath, $this->perms );
-		} elseif ( $this->isFile() && !is_file( $finalPath ) ) {
-			unlink( $finalPath );
-			return file_put_contents( $finalPath, $data );
-		} else {
+		}
+
+		if ( $this->isDir() ) {
+			if ( file_exists( $finalPath ) && !is_dir( $finalPath ) ) {
+				unlink( $finalPath );
+			}
+			return mkdir( $finalPath );
+		} elseif ( $this->isFile() ) {
+			if ( file_exists( $finalPath ) && is_dir( $finalPath ) ) {
+				rmdir( $finalPath );
+			}
 			return file_put_contents( $finalPath, $data );
 		}
 	}

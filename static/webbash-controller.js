@@ -112,6 +112,7 @@ function WebBash( username ) {
 	 */
 	this.executeCommand = function( argv, terminal, deferred ) {
 		var retval;
+		var fds = [ deferred.stdin, new IoStream(), new IoStream() ];
 
 		if ( argv[0] in this.aliasCommands ) {
 			argv = $.merge( $.splitArgs( this.aliasCommands[argv[0]] ), argv.slice( 1 ) );
@@ -136,16 +137,50 @@ function WebBash( username ) {
 			}
 			retval = '0';
 		} else if ( argv[0] in WebBash['commands'] ) {
-			var fds = [ deferred.stdin, new IoStream(), new IoStream() ];
-			fds[1].flush = function( stream ) {
-				var text = stream.read();
-				deferred.notify( [text] );
-			};
-			fds[2].flush = function( stream ) {
-				var text = stream.read();
-				deferred.notify( [text] );
-			};
+			var foundStdout = false;
+			var foundStderr = false;
 
+			for ( var i = argv.indexOf( '>' ); i !== -1; i = argv.indexOf( '>', i ) ) {
+				foundStdout = true;
+				var path = $.realpath( argv[i + 1], this.environment['PWD'], this.environment['HOME'] );
+				fds[1].getPromise().done( $.proxy( function( stream ) {
+					var txt = stream.read();
+					this.api.request( 'PATCH', '/files' + path, txt, { 'Content-Type': 'text/plain' } );
+				}, this ) );;
+				argv.splice( i, 2 );
+			}
+
+			for ( var i = argv.indexOf( '2>' ); i !== -1; i = argv.indexOf( '2>', i ) ) {
+				foundStderr = true;
+				var path = $.realpath( argv[i + 1], this.environment['PWD'], this.environment['HOME'] );
+				fds[2].getPromise().done( $.proxy( function( stream ) {
+					var txt = stream.read();
+					this.api.request( 'PATCH', '/files' + path, txt, { 'Content-Type': 'text/plain' } );
+				}, this ) );;
+				argv.splice( i, 2 );
+			}
+
+			for ( var i = argv.indexOf( '<' ); i !== -1; i = argv.indexOf( '<', i ) ) {
+				var path = $.realpath( argv[i + 1], this.environment['PWD'], this.environment['HOME'] );
+				fds[0] = new IoStream();
+				this.api.request( 'GET', '/files' + path ).done( function( txt ) {
+					fds[0].write( txt );
+					fds[0].close();
+				} );
+				argv.splice( i, 2 );
+			}
+
+			if ( !foundStdout ) {
+				fds[1].write = function( txt ) {
+					deferred.notify( [txt] );
+				};
+			}
+			if ( !foundStderr ) {
+				fds[2].write = function( txt ) {
+					deferred.notify( [txt] );
+				};
+			}
+			
 			var argc = argv.length;
 			retval = WebBash['commands'][argv[0]]( fds, argc, argv, this.environment );
 		} else if ( argv[0] ) {
@@ -156,6 +191,9 @@ function WebBash( username ) {
 		var updateFunc = $.proxy( function( retcode ) {
 			this.environment['?'] = retcode.toString();
 			terminal.prompt = this.username + '@ubuntu ' + this.environment['PWD'] + ' $ ';
+			fds[0].close();
+			fds[1].close();
+			fds[2].close();
 			deferred.resolve();
 		}, this );
 

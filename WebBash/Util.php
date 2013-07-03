@@ -151,3 +151,35 @@ function basename( $path ) {
 		return substr( $path, $pos + 1 );
 	}
 }
+
+/**
+ * Resolve any dots in a path and return the absolute path
+ *
+ * @param string $pathname Path to file
+ * @return string
+ */
+function realpath( $path ) {
+	if ( strpos( $path, ':' ) === false && ( !$path || $path[0] !== '/' ) ) {
+		$path = getcwd() . DIRECTORY_SEPARATOR . $path;
+	}
+
+	$path = str_replace( array( '/'. '\\' ), DIRECTORY_SEPARATOR, $path );
+	$parts = explode( DIRECTORY_SEPARATOR, substr( $path, 1 ) );
+	foreach ( $parts as $key => $part ) {
+		if ( !$part || $part === '.' ) {
+			unset( $parts[$key] );
+		} elseif ( $part === '..' ) {
+			unset( $parts[$key] );
+			if ( $key - 1 > 0 ) {
+				unset( $pars[$key] );
+			}
+		}
+	}
+
+	$path = DIRECTORY_SEPARATOR . implode( DIRECTORY_SEPARATOR, $parts );
+	if ( file_exists( $path ) && is_link( $path ) ) {
+		$path = readlink( $path );
+	}
+
+	return $path;
+}

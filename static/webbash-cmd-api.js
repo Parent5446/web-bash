@@ -202,16 +202,25 @@
 	 * @param {number} argc Number of arguments
 	 * @param {Array.<string>} argv Arguments passed to command
 	 * @param {Array.<string>} env Environment variables
-	 * @return {number} Retcode, 0 for success
+	 * @return {number|Object} Retcode, 0 for success
 	 */
 	WebBash['commands']['cat'] = function( fds, argc, argv, env ) {
 		var newDir = '';
 		if ( argc <= 1 ) {
-			fds[2].write( 'cat: invalid number of parameters' );
-			return 1;
+			argv.push( '-' );
+			++argc;
 		}
 
+		var usingStdin = false;
 		for ( var i = 1; i < argc; i++ ) {
+			if ( argv[i] === '-' ) {
+				usingStdin = true;
+				fds[0].getPromise().progress( function( stream ) {
+					fds[1].write( stream.read() );
+				} );
+				continue;
+			}
+
 			var path = $.realpath( argv[i], env['PWD'], env['HOME'] );
 			req = api.request( 'GET', '/files' + path, '', {}, false );
 
@@ -230,7 +239,7 @@
 			}
 		}
 
-		return 0;
+		return usingStdin ? fds[0].getPromise() : 0;
 	};
 
 	/**
@@ -368,7 +377,7 @@
 
 		var deferred = $.Deferred();
 
-		fds[0].readBlocking().progress( function( stream ) {
+		fds[0].getPromise().progress( function( stream ) {
 			var password = stream.read();
 
 			var req = api.request( 'PATCH', '/users/' + argv[1], {
@@ -480,16 +489,13 @@
 	WebBash['commands']['rmdir'] = function( fds, argc, argv, env ) {
 		for ( var i = 1; i < argc; i++ ) {
 				var path = $.realpath( argv[i], env['PWD'], env['HOME'] );
-
 				var req = api.request( 'GET', '/files' + path, {}, {}, false );
-
 
 				if ( req['status'] === 404 ) {
 					fds[2].write( 'rmdir: cannot remove ' + path + ': No such directory' );
 				} else if ( req['status'] === 403 ) {
 					fds[2].write( 'rmdir: cannot remove ' + path + ': Permission denied' );
-				} else if ( req.getResponseHeader( 'File-Type' ) === 'directory' &&
-					        req['responseJSON'].length === 0 ) {
+				} else if ( req.getResponseHeader( 'File-Type' ) === 'directory' && req['responseJSON'].length === 2 ) {
 					req = api.request( 'DELETE', '/files' + path, '', {}, false );
 				} else {
 					fds[2].write( 'rmdir: cannot remove ' + path + ': Non-empty directory' );

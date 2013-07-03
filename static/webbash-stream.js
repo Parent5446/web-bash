@@ -32,7 +32,6 @@ function IoStream() {
 	 */
 	this.write = function( str ) {
 		this.buffer += str;
-		this.flush( this );
 		if ( this.deferred !== null ) {
 			this.deferred.notify( this );
 		}
@@ -63,15 +62,14 @@ function IoStream() {
 	 * Get a deferred that will be notified when there is something to read
 	 * @return {object}
 	 */
-	this.readBlocking = function() {
+	this.getPromise = function() {
 		return this.deferred.promise();
 	};
 
 	/**
-	 * Function to flush the buffer to its final destination. Should be
-	 * overridden to control functionality
-	 * @param {IoStream} stream The current stream
+	 * Closes the stream and flushes the buffer
 	 */
-	this.flush = function( stream ) {
+	this.close = function() {
+		this.deferred.resolve( this );
 	};
 }

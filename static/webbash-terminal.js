@@ -214,14 +214,19 @@ function Terminal() {
 			$( '#cursor' ).next().append( '^C' );
 			this.displayPrompt();
 		} else if ( e.ctrlKey && !e.metaKey && !e.shiftKey && e.which === 68 ) {
-			// Ctrl-D: exit the terminal
+			// Ctrl-D: stop input for either the current command or the terminal itself
 			e.preventDefault();
-			this.controller.shutdown( this );
-			this.controller.api.logout();
-			// Hopefully something here will close the window
-			window.open( '', '_self', '' );
-			window.close();
-			self.close();
+			if ( this.promise && this.promise.stdin ) {
+				$( '#cursor' ).next().append( '^D' );
+				this.promise.stdin.close();
+			} else {
+				this.controller.shutdown( this );
+				this.controller.api.logout();
+				// Hopefully something here will close the window
+				window.open( '', '_self', '' );
+				window.close();
+				self.close();
+			}
 		} else if ( e.which === 46 ) {
 			// Delete key
 			elem = $( '#cursor' );
@@ -251,10 +256,9 @@ function Terminal() {
 			cmd = $.trim( cmd.substr( 0, cmd.length - 1 ) );
 			children.addClass( 'completed' );
 
-			$( '#cursor' ).prev().append( $( '#cursor' ).text() );
-			$( '#cursor' ).next().after( $( ' <br> ') );
+			$( '#cursor' ).prev().append( $( '#cursor' ).text() + '<br >' );
 
-			if ( this.promise !== null ) {
+			if ( this.promise && this.promise.stdin ) {
 				this.promise.stdin.write( cmd );
 			} else if ( cmd.length > 0 ) {
 				this.cmdHistory[this.cmdHistory.length] = cmd;
@@ -267,7 +271,7 @@ function Terminal() {
 			} else {
 				this.displayPrompt();
 			}
-		} else if ( e.which === 222 && e.shiftKey) {
+		} else if ( e.which === 222 && e.shiftKey ) {
 			// double quote: Needs special handling
 			e.preventDefault();
 			elem = $( '#cursor' ).prev();
