@@ -251,8 +251,8 @@ class FileController
 		$file->updateATime();
 		$file->updateMTime();
 		$file->updateCTime();
-		$file->save();
 		$file->setContents( $data );
+		$file->save();
 	}
 
 	/**

@@ -526,11 +526,13 @@ class FileInfo implements Model
 		}
 
 		if ( $this->isDir() ) {
+			$this->size = 0;
 			if ( file_exists( $finalPath ) && !is_dir( $finalPath ) ) {
 				unlink( $finalPath );
 			}
 			return mkdir( $finalPath );
 		} elseif ( $this->isFile() ) {
+			$this->size = strlen( $data );
 			if ( file_exists( $finalPath ) && is_dir( $finalPath ) ) {
 				rmdir( $finalPath );
 			}
