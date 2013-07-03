@@ -44,16 +44,24 @@
 		}
 	};
 
+	/**
+	 *  used by ls for printing the last row
+	 */
+	var maxToPrint;
+	/**
+	 *  used by ls for keeping track of the items printed so far
+	 */
 	/** 
 	 * print the file info with options to the provided output stream
 	 * @param {IoStream} fd Output stream
 	 * @param {object} responseJSON responseJSON AJAX response object
 	 * @param {Object.<string, *>} opts CLI options
-	 * @param {numeric} counter
 	 * @param {string} lastOutput
 	 */
-	function printFile( fd, responseJSON, opts, counter, lastOutput ) {
+	function printFile( fd, responseJSON, opts, lastOutput ) {
+
 		if ( ( responseJSON[6] === '.' || responseJSON[6] === '..' ) && !( 'a' in opts ) ) {
+			maxToPrint--;
 			return lastOutput;
 		}
 
@@ -84,13 +92,14 @@
 			fd.write( output );
 			output = "";
 		} else {
-			if ( counter % 4 === 0 ) {
+			counter++;
+			if ( counter % 4 === 0 || counter === maxToPrint ) {
+				output += "\n";
 				fd.write( output );
-				output += "\n   ";
 				output = "";
 			}
 		}
-
+	
 		return output;
 	}
 
@@ -126,8 +135,10 @@
 			}
 
 			var lastOutput = '';
-			for ( var j = 0, counter = req['responseJSON'].length - 1; j < req['responseJSON'].length; j++, counter-- ) {
-				lastOutput = printFile( fds[1], req['responseJSON'][j], opts, counter, lastOutput );
+			maxToPrint = req['responseJSON'].length;
+			counter = 0;
+			for ( var j = 0; j < req['responseJSON'].length; j++ ) {
+				lastOutput = printFile( fds[1], req['responseJSON'][j], opts, lastOutput );
 			}
 		}
 
