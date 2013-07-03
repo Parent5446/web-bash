@@ -229,7 +229,7 @@ class FileController
 		$file->setFiletype( self::$fileTypes[$params['type']] );
 		$file->setOwner( $owner );
 		$file->setGroup( $group );
-		$$file->setPermissionsRaw( $perms );
+		$file->setPermissionsRaw( $perms );
 
 		$file->updateATime();
 		$file->updateMTime();
