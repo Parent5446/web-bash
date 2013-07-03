@@ -27,6 +27,14 @@ class FileController
 		'l' => 'l'
 	);
 
+	private static $sortFields = array(
+		'name',
+		'size',
+		'ctime',
+		'mtime',
+		'atime'
+	);
+
 	/**
 	 * Construct the controller
 	 *
@@ -66,8 +74,17 @@ class FileController
 				$this->getFileInfoArray( $file->getParent(), '..' )
 			);
 
+			if ( !isset( $params['sortby'] ) ) {
+				$params['sortby'] = array( 'name' );
+			} else {
+				$params['sortby'] = array_map( 'trim', explode( ',', $params['sortby'] ) );
+				if ( array_diff( $params['sortby'], self::$sortFields ) ) {
+					throw new HttpException( 400, 'Invalid sort field' );
+				}
+			}
+
 			// Add entries for the children
-			foreach ( $file->getChildren() as $child ) {
+			foreach ( $file->getChildren( $params['sortby'] ) as $child ) {
 				$childrenArray[] = $this->getFileInfoArray( $child );
 			}
 
@@ -156,7 +173,7 @@ class FileController
 		}
 
 		$file->updateATime();
-		$file->updateMTime();
+		$file->updateCTime();
 		$file->save();
 
 		$response = new Response( null );
@@ -233,6 +250,7 @@ class FileController
 
 		$file->updateATime();
 		$file->updateMTime();
+		$file->updateCTime();
 		$file->save();
 		$file->setContents( $data );
 	}
@@ -254,6 +272,8 @@ class FileController
 		} elseif ( !$file->isAllowed( $this->deps->currentUser, FileInfo::ACTION_WRITE ) ) {
 			throw new HttpException( 403 );
 		}
+		
+		$cTime = $mTime = false;
 
 		if ( isset( $params['owner'] ) ) {
 			$owner = $this->deps->userCache->get( 'name', $params['owner'] );
@@ -263,6 +283,7 @@ class FileController
 				throw new HttpException( 403, 'Only the owner can change permissions' );
 			}
 			$file->setOwner( $owner );
+			$cTime = true;
 		}
 
 		if ( isset( $params['group'] ) ) {
@@ -273,6 +294,7 @@ class FileController
 				throw new HttpException( 403, 'Only the owner can change permissions' );
 			}
 			$file->setGroup( $group );
+			$cTime = true;
 		}
 
 		if ( isset( $params['perms'] ) ) {
@@ -280,14 +302,22 @@ class FileController
 				throw new HttpException( 403, 'Only the owner can change permissions' );
 			}
 			$file->setPermissionsRaw( octdec( $params['perms'] ) );
+			$cTime = true;
 		}
 
 		if ( isset( $params['type'] ) ) {
 			$file->setFiletype( self::$fileTypes[$params['type']] );
 		}
-
-		if ( $data ) {
+		if ( isset( $params['type'] ) || $data ) {
 			$file->setContents( $data );
+			$mTime = true;
+		}
+
+		if ( $cTime ) {
+			$file->updateCTime();
+		}
+		if ( $mTime ) {
+			$file->updateMTime();
 		}
 
 		$file->save();

@@ -45,6 +45,7 @@ $router->register(
 		'FILE-GROUP' => 'group',
 		'FILE-TYPE' => 'type',
 		'FILE-PERMISSIONS' => 'perms',
+		'SORT-BY' => 'sortby',
 	)
 );
 
