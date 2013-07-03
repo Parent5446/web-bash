@@ -96,16 +96,16 @@ class FileController
 		} else {
 			$contents = (string)$file->getContents();
 			$response = new Response( $contents );
+			$response->addETag( md5( $contents ) );
 		}
 
 		// Update the access time
+		$response->addModifiedTime( $file->getMTime() );
 		$file->updateATime();
 		$file->save();
 
 		return $response
-			->addHeader( 'Content-Length', $file->getSize() )
 			->addHeader( 'Content-Disposition', "attachment; filename=\"{$file->getFilename()}" )
-			->addHeader( 'Last-Modified', $file->getMTime() )
 			->addHeader( 'Last-Accessed', $file->getATime() )
 			->addHeader( 'Creation-Time', $file->getCTime() )
 			->addHeader( 'File-Owner', $file->getOwner()->getName() )

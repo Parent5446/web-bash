@@ -82,12 +82,16 @@ class HttpException extends \Exception
 	 *
 	 * @param int $code HTTP error code
 	 * @param string $msg Message for the exception
-	 * @param array $headers Response headers to send
+	 * @param Response|array $headers Response headers to send
 	 */
 	public function __construct( $code, $msg = '', $headers = array() ) {
 		parent::__construct( $msg, $code );
 		$this->httpCode = $code;
-		$this->headers = $headers;
+		if ( $headers instanceof Response ) {
+			$this->headers = $headers->getHeaders();
+		} else {
+			$this->headers = $headers;
+		}
 	}
 
 	/**

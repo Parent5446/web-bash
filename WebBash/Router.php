@@ -198,6 +198,44 @@ class Router
 		}
 		$response->addHeader( 'X-Frame-Options', 'deny' );
 
+		// Check if we need to send the request body based on the conditional
+		// HTTP headers
+		$allowWeak = $method === 'GET' && !isset( $headers['RANGE'] );
+		$notModified = null;
+		if ( isset( $headers['IF-NONE-MATCHES'] ) ) {
+			foreach ( explode( ',', $headers['IF-NONE-MATCHES'] ) as $etag ) {
+				$etag = trim( $etag );
+				if ( $response->matchETag( $etag, $allowWeak ) ) {
+					$notModified = true;
+				} else {
+					$notModified = false;
+					break;
+				}
+			}
+		}
+		if ( isset( $headers['IF-MODIFIED-SINCE'] ) ) {
+			if ( $response->matchLastModified( $headers['IF-MODIFIED-SINCE'], $allowWeak ) ) {
+				$notModified = $notModified === false ? false : true;
+			} else {
+				$notModified = false;
+			}
+		}
+		if ( isset( $headers['IF-UNMODIFIED-SINCE'] ) ) {
+			if ( !$response->matchLastModified( $headers['IF-UNMODIFIED-SINCE'], $allowWeak ) ) {
+				$notModified = $notModified === false ? false : true;
+			} else {
+				$notModified = false;
+			}
+		}
+
+		if ( $notModified ) {
+			if ( $method === 'GET' || $method === 'HEAD' ) {
+				throw new HttpException( 304, '', $response );
+			} else {
+				throw new HttpException( 412, '', $response );
+			}
+		}
+
 		// Encode the response appropriately for the client
 		if ( !isset( $headers['ACCEPT'] ) ) {
 			$headers['ACCEPT'] = 'application/json';
@@ -256,6 +294,7 @@ class Router
 			}
 		}
 
+		$response->addHeader( 'Content-Length', strlen( $responseData ) );
 		foreach ( $response->getHeaders() as $key => $val ) {
 			header( "$key: $val" );
 		}
