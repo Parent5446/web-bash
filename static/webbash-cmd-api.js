@@ -112,7 +112,7 @@
 	 * @return {number} Retcode, 0 for success
 	 */
 	WebBash['commands']['ls'] = function( fds, argc, argv, env ) {
-		var info = $.getopt( argv, 'la' );
+		var info = $.getopt( argv, 'latcurS' );
 		var opts = info[0];
 		argv = info[1];
 		argc = argv.length;
@@ -121,9 +121,22 @@
 			argv[argc++] = "";
 		}
 
+		var sortBy = 'name';
+		if ( 'l' in opts && 't' in opts  ) {
+			if ( 'c' in opts ) {
+				sortBy = 'ctime';
+			} else if ( 'u' in opts ) {
+				sortBy = 'atime';
+			}
+		} else if ( 't' in opts ) {
+			sortBy = 'mtime';
+		} else if ( 'S' in opts ) {
+			sortBy = 'size';
+		}
+
 		for ( var i = 1; i < argv.length; i++ ) {
 			var path = $.realpath( argv[i], env['PWD'], env['HOME'] );
-			var req = api.request( 'GET', '/files' + path, {}, {}, false );
+			var req = api.request( 'GET', '/files' + path, {}, { 'Sort-By': sortBy }, false );
 
 			if ( req === null || req['status'] !== 200 ) {
 				fds[2].write( 'ls: cannot access ' + path + ': No such file or directory' );
@@ -132,6 +145,10 @@
 				req['responseJSON'] = [req['responseJSON']];
 			} else if ( req['responseJSON'] === null || req['responseJSON'] === undefined ) {
 				req['responseJSON'] = [];
+			}
+
+			if ( 'r' in opts ) {
+				req['responseJSON'].reverse();
 			}
 
 			var lastOutput = '';

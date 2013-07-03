@@ -33,6 +33,7 @@ class FileInfo implements Model
 	private $exists = null;
 	private $fp = null;
 	private $children = null;
+	private $childrenOrderBy = null;
 
 	public static function newFromId( DI $deps, $id ) {
 		$obj = new self( $deps );
@@ -412,6 +413,12 @@ class FileInfo implements Model
 		$this->atime = date_format( new \DateTime(), 'Y-m-d H:i:s' );
 	}
 
+	public function updateCTime() {
+		$this->load();
+		date_default_timezone_set( 'UTC' );
+		$this->ctime = date_format( new \DateTime(), 'Y-m-d H:i:s' );
+	}
+
 	public function exists() {
 		$this->load();
 		return $this->exists;
@@ -456,22 +463,25 @@ class FileInfo implements Model
 		$this->linkid = $target->getId();
 	}
 
-	public function getChildren() {
-		if ( $this->children !== null ) {
+	public function getChildren( $orderBy = 'name' ) {
+		if ( $this->children !== null && $this->childrenOrderBy === $orderBy ) {
 			return $this->children;
 		}
 
+		$orderBy = implode( ',', (array)$orderBy );
+
 		$this->load();
 		$this->children = array();
+		$this->childrenOrderBy = $orderBy;
 
 		if ( $this->path !== '/' ) {
 			$stmt = $this->deps->stmtCache->prepare(
-				'SELECT * FROM file WHERE parent = :id'
+				"SELECT * FROM file WHERE parent = :id ORDER BY $orderBy"
 			);
 			$stmt->bindParam( ':id', $this->id );
 		} else {
 			$stmt = $this->deps->stmtCache->prepare(
-				'SELECT * FROM file WHERE parent IS NULL'
+				"SELECT * FROM file WHERE parent IS NULL ORDER BY $orderBy"
 			);
 		}
 		$stmt->execute();
