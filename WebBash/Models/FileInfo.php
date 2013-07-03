@@ -129,7 +129,7 @@ class FileInfo implements Model
 		$this->load();
 
 		$webRoot = $this->deps->config['webbash']['fileroot'];
-		$finalPath = realpath( $webRoot . $this->path );
+		$finalPath = Util\realpath( $webRoot, $this->path );
 
 		if (
 			strpos( $finalPath, $webRoot ) === 0 ||
@@ -484,7 +484,7 @@ class FileInfo implements Model
 
 	public function getContents( $offset = 0, $length = -1 ) {
 		$webRoot = $this->deps->config['webbash']['fileroot'];
-		$finalPath = Util\realpath( $webRoot . $this->path );
+		$finalPath = Util\realpath( $webRoot, $this->path );
 
 		if ( strpos( $finalPath, $webRoot ) !== 0 ) {
 			$contents = null;
@@ -507,7 +507,7 @@ class FileInfo implements Model
 
 	public function setContents( $data = null ) {
 		$webRoot = $this->deps->config['webbash']['fileroot'];
-		$finalPath = Util\realpath( $webRoot . $this->path );
+		$finalPath = Util\realpath( $webRoot, $this->path );
 
 		if ( strpos( $finalPath, $webRoot ) !== 0 ) {
 			return false;

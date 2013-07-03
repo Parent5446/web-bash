@@ -155,14 +155,11 @@ function basename( $path ) {
 /**
  * Resolve any dots in a path and return the absolute path
  *
+ * @param string $base Base path that is guaranteed to exist
  * @param string $pathname Path to file
  * @return string
  */
-function realpath( $path ) {
-	if ( strpos( $path, ':' ) === false && ( !$path || $path[0] !== '/' ) ) {
-		$path = getcwd() . DIRECTORY_SEPARATOR . $path;
-	}
-
+function realpath( $base, $path ) {
 	$path = str_replace( array( '/'. '\\' ), DIRECTORY_SEPARATOR, $path );
 	$parts = explode( DIRECTORY_SEPARATOR, substr( $path, 1 ) );
 	foreach ( $parts as $key => $part ) {
@@ -176,7 +173,7 @@ function realpath( $path ) {
 		}
 	}
 
-	$path = DIRECTORY_SEPARATOR . implode( DIRECTORY_SEPARATOR, $parts );
+	$path = $base . DIRECTORY_SEPARATOR . implode( DIRECTORY_SEPARATOR, $parts );
 	if ( file_exists( $path ) && is_link( $path ) ) {
 		$path = readlink( $path );
 	}
