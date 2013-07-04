@@ -117,18 +117,18 @@ class FileController
 		} else {
 			$contents = (string)$file->getContents();
 			$response = new Response( $contents );
-			$response->addETag( md5( $contents ) );
+			$response->addEtag( md5( $contents ) );
 		}
 
 		// Update the access time
-		$response->addModifiedTime( $file->getMTime() );
-		$file->updateATime();
+		$response->addModifiedTime( $file->getModifiedTime() );
+		$file->updateAccessTime();
 		$file->save();
 
 		return $response
 			->addHeader( 'Content-Disposition', "attachment; filename=\"{$file->getFilename()}\"" )
-			->addHeader( 'Last-Accessed', $file->getATime() )
-			->addHeader( 'Creation-Time', $file->getCTime() )
+			->addHeader( 'Last-Accessed', $file->getAccessTime() )
+			->addHeader( 'Creation-Time', $file->getChangedTime() )
 			->addHeader( 'File-Owner', $file->getOwner()->getName() )
 			->addHeader( 'File-Group', $file->getGroup()->getName() )
 			->addHeader( 'File-Type', array_search( $file->getFiletype(), self::$fileTypes ) );
@@ -147,7 +147,7 @@ class FileController
 			$file->getOwner()->getName(),
 			$file->getGroup()->getName(),
 			$file->getSize(),
-			$file->getMTime(),
+			$file->getModifiedTime(),
 			$name ?: $file->getFilename()
 		);
 	}
@@ -162,7 +162,10 @@ class FileController
 		$file = $this->deps->fileCache->get( 'path', "/{$params['path']}" );
 		if( !$file->exists() ) {
 			throw new HttpException( 404, 'File not found' );
-		} elseif ( !$file->getParent()->isAllowed( $this->deps->currentUser, FileInfo::ACTION_EXECUTE ) ) {
+		} elseif ( !$file->getParent()->isAllowed(
+			$this->deps->currentUser,
+			FileInfo::ACTION_EXECUTE
+		) ) {
 			throw new HttpException( 403 );
 		}
 
@@ -170,9 +173,9 @@ class FileController
 		return $response
 			->addHeader( 'Content-Length', $file->getSize() )
 			->addHeader( 'Content-Disposition', "attachment; filename=\"{$file->getFilename()}" )
-			->addHeader( 'Last-Modified', $file->getMTime() )
-			->addHeader( 'Last-Accessed', $file->getATime() )
-			->addHeader( 'Creation-Time', $file->getCTime() )
+			->addHeader( 'Last-Modified', $file->getModifiedTime() )
+			->addHeader( 'Last-Accessed', $file->getAccessTime() )
+			->addHeader( 'Creation-Time', $file->getChangedTime() )
 			->addHeader( 'File-Owner', $file->getOwner()->getName() )
 			->addHeader( 'File-Group', $file->getGroup()->getName() )
 			->addHeader( 'File-Type', array_search( $file->getFiletype(), self::$fileTypes ) );
@@ -193,17 +196,17 @@ class FileController
 			throw new HttpException( 403 );
 		}
 
-		$file->updateATime();
-		$file->updateCTime();
+		$file->updateAccessTime();
+		$file->updateChangedTime();
 		$file->save();
 
 		$response = new Response( null );
 		return $response
 			->addHeader( 'Content-Length', $file->getSize() )
 			->addHeader( 'Content-Disposition', "attachment; filename=\"{$file->getFilename()}" )
-			->addHeader( 'Last-Modified', $file->getMTime() )
-			->addHeader( 'Last-Accessed', $file->getATime() )
-			->addHeader( 'Creation-Time', $file->getCTime() )
+			->addHeader( 'Last-Modified', $file->getModifiedTime() )
+			->addHeader( 'Last-Accessed', $file->getAccessTime() )
+			->addHeader( 'Creation-Time', $file->getChangedTime() )
 			->addHeader( 'File-Owner', $file->getOwner()->getName() )
 			->addHeader( 'File-Group', $file->getGroup()->getName() )
 			->addHeader( 'File-Type', array_search( $file->getFiletype(), self::$fileTypes ) );
@@ -268,7 +271,7 @@ class FileController
 		if ( !$file->exists() ) {
 			$parent = $file->getParent();
 			var_dump( $parent );
-			$parent->updateMTime();
+			$parent->updateModifiedTime();
 			$parent->save();
 		}
 
@@ -278,9 +281,9 @@ class FileController
 		$file->setGroup( $group );
 		$file->setPermissionsRaw( $perms );
 
-		$file->updateATime();
-		$file->updateMTime();
-		$file->updateCTime();
+		$file->updateAccessTime();
+		$file->updateModifiedTime();
+		$file->updateChangedTime();
 		$file->setContents( $data );
 		$file->save();
 
@@ -304,7 +307,7 @@ class FileController
 		} elseif ( !$file->isAllowed( $this->deps->currentUser, FileInfo::ACTION_WRITE ) ) {
 			throw new HttpException( 403 );
 		}
-		
+
 		$cTime = $mTime = false;
 
 		if ( isset( $params['owner'] ) ) {
@@ -346,10 +349,10 @@ class FileController
 		}
 
 		if ( $cTime ) {
-			$file->updateCTime();
+			$file->updateChangedTime();
 		}
 		if ( $mTime ) {
-			$file->updateMTime();
+			$file->updateModifiedTime();
 		}
 
 		$file->save();
@@ -372,9 +375,10 @@ class FileController
 
 		$this->deps->db->beginTransaction();
 		$parent = $file->getParent();
-		$parent->updateMTime();
+		$parent->updateModifiedTime();
 		$parent->save();
 		$file->delete();
 		$this->deps->db->commit();
 	}
 }
+

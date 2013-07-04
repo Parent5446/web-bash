@@ -51,12 +51,12 @@ class ServerController
 	 * @param array $params Request parameters
 	 * @return array|Response Response information
 	 */
-	public function get( array $params ) {
+	public function get() {
 		$hostnameFile = $this->deps->fileCache->get( 'path', '/etc/hostname' );
 		if ( $hostnameFile->exists() ) {
 			$hostname = trim( $hostnameFile->getContents() );
 		} else {
-			$hostname = $this->deps->config['webbash']['hostname']
+			$hostname = $this->deps->config['webbash']['hostname'];
 		}
 
 		return array(

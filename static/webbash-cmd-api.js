@@ -1,3 +1,22 @@
+/**
+ * Copyright (C) 2013 Tyler Romeo, Krzysztof Jordan, Nicholas Bevaqua
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * http://www.gnu.org/copyleft/gpl.html
+ */
+
 ( function( $, WebBash ) {
 	'use strict';
 
@@ -395,9 +414,10 @@
 	 * @param {number} argc Number of arguments
 	 * @param {Array.<string>} argv Arguments passed to command
 	 * @param {Array.<string>} env Environment variables
+	 * @param {Terminal} terminal Terminal the command was entered on
 	 * @return {number} Retcode, 0 for success
 	 */
-	WebBash['commands']['passwd'] = function( fds, argc, argv, env ) {
+	WebBash['commands']['passwd'] = function( fds, argc, argv, env, terminal ) {
 		if ( argc < 2 ) {
 			argv.push( env['USER'] );
 			++argc;
@@ -407,6 +427,7 @@
 
 		fds[0].getPromise().progress( function( stream ) {
 			var password = stream.read();
+			terminal.toggleTextVisibility();
 
 			var req = api.request( 'PATCH', '/users/' + argv[1], {
 					'password': password
@@ -427,6 +448,7 @@
 		} );
 
 		fds[1].write( 'Password: ' );
+		terminal.toggleTextVisibility();
 
 		return deferred;
 	}

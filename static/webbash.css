@@ -21,7 +21,7 @@ body > ul {
 	background-color: white;
 }
 
-.userinput {
+.userinput, .system_output {
 	display: inline;
 }
 

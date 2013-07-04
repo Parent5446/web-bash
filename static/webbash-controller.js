@@ -1,4 +1,23 @@
 /**
+ * Copyright (C) 2013 Tyler Romeo, Krzysztof Jordan, Nicholas Bevaqua
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * http://www.gnu.org/copyleft/gpl.html
+ */
+
+/**
  * Controller class to handle execution of commands
  * @constructor
  */
@@ -220,7 +239,7 @@ function WebBash( username ) {
 			retval = '0';
 		} else if ( argv[0] in WebBash['commands'] ) {
 			var argc = argv.length;
-			retval = WebBash['commands'][argv[0]]( fds, argc, argv, this.environment );
+			retval = WebBash['commands'][argv[0]]( fds, argc, argv, this.environment, terminal );
 		} else if ( argv[0] ) {
 			deferred.notify( ["error: unknown command " + argv[0]] );
 			retval = '127';
@@ -298,7 +317,7 @@ function WebBash( username ) {
  * List of commands
  * @expose
  * @dict
- * @type {Object.<string, function(Array.<IoStream>, number, Array.<string>, Array.<string>): number>}
+ * @type {Object.<string, function(Array.<IoStream>, number, Array.<string>, Array.<string>, Terminal): number>}
  */
 WebBash['commands'] = {};
 

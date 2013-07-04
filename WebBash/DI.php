@@ -61,25 +61,25 @@ class DI
 	 * @var \WebBash\ProcessCache\StatementCache
 	 */
 	public $stmtCache;
-	
+
 	/**
 	 * Cache for user objects
 	 * @var \WebBash\ProcessCache\UserCache
 	 */
 	public $userCache;
-	
+
 	/**
 	 * Cache for group objects
 	 * @var \WebBash\ProcessCache\GroupCache
 	 */
 	public $groupCache;
-	
+
 	/**
 	 * Cache for file objects
 	 * @var \WebBash\ProcessCache\FileInfoCache
 	 */
 	public $fileCache;
-	
+
 	/**
 	 * The current logged in user
 	 * @var \WebBash\Models\User

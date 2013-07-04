@@ -2,7 +2,10 @@
     "name": "parent5446/web-bash",
     "description": "A terminal for the browser",
     "require-dev": {
-        "phpunit/phpunit": "*"
+        "phpunit/phpunit": "*",
+        "squizlabs/php_codesniffer": "*",
+        "phpmd/phpmd": "*",
+        "phpunit/php-code-coverage": "*"
     },
     "license": "GPL 3.0",
     "authors": [

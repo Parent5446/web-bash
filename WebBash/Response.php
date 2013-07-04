@@ -39,13 +39,13 @@ class Response
 	 * @private mixed
 	 */
 	private $content;
-	
+
 	/**
 	 * ETag for the resource
 	 * @private string
 	 */
 	private $etag = null;
-	
+
 	/**
 	 * Modified time
 	 * @private \DateTime
@@ -100,7 +100,7 @@ class Response
 	 * @param string $etag
 	 * @param bool $weak Whether it's a weak tag or not
 	 */
-	public function addETag( $etag, $weak = false ) {
+	public function addEtag( $etag, $weak = false ) {
 		$fullTag = $weak ? "W/\"$etag\"" : "\"$etag\"";
 		$this->addHeader( 'ETag', $fullTag );
 		$this->etag = $fullTag;
@@ -123,7 +123,7 @@ class Response
 	 * @param string $allowWeak Whether weak matching is allowed
 	 * @return bool True if matches, false otherwise
 	 */
-	public function matchETag( $etag, $allowWeak ) {
+	public function matchEtag( $etag, $allowWeak ) {
 		if ( $etag === '*' ) {
 			return $this->etag !== null;
 		} elseif ( !$allowWeak && ( $etag[0] === 'W' || $this->etag[0] === 'W' ) ) {
@@ -135,16 +135,16 @@ class Response
 		} else {
 			$serverTag = trim( $this->etag, '"' );
 		}
-		
+
 		if ( $etag[0] === 'W' ) {
 			$clientTag = trim( substr( $etag, 1 ), '"' );
 		} else {
 			$clientTag = trim( $etag, '"' );
 		}
-		
+
 		return $serverTag === $clientTag;
 	}
-	
+
 	/**
 	 * See if an ETag matches against this resource
 	 *

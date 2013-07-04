@@ -67,8 +67,6 @@ class Router
 			$this->startSession();
 			$this->performRequest( $method, $url, $headers, $data );
 		} catch ( HttpException $e ) {
-			$code = $e->getHttpCode();
-
 			header( "HTTP/1.0 {$e->getHttpCode()} {$e->getHttpMsg()}" );
 			header( 'Content-Type: application/json' );
 			foreach ( $e->getHeaders() as $header => $value ) {
@@ -227,7 +225,7 @@ class Router
 		if ( isset( $headers['IF-NONE-MATCH'] ) ) {
 			foreach ( explode( ',', $headers['IF-NONE-MATCH'] ) as $etag ) {
 				$etag = trim( $etag );
-				if ( $response->matchETag( $etag, $allowWeak ) ) {
+				if ( $response->matchEtag( $etag, $allowWeak ) ) {
 					$notModified = true;
 				} else {
 					$notModified = false;
@@ -361,7 +359,7 @@ class Router
 
 		// Check if the method is valid for this controller
 		if ( !method_exists( $controller, $method ) ) {
-			$allowedMethods = array_map( 'strtoupper', get_class_methods( $controllerClass ) );
+			$allowedMethods = array_map( 'strtoupper', get_class_methods( $controller ) );
 			$allowedMethods = array_intersect(
 				$allowedMethods,
 				array( 'GET', 'HEAD', 'POST', 'PUT', 'DELETE' )
