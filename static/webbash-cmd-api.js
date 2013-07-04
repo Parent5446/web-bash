@@ -160,8 +160,17 @@
 			if ( req === null || req['status'] !== 200 ) {
 				fds[2].write( 'ls: cannot access ' + path + ': No such file or directory' );
 				continue;
-			} else if ( typeof req['responseJSON'] === 'string' ) {
-				req['responseJSON'] = [req['responseJSON']];
+			} else if ( req.getResponseHeader( 'File-Type' ) !== 'directory' ) {
+				console.log( path );
+				req['responseJSON'] = [[
+					'f',
+					req.getResponseHeader( 'File-Perms' ),
+					req.getResponseHeader( 'File-Owner' ),
+					req.getResponseHeader( 'File-Group' ),
+					req.getResponseHeader( 'Content-Length' ),
+					req.getResponseHeader( 'Last-Modified' ),
+					path
+				]];
 			} else if ( req['responseJSON'] === null || req['responseJSON'] === undefined ) {
 				req['responseJSON'] = [];
 			}
@@ -498,6 +507,7 @@
 	WebBash['commands']['mv'] = function( fds, argc, argv, env ) {
 		if ( argc !== 3 ) {
 			fds[2].write( 'mv: invalid number of parameters' );
+			return 1;
 		}
 
 		var src = $.realpath( argv[1], env['PWD'], env['HOME'] );
