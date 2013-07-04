@@ -74,9 +74,11 @@ function WebBashLogin() {
 			this.username = text;
 			if ( text !== '' ) {
 				terminal.prompt = 'Password: ';
-				terminal.toggleTextVisibility();
 			}
 			deferred.resolve();
+			if ( text !== '' ) {
+				terminal.toggleTextVisibility();
+			}
 		} else {
 			this.api.login( this.username, text ).done( $.proxy( function() {
 				terminal.toggleTextVisibility();
