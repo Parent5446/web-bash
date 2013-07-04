@@ -112,7 +112,11 @@ class FileController
 			$response = new Response( $childrenArray );
 		} elseif ( $file->isLink() ) {
 			$target = $file->getLinkTarget();
-			$response = new Response( (string)$target->getContents() );
+			if ( $target->exists() ) {
+				$response = new Response( (string)$target->getContents() );
+			} else {
+				$response = new Response( '' );
+			}
 			$response->addHeader( 'Content-Location', '/files' . $file->getLinkPath() );
 		} else {
 			$contents = (string)$file->getContents();
@@ -266,11 +270,14 @@ class FileController
 			throw new HttpException( 400, 'Invalid group' );
 		}
 
+		$target = null;
+		if ( isset( $params['linktarget'] ) ) {
+			$target = $this->deps->fileCache->get( 'path', $params['linktarget'] );
+		}
+
 		$this->deps->db->beginTransaction();
-		var_dump( $file );
 		if ( !$file->exists() ) {
 			$parent = $file->getParent();
-			var_dump( $parent );
 			$parent->updateModifiedTime();
 			$parent->save();
 		}
@@ -280,6 +287,10 @@ class FileController
 		$file->setOwner( $owner );
 		$file->setGroup( $group );
 		$file->setPermissionsRaw( $perms );
+
+		if ( $target !== null ) {
+			$file->setLinkTarget( $target );
+		}
 
 		$file->updateAccessTime();
 		$file->updateModifiedTime();

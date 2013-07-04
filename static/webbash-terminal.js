@@ -106,6 +106,7 @@ function Terminal() {
 	 */
 	this.displayPrompt = function() {
 		this.promise = null;
+		this.hiddenMode = false;
 		$( "body > ul" ).append( '<li>' + this.prompt + '</li>' );
 		this.resetCursor();
 	};
