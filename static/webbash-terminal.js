@@ -37,13 +37,27 @@ function Terminal() {
 	this.promise = null;
 
 	/**
+	 * decides whether input text is hidden
+	 * @type {boolean}
+	 * @private
+	 */ 
+	this.hiddenMode = false;
+
+    /**
+     * toggles text hiding
+     */
+    this.toggleTextVisibility = function () {
+    	this.hiddenMode = !this.hiddenMode;
+    }
+
+	/**
 	 * Reset the cursor position
 	 */
 	this.resetCursor = function() {
 		$( '#cursor' ).remove();
 		$( "body > ul > li:last-child" ).append( $( '<div id="cursor" class="userinput">&nbsp;</div>' ) );
 
-		if ( this.prompt !== 'Password: ' ) {
+		if ( this.hiddenMode ) {
 			$( '#cursor' ).before( $( '<div class="userinput"></div>' ) );
 			$( '#cursor' ).after( $( '<div class="userinput></div>' ) );			
 		} else {		
