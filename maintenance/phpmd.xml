@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<pmd version="0.0.1" timestamp="2009-12-19T22:17:18+01:00">
+	<rule ref="rulesets/design.xml" />
+	<rule ref="rulesets/naming.xml/BooleanGetMethodName" />
+	<rule ref="rulesets/naming.xml/ConstructorWithNameAsEnclosingClass" />
+	<rule ref="rulesets/naming.xml/ConstantNamingConventions" />
+	<rule ref="rulesets/unusedcode.xml" />
+	<rule ref="rulesets/design.xml" />
+</pmd>

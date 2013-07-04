@@ -75,7 +75,7 @@ class User implements Model
 		$this->load();
 
 		if ( !$this->exists ) {
-			/** @TODO Add a ON DUPLICATE KEY UPDATE clause here. */ 
+			/** @TODO Add a ON DUPLICATE KEY UPDATE clause here. */
 			$stmt = $this->deps->stmtCache->prepare(
 				'INSERT into user (name, email, email_confirmed, password, token, homedir) ' .
 				'VALUES (:name, :email, :email_confirmed, :password, :token, :homedir)'
@@ -280,7 +280,7 @@ class User implements Model
 
 		return $this->history;
 	}
-	
+
 	public function addHistory( array $cmds ) {
 		if ( !$cmds ) {
 			return true;

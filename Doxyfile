@@ -147,7 +147,8 @@ FILE_PATTERNS          = *.c \
                          *.vhdl
 RECURSIVE              = YES
 EXCLUDE                = .git/ \
-                         filesystem/
+                         filesystem/ \
+                         vendor/
 EXCLUDE_SYMLINKS       = NO
 EXCLUDE_PATTERNS       = 
 EXCLUDE_SYMBOLS        = 

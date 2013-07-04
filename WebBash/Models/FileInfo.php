@@ -233,7 +233,7 @@ class FileInfo implements Model
 
 		$joinConds = array();
 		$whereConds = array();
-		foreach ( $parts as $key => $val ) {
+		foreach ( array_keys( $parts ) as $key ) {
 			$curAlias = "file$key";
 			$lastAlias = 'file' . ( $key - 1 );
 
@@ -282,7 +282,6 @@ class FileInfo implements Model
 		}
 		$selectFields = implode( ', ', $selectFields );
 		$joinConds = implode( ' ', $joinConds );
-		$finalAlias = "file9";
 
 		$stmt = $this->deps->stmtCache->prepare( "SELECT $selectFields FROM file AS file0 $joinConds WHERE file0.id = :id" );
 		$stmt->bindParam( ':id', $this->id );
@@ -326,12 +325,12 @@ class FileInfo implements Model
 	}
 
 	public function getFilename() {
-		if ( $this->name !== null ) {
-			// Do nothing
-		} elseif ( $this->path !== null ) {
-			$this->name = Util\basename( $this->path );
-		} else {
-			$this->load();
+		if ( $this->name === null ) {
+			if ( $this->path !== null ) {
+				$this->name = Util\basename( $this->path );
+			} else {
+				$this->load();
+			}
 		}
 
 		return $this->name;
@@ -404,37 +403,37 @@ class FileInfo implements Model
 		return $this->perms;
 	}
 
-	public function getATime() {
+	public function getAccessTime() {
 		$this->load();
 		date_default_timezone_set( 'UTC' );
 		return new \DateTime( $this->atime );
 	}
 
-	public function getMTime() {
+	public function getModifiedTime() {
 		$this->load();
 		date_default_timezone_set( 'UTC' );
 		return new \DateTime( $this->mtime );
 	}
 
-	public function getCTime() {
+	public function getChangedTime() {
 		$this->load();
 		date_default_timezone_set( 'UTC' );
 		return new \DateTime( $this->ctime );
 	}
 
-	public function updateMTime() {
+	public function updateModifiedTime() {
 		$this->load();
 		date_default_timezone_set( 'UTC' );
 		$this->mtime = date_format( new \DateTime(), 'Y-m-d H:i:s' );
 	}
 
-	public function updateATime() {
+	public function updateAccessTime() {
 		$this->load();
 		date_default_timezone_set( 'UTC' );
 		$this->atime = date_format( new \DateTime(), 'Y-m-d H:i:s' );
 	}
 
-	public function updateCTime() {
+	public function updateChangedTime() {
 		$this->load();
 		date_default_timezone_set( 'UTC' );
 		$this->ctime = date_format( new \DateTime(), 'Y-m-d H:i:s' );

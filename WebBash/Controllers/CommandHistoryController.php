@@ -97,7 +97,6 @@ class CommandHistoryController
 	 */
 	public function delete( array $params ) {
 		$user = $this->deps->userCache->get( 'name', $params['name'] );
-		$admins = $this->deps->groupCache->get( 'name', 'admin' );
 
 		if ( !$user->exists() ) {
 			throw new HttpException( 404, 'User does not exist' );

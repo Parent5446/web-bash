@@ -189,7 +189,7 @@ function realpath( $base, $path ) {
 		} elseif ( $part === '..' ) {
 			unset( $parts[$key] );
 			if ( $key - 1 > 0 ) {
-				unset( $pars[$key] );
+				unset( $parts[$key] );
 			}
 		}
 	}

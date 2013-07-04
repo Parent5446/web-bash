@@ -54,7 +54,7 @@ class LoginController
 	 * @param array $params Request parameters
 	 * @return array|Response Response information
 	 */
-	public function get( array $params ) {
+	public function get() {
 		if ( !isset( $_SESSION['loginToken'] ) ) {
 			$_SESSION['loginToken'] = bin2hex( Util\urandom( 32 ) );
 		}
@@ -72,6 +72,8 @@ class LoginController
 	 * @return mixed|Response Response information
 	 */
 	public function put( array $params, $data ) {
+		$params = array();
+
 		if (
 			!isset( $data['username'] ) ||
 			!isset( $data['password'] ) ||
@@ -113,7 +115,7 @@ class LoginController
 	 * @param array $params Request parameters
 	 * @return mixed|Response Response information
 	 */
-	public function delete( array $params, $data ) {
+	public function delete() {
 		session_unset();
 
 		if ( init_get( 'session.use_cookies' ) ) {

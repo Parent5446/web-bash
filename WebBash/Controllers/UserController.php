@@ -95,7 +95,7 @@ class UserController
 				$groups[] = $groupObj;
 			}
 		}
-		
+
 		$user = $this->deps->userCache->get( 'name', $params['name'] );
 
 		// Make sure the user is only changing their own info, or is an admin
@@ -116,7 +116,7 @@ class UserController
 		$user->setEmail( $data['email'] );
 		$user->setPassword( $data['password'] );
 		$user->setHomeDirectory( $homedir );
-		
+
 		$this->deps->db->beginTransaction();
 		$user->save();
 
@@ -185,10 +185,9 @@ class UserController
 		if ( isset( $data['password'] ) ) {
 			$user->setPassword( $data['password'] );
 		}
-		
+
 		$this->deps->db->beginTransaction();
-		
-		$groups = array();
+
 		if ( isset( $data['groups'] ) ) {
 			foreach ( $data['groups'] as $group ) {
 				$groupObj = $this->deps->groupCache->get( 'name', $group );
@@ -206,7 +205,7 @@ class UserController
 			$homedir->setOwner( $user );
 			$homedir->save();
 		}
-		
+
 		$this->deps->db->commit();
 
 		return $this->get( $params );
