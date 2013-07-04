@@ -35,7 +35,7 @@ class User implements Model
 	public $email_confirmed = null;
 	public $password = '$2y$12$MTIzNDU2Nzg5MGFiY2RlZeZZskHZ2KTCr4MHqdn0WMEb4Iag4YEhq';
 	public $token = null;
-	public $exists = null;
+	public $exists = false;
 	private $groups = null;
 	private $history = null;
 

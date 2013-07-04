@@ -51,7 +51,7 @@ class FileInfo implements Model
 	public $linkpath = null;
 	public $filetype = null;
 
-	private $exists = null;
+	private $exists = false;
 	private $fp = null;
 	private $children = null;
 	private $childrenOrderBy = null;

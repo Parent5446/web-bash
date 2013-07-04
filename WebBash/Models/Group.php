@@ -37,7 +37,7 @@ class Group implements Model
 	private $name = null;
 	private $members = array();
 
-	private $exists = null;
+	private $exists = false;
 	private $membersToAdd = array();
 	private $membersToRemove = array();
 	private $fullyLoaded = false;
