@@ -138,6 +138,9 @@
 
 		if ( argc === 1 ) {
 			argv[argc++] = "";
+		} else if ( $.type( opts ) === 'string' ) {
+			fds[2].write( opts );
+			return 1;
 		}
 
 		var sortBy = 'name';
@@ -353,6 +356,9 @@
 		} else if ( argc !== 3 ) {
 			argv.push( argv[1] + '@localhost' );
 			++argc;
+		} else if ( $.type( opts ) === 'string' ) {
+			fds[2].write( opts );
+			return 1;
 		}
 
 		var req = api.request( 'GET', '/users/' + argv[1], '', {}, false );
@@ -579,6 +585,11 @@
 		argv = info[1];
 		argc = argv.length;
 
+		if ( $.type( opts ) === 'string' ) {
+			fds[2].write( opts );
+			return 1;
+		}
+
 		var removedir = false;
 
 		for ( var option in opts ) {
@@ -727,6 +738,11 @@
 		var opts = info[0];
 		argv = info[1];
 		argc = argv.length;
+
+		if ( $.type( opts ) === 'string' ) {
+			fds[2].write( opts );
+			return 1;
+		}
 
 		var req = api.request( 'GET', '/', '', {}, false );
 		if ( req['status'] !== 200 ) {

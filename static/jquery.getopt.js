@@ -48,7 +48,7 @@ $.getopt = function( argv, optstring ) {
 			var index = optstring.indexOf( opt );
 
 			if ( index === -1 ) {
-				return "Unknown option -" + opt;
+				return [ "Unknown option -" + opt, argv ];
 			} else if ( optstring[index + 1] === ':' ) {
 				if ( j === argv[i].length - 1 && argv[i + 1][0] !== '-' ) {
 					opts[opt] = argv[++i];
