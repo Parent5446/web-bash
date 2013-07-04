@@ -507,6 +507,7 @@
 	WebBash['commands']['mv'] = function( fds, argc, argv, env ) {
 		if ( argc !== 3 ) {
 			fds[2].write( 'mv: invalid number of parameters' );
+			return 1;
 		}
 
 		var src = $.realpath( argv[1], env['PWD'], env['HOME'] );
