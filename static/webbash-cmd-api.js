@@ -716,7 +716,7 @@
 	};
 
 	/**
-	 * Change the ownership of one or more files
+	 * Gets information about the server
 	 * @param {Array.<IoStream>} fds Input/output streams
 	 * @param {number} argc Number of arguments
 	 * @param {Array.<string>} argv Arguments passed to command
