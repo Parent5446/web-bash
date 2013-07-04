@@ -2,3 +2,6 @@
 *\.bak
 filesystem/*
 config.ini
+
+docs/*
+!docs/doxygen.conf
