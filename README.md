@@ -38,6 +38,11 @@ Examples:
 
 ## COMMANDS
 
+### alias <expressions>
+	Declares one or more new command shortcuts
+    expressions have the form X=(value)             
+		EX: alias speak=echo
+
 ### cat <files>
 	Outputs contents of one or more files to the stdout 
 	(unless redirected to a different stream)
