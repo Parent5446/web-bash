@@ -395,9 +395,10 @@
 	 * @param {number} argc Number of arguments
 	 * @param {Array.<string>} argv Arguments passed to command
 	 * @param {Array.<string>} env Environment variables
+	 * @param {Terminal} terminal Terminal the command was entered on
 	 * @return {number} Retcode, 0 for success
 	 */
-	WebBash['commands']['passwd'] = function( fds, argc, argv, env ) {
+	WebBash['commands']['passwd'] = function( fds, argc, argv, env, terminal ) {
 		if ( argc < 2 ) {
 			argv.push( env['USER'] );
 			++argc;
@@ -407,6 +408,7 @@
 
 		fds[0].getPromise().progress( function( stream ) {
 			var password = stream.read();
+			terminal.toggleTextVisibility();
 
 			var req = api.request( 'PATCH', '/users/' + argv[1], {
 					'password': password
@@ -427,6 +429,7 @@
 		} );
 
 		fds[1].write( 'Password: ' );
+		terminal.toggleTextVisibility();
 
 		return deferred;
 	}

@@ -220,7 +220,7 @@ function WebBash( username ) {
 			retval = '0';
 		} else if ( argv[0] in WebBash['commands'] ) {
 			var argc = argv.length;
-			retval = WebBash['commands'][argv[0]]( fds, argc, argv, this.environment );
+			retval = WebBash['commands'][argv[0]]( fds, argc, argv, this.environment, terminal );
 		} else if ( argv[0] ) {
 			deferred.notify( ["error: unknown command " + argv[0]] );
 			retval = '127';
@@ -298,7 +298,7 @@ function WebBash( username ) {
  * List of commands
  * @expose
  * @dict
- * @type {Object.<string, function(Array.<IoStream>, number, Array.<string>, Array.<string>): number>}
+ * @type {Object.<string, function(Array.<IoStream>, number, Array.<string>, Array.<string>, Terminal): number>}
  */
 WebBash['commands'] = {};
 

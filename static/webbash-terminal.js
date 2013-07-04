@@ -43,12 +43,19 @@ function Terminal() {
 	 */ 
 	this.hiddenMode = false;
 
-    /**
-     * toggles text hiding
-     */
-    this.toggleTextVisibility = function () {
-    	this.hiddenMode = !this.hiddenMode;
-    }
+	/**
+	 * toggles text hiding
+	 */
+	this.toggleTextVisibility = function () {
+		this.hiddenMode = !this.hiddenMode;
+		if ( !this.hiddenMode ) {
+			$( '#cursor' ).before( $( '<div class="userinput"></div>' ) );
+			$( '#cursor' ).after( $( '<div class="userinput></div>' ) );			
+		} else {		
+			$( '#cursor' ).before( $( '<div id="hiddentext" class="userinput"></div>' ) );
+			$( '#cursor' ).after( $( '<div id="hiddentext" class="userinput"></div>' ) );
+		}
+	}
 
 	/**
 	 * Reset the cursor position
@@ -57,13 +64,14 @@ function Terminal() {
 		$( '#cursor' ).remove();
 		$( "body > ul > li:last-child" ).append( $( '<div id="cursor" class="userinput">&nbsp;</div>' ) );
 
-		if ( this.hiddenMode ) {
+		if ( !this.hiddenMode ) {
 			$( '#cursor' ).before( $( '<div class="userinput"></div>' ) );
 			$( '#cursor' ).after( $( '<div class="userinput></div>' ) );			
 		} else {		
 			$( '#cursor' ).before( $( '<div id="hiddentext" class="userinput"></div>' ) );
 			$( '#cursor' ).after( $( '<div id="hiddentext" class="userinput"></div>' ) );
 		}
+
 		$( window ).scrollTop( $( document ).height() );
 	};
 
@@ -88,7 +96,7 @@ function Terminal() {
 	 * @param {string} txt Command entered
 	 */
 	this.appendOutput = function( txt ) {
-		var output = $( '<div id="system_output"></div>' );
+		var output = $( '<div class="system_output"></div>' );
 		var pattern = /\n/g;
 
 		output.text( txt );
