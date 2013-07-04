@@ -218,6 +218,47 @@ class Router
 			$response = new Response( $response );
 		}
 		$response->addHeader( 'X-Frame-Options', 'deny' );
+		$response->addHeader( 'Cache-Control', 'private, max-age=0' );
+
+		// Check if we need to send the request body based on the conditional
+		// HTTP headers
+		$allowWeak = $method === 'get' && !isset( $headers['RANGE'] );
+		$notModified = null;
+		if ( isset( $headers['IF-NONE-MATCH'] ) ) {
+			foreach ( explode( ',', $headers['IF-NONE-MATCH'] ) as $etag ) {
+				$etag = trim( $etag );
+				if ( $response->matchETag( $etag, $allowWeak ) ) {
+					$notModified = true;
+				} else {
+					$notModified = false;
+					break;
+				}
+			}
+		}
+		if ( isset( $headers['IF-MODIFIED-SINCE'] ) ) {
+			$headerTime = new \DateTime( $headers['IF-MODIFIED-SINCE'] );
+			if ( $response->matchLastModified( $headerTime, $allowWeak ) ) {
+				$notModified = $notModified === false ? false : true;
+			} else {
+				$notModified = false;
+			}
+		}
+		if ( isset( $headers['IF-UNMODIFIED-SINCE'] ) ) {
+			$headerTime = new \DateTime( $headers['IF-MODIFIED-SINCE'] );
+			if ( !$response->matchLastModified( $headerTime, $allowWeak ) ) {
+				$notModified = $notModified === false ? false : true;
+			} else {
+				$notModified = false;
+			}
+		}
+
+		if ( $notModified ) {
+			if ( $method === 'get' || $method === 'head' ) {
+				throw new HttpException( 304, '', $response );
+			} else {
+				throw new HttpException( 412, '', $response );
+			}
+		}
 
 		// Encode the response appropriately for the client
 		if ( !isset( $headers['ACCEPT'] ) ) {
@@ -277,6 +318,7 @@ class Router
 			}
 		}
 
+		$response->addHeader( 'Content-Length', strlen( $responseData ) );
 		foreach ( $response->getHeaders() as $key => $val ) {
 			header( "$key: $val" );
 		}
