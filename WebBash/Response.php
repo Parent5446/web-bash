@@ -29,7 +29,7 @@ class Response
 	 * Modified time
 	 * @private \DateTime
 	 */
-	private $modifiedTime;
+	private $modifiedTime = null;
 
 	/**
 	 * Consruct the response object
@@ -132,11 +132,11 @@ class Response
 	 * @return bool True if the resource has not been modified
 	 */
 	public function matchLastModified( \DateTime $mtime, $allowWeak ) {
-		if ( !$allowWeak ) {
+		if ( !$allowWeak || $this->modifiedTime === null ) {
 			return false;
 		}
 
-		$diff = $this->lastModified->diff( $mtime );
-		return $diff->invert;
+		$diff = $this->modifiedTime->diff( $mtime );
+		return !$diff->invert;
 	}
 }

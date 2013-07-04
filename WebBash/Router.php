@@ -197,13 +197,14 @@ class Router
 			$response = new Response( $response );
 		}
 		$response->addHeader( 'X-Frame-Options', 'deny' );
+		$response->addHeader( 'Cache-Control', 'private, max-age=0' );
 
 		// Check if we need to send the request body based on the conditional
 		// HTTP headers
-		$allowWeak = $method === 'GET' && !isset( $headers['RANGE'] );
+		$allowWeak = $method === 'get' && !isset( $headers['RANGE'] );
 		$notModified = null;
-		if ( isset( $headers['IF-NONE-MATCHES'] ) ) {
-			foreach ( explode( ',', $headers['IF-NONE-MATCHES'] ) as $etag ) {
+		if ( isset( $headers['IF-NONE-MATCH'] ) ) {
+			foreach ( explode( ',', $headers['IF-NONE-MATCH'] ) as $etag ) {
 				$etag = trim( $etag );
 				if ( $response->matchETag( $etag, $allowWeak ) ) {
 					$notModified = true;
@@ -214,14 +215,16 @@ class Router
 			}
 		}
 		if ( isset( $headers['IF-MODIFIED-SINCE'] ) ) {
-			if ( $response->matchLastModified( $headers['IF-MODIFIED-SINCE'], $allowWeak ) ) {
+			$headerTime = new \DateTime( $headers['IF-MODIFIED-SINCE'] );
+			if ( $response->matchLastModified( $headerTime, $allowWeak ) ) {
 				$notModified = $notModified === false ? false : true;
 			} else {
 				$notModified = false;
 			}
 		}
 		if ( isset( $headers['IF-UNMODIFIED-SINCE'] ) ) {
-			if ( !$response->matchLastModified( $headers['IF-UNMODIFIED-SINCE'], $allowWeak ) ) {
+			$headerTime = new \DateTime( $headers['IF-MODIFIED-SINCE'] );
+			if ( !$response->matchLastModified( $headerTime, $allowWeak ) ) {
 				$notModified = $notModified === false ? false : true;
 			} else {
 				$notModified = false;
@@ -229,7 +232,7 @@ class Router
 		}
 
 		if ( $notModified ) {
-			if ( $method === 'GET' || $method === 'HEAD' ) {
+			if ( $method === 'get' || $method === 'head' ) {
 				throw new HttpException( 304, '', $response );
 			} else {
 				throw new HttpException( 412, '', $response );

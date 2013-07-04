@@ -105,7 +105,7 @@ class FileController
 		$file->save();
 
 		return $response
-			->addHeader( 'Content-Disposition', "attachment; filename=\"{$file->getFilename()}" )
+			->addHeader( 'Content-Disposition', "attachment; filename=\"{$file->getFilename()}\"" )
 			->addHeader( 'Last-Accessed', $file->getATime() )
 			->addHeader( 'Creation-Time', $file->getCTime() )
 			->addHeader( 'File-Owner', $file->getOwner()->getName() )
