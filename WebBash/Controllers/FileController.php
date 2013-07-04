@@ -242,6 +242,15 @@ class FileController
 			throw new HttpException( 400, 'Invalid group' );
 		}
 
+		$this->deps->db->beginTransaction();
+		var_dump( $file );
+		if ( !$file->exists() ) {
+			$parent = $file->getParent();
+			var_dump( $parent );
+			$parent->updateMTime();
+			$parent->save();
+		}
+
 		// Set all the file info
 		$file->setFiletype( self::$fileTypes[$params['type']] );
 		$file->setOwner( $owner );
@@ -253,6 +262,8 @@ class FileController
 		$file->updateCTime();
 		$file->setContents( $data );
 		$file->save();
+
+		$this->deps->db->commit();
 	}
 
 	/**
@@ -338,6 +349,11 @@ class FileController
 			throw new HttpException( 403 );
 		}
 
+		$this->deps->db->beginTransaction();
+		$parent = $file->getParent();
+		$parent->updateMTime();
+		$parent->save();
 		$file->delete();
+		$this->deps->db->commit();
 	}
 }
