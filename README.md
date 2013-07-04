@@ -1,9 +1,12 @@
 web-bash
 ========
 
-web-bash is a simulated terminal interface implemented entirely in your browser. By using the browser, users are able to become accostomed to a command line without putting production systems at risk.
+web-bash is a simulated terminal interface implemented entirely in your browser.
+By using the browser, users are able to become accostomed to a command line without
+putting production systems at risk.
 
-Why would you put your system in danger by letting the intern play with your servers? Buy web-bash and save yourself the trouble.
+Why would you put your system in danger by letting the intern play with your servers?
+Buy web-bash and save yourself the trouble.
 
 Authors
 -------
@@ -15,13 +18,15 @@ Authors
 Note: all paths are relative to the root folder of webbash
 
 1. Install a LAMP web stack. The following software is recommended:
- + Apache (if not using Apache, make sure to properly configure your web server to match our .htaccess file)
+ + Apache (if not using Apache, make sure to properly configure your web server to
+   match our .htaccess file)
  + PHP 5.3+ with PDO
  + MySQL
  + Linux or Windows (Mac not yet supported)
 2. Create a database and user in your MySQL server for WebBash.
 3. Import the maintenance/tables.sql file into your database server.
-4. Open the config.ini.sample file and replace the sample database credentials with your own.
+4. Open the config.ini.sample file and replace the sample database credentials with
+   your own.
 
 ## FEATURES
 
