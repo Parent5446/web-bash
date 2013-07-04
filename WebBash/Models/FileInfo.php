@@ -466,7 +466,7 @@ class FileInfo implements Model
 
 	public function getLinkTarget() {
 		$this->load();
-		return $this->deps->fileCache->get( 'id', $this->linkid );
+		return $this->deps->fileCache->get( 'id', (int)$this->linkid );
 	}
 
 	public function getLinkPath() {
@@ -519,7 +519,7 @@ class FileInfo implements Model
 		if ( strpos( $finalPath, $webRoot ) !== 0 ) {
 			$contents = null;
 		} elseif ( !is_file( $finalPath ) || !is_readable( $finalPath ) ) {
-			throw new RuntimeException( "Error while accessing contents of $finalPath" );
+			throw new \RuntimeException( "Error while accessing contents of $finalPath" );
 		} elseif ( $length === -1 ) {
 			$contents = file_get_contents( $finalPath );
 		} else {

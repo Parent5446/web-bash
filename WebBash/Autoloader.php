@@ -63,6 +63,6 @@ class Autoloader
 
 		$filename .= str_replace( '_', DIRECTORY_SEPARATOR, $class ) . '.php';
 
-		require $filename;
+		include $filename;
 	}
 }
