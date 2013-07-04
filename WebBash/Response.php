@@ -39,6 +39,18 @@ class Response
 	 * @private mixed
 	 */
 	private $content;
+	
+	/**
+	 * ETag for the resource
+	 * @private string
+	 */
+	private $etag = null;
+	
+	/**
+	 * Modified time
+	 * @private \DateTime
+	 */
+	private $modifiedTime = null;
 
 	/**
 	 * Consruct the response object
@@ -80,5 +92,72 @@ class Response
 	 */
 	public function getContents() {
 		return $this->content;
+	}
+
+	/**
+	 * Add an ETag to this response
+	 *
+	 * @param string $etag
+	 * @param bool $weak Whether it's a weak tag or not
+	 */
+	public function addETag( $etag, $weak = false ) {
+		$fullTag = $weak ? "W/\"$etag\"" : "\"$etag\"";
+		$this->addHeader( 'ETag', $fullTag );
+		$this->etag = $fullTag;
+	}
+
+	/**
+	 * Add a modified time to this response
+	 *
+	 * @param \DateTime $mtime Modified time
+	 */
+	public function addModifiedTime( \DateTime $mtime ) {
+		$this->addHeader( 'Last-Modified', $mtime );
+		$this->modifiedTime = $mtime;
+	}
+
+	/**
+	 * See if an ETag matches against this resource
+	 *
+	 * @param string $etag ETag to check
+	 * @param string $allowWeak Whether weak matching is allowed
+	 * @return bool True if matches, false otherwise
+	 */
+	public function matchETag( $etag, $allowWeak ) {
+		if ( $etag === '*' ) {
+			return $this->etag !== null;
+		} elseif ( !$allowWeak && ( $etag[0] === 'W' || $this->etag[0] === 'W' ) ) {
+			return false;
+		}
+
+		if ( $this->etag[0] === 'W' ) {
+			$serverTag = trim( substr( $this->etag, 1 ), '"' );
+		} else {
+			$serverTag = trim( $this->etag, '"' );
+		}
+		
+		if ( $etag[0] === 'W' ) {
+			$clientTag = trim( substr( $etag, 1 ), '"' );
+		} else {
+			$clientTag = trim( $etag, '"' );
+		}
+		
+		return $serverTag === $clientTag;
+	}
+	
+	/**
+	 * See if an ETag matches against this resource
+	 *
+	 * @param string $mtime Modified time to check
+	 * @param string $allowWeak Whether weak matching is allowed
+	 * @return bool True if the resource has not been modified
+	 */
+	public function matchLastModified( \DateTime $mtime, $allowWeak ) {
+		if ( !$allowWeak || $this->modifiedTime === null ) {
+			return false;
+		}
+
+		$diff = $this->modifiedTime->diff( $mtime );
+		return !$diff->invert;
 	}
 }

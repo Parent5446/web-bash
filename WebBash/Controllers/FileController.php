@@ -117,16 +117,16 @@ class FileController
 		} else {
 			$contents = (string)$file->getContents();
 			$response = new Response( $contents );
+			$response->addETag( md5( $contents ) );
 		}
 
 		// Update the access time
+		$response->addModifiedTime( $file->getMTime() );
 		$file->updateATime();
 		$file->save();
 
 		return $response
-			->addHeader( 'Content-Length', $file->getSize() )
-			->addHeader( 'Content-Disposition', "attachment; filename=\"{$file->getFilename()}" )
-			->addHeader( 'Last-Modified', $file->getMTime() )
+			->addHeader( 'Content-Disposition', "attachment; filename=\"{$file->getFilename()}\"" )
 			->addHeader( 'Last-Accessed', $file->getATime() )
 			->addHeader( 'Creation-Time', $file->getCTime() )
 			->addHeader( 'File-Owner', $file->getOwner()->getName() )
@@ -263,6 +263,15 @@ class FileController
 			throw new HttpException( 400, 'Invalid group' );
 		}
 
+		$this->deps->db->beginTransaction();
+		var_dump( $file );
+		if ( !$file->exists() ) {
+			$parent = $file->getParent();
+			var_dump( $parent );
+			$parent->updateMTime();
+			$parent->save();
+		}
+
 		// Set all the file info
 		$file->setFiletype( self::$fileTypes[$params['type']] );
 		$file->setOwner( $owner );
@@ -274,6 +283,8 @@ class FileController
 		$file->updateCTime();
 		$file->setContents( $data );
 		$file->save();
+
+		$this->deps->db->commit();
 	}
 
 	/**
@@ -359,6 +370,11 @@ class FileController
 			throw new HttpException( 403 );
 		}
 
+		$this->deps->db->beginTransaction();
+		$parent = $file->getParent();
+		$parent->updateMTime();
+		$parent->save();
 		$file->delete();
+		$this->deps->db->commit();
 	}
 }
