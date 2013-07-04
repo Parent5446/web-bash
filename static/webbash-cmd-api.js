@@ -60,7 +60,7 @@
 	 */
 	function printFile( fd, responseJSON, opts, lastOutput ) {
 
-		if ( ( responseJSON[6] === '.' || responseJSON[6] === '..' ) && !( 'a' in opts ) ) {
+		if ( ( responseJSON[6][0] === '.' ) && !( 'a' in opts ) ) {
 			maxToPrint--;
 			return lastOutput;
 		}
