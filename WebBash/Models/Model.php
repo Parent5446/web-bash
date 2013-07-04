@@ -23,10 +23,35 @@
 
 namespace WebBash\Models;
 
+/**
+ * Represents a database model that can be used with the ProcessCache
+ *
+ * @see \WebBash\ProcessCache\ProcessCache
+ */
 interface Model {
+	/**
+	 * Loads the information from the database
+	 *
+	 * Models are allowed to load data lazily in order to prevent unnecessary
+	 * work. If this function is called, the model MUST load the data so that
+	 * callers can access it.
+	 */
 	public function load();
 
+	/**
+	 * Save the information to the database
+	 */
 	public function save();
 
+	/**
+	 * Merge information from another model into this model
+	 *
+	 * When the process cache is updated, which occurs whenever one model gets
+	 * their Model::load() function called, all the objects that are semantically
+	 * equivalent are combined. This function will be called on all objects
+	 * that are the same.
+	 *
+	 * @param \WebBash\Models\Model $other The model that was loaded
+	 */
 	public function merge( Model $other );
 }

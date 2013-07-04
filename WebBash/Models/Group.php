@@ -26,6 +26,11 @@ namespace WebBash\Models;
 use \WebBash\Util;
 use \WebBash\DI;
 
+/**
+ * Represents a user group, which groups users for permissions purposes
+ *
+ * Groups can be identified by either a group ID or by name
+ */
 class Group implements Model
 {
 	private $id = null;
@@ -37,18 +42,39 @@ class Group implements Model
 	private $membersToRemove = array();
 	private $fullyLoaded = false;
 
+	/**
+	 * Generate a new group object based on the group ID
+	 *
+	 * @param \WebBash\DI $deps Dependency injection container
+	 * @param int $id Group ID
+	 *
+	 * @return \WebBash\Models\Group The generated group
+	 */
 	public static function newFromId( DI $deps, $id ) {
 		$obj = new self( $deps );
 		$obj->id = $id;
 		return $obj;
 	}
 
+	/**
+	 * Generate a new group object based on the group name
+	 *
+	 * @param \WebBash\DI $deps Dependency injection container
+	 * @param string $id Group name
+	 *
+	 * @return \WebBash\Models\Group The generated group
+	 */
 	public static function newFromName( DI $deps, $name ) {
 		$obj = new self( $deps );
 		$obj->name = $name;
 		return $obj;
 	}
 
+	/**
+	 * Construct the group object
+	 *
+	 * @param \WebBash\DI $deps Dependency injection container
+	 */
 	private function __construct( DI $deps ) {
 		$this->deps = $deps;
 	}
@@ -136,6 +162,10 @@ class Group implements Model
 		return $exists;
 	}
 
+	/**
+	 * Get the group ID
+	 * @return int
+	 */
 	public function getId() {
 		if ( $this->id === null ) {
 			$this->load();
@@ -143,6 +173,10 @@ class Group implements Model
 		return $this->id;
 	}
 
+	/**
+	 * Get the group name
+	 * @return string
+	 */
 	public function getName() {
 		if ( $this->name === null ) {
 			$this->load();
@@ -150,6 +184,12 @@ class Group implements Model
 		return $this->name;
 	}
 
+	/**
+	 * Determine if a given user is a member of the group
+	 *
+	 * @param \WebBash\Models\User $user User to check membership for
+	 * @return bool True if a member, false otherwise
+	 */
 	public function isMember( User $user ) {
 		if ( in_array( $user->getName(), $this->members ) ) {
 			return true;
@@ -159,6 +199,16 @@ class Group implements Model
 		}
 	}
 
+	/**
+	 * Cache the fact that a user is a member of the group
+	 *
+	 * This is for use with the User model. If the user model loads the groups
+	 * for itself, then we know that that user is a member of those groups
+	 * without having to load all the members for that group
+	 *
+	 * @see \WebBash\Models\User::getGroups
+	 * @param \WebBash\Models\User $user User that is a member
+	 */
 	public function cacheMember( User $user ) {
 		if ( $this->fullyLoaded ) {
 			return;
@@ -166,7 +216,13 @@ class Group implements Model
 		$this->members[] = $user->getName();
 	}
 
+	/**
+	 * Get all the members of this group
+	 *
+	 * @return array Array of User objects
+	 */
 	public function getMembers() {
+		$this->load();
 		$objs = array();
 		foreach ( $this->members as $member ) {
 			$objs[] = $this->userCache->get( 'name', $member );
@@ -174,7 +230,13 @@ class Group implements Model
 		return $objs;
 	}
 
+	/**
+	 * Add a user to this group
+	 *
+	 * @param \WebBash\Models\User $user User to add
+	 */
 	public function addMember( User $user ) {
+		$this->load();
 		$name = $user->getName();
 		if ( !in_array( $name, $this->members ) ) {
 			$this->members[] = $name;
@@ -182,7 +244,13 @@ class Group implements Model
 		$this->membersToAdd[] = $name;
 	}
 
+	/**
+	 * Remove a user from this group
+	 *
+	 * @param \WebBash\Models\User $user User to remove
+	 */
 	public function removeMember( User $user ) {
+		$this->load();
 		$index = array_search( $user->getName(), $this->members );
 		if ( $index !== false ) {
 			unset( $this->members[$index] );
@@ -190,6 +258,11 @@ class Group implements Model
 		}
 	}
 
+	/**
+	 * Return if this group exists in the database or now
+	 *
+	 * @return bool True if exists, false otherwise
+	 */
 	public function exists() {
 		$this->load();
 		return $this->exists;
