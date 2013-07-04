@@ -1,0 +1,17 @@
+{
+    "name": "parent5446/web-bash",
+    "description": "A terminal for the browser",
+    "require-dev": {
+        "phpunit/phpunit": "*"
+    },
+    "license": "GPL 3.0",
+    "authors": [
+        {
+            "name": "Tyler Anthony Romeo",
+            "email": "tylerromeo@gmail.com"
+        }
+    ],
+    "require": {
+
+    }
+}

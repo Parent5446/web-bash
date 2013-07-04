@@ -5,3 +5,5 @@ config.ini
 
 docs/*
 !docs/doxygen.conf
+
+/vendor/

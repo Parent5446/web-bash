@@ -4,6 +4,8 @@ error_reporting( E_ALL | E_STRICT );
 
 define( 'WEBBASH', 1.0 );
 
+include 'vendor/autoload.php';
+
 // Parse configuration and load database
 $config = parse_ini_file( 'config.ini', true );
 $config['webbash'] += array(
