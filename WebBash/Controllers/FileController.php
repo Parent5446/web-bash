@@ -125,14 +125,17 @@ class FileController
 		}
 
 		// Update the access time
-		$response->addModifiedTime( $file->getModifiedTime() );
+		$mtime = $file->getModifiedTime();
+		$ctime = $file->getChangedTime();
+		$diff = $mtime->diff( $ctime );
+
+		$response->addModifiedTime( $diff->invert ? $mtime : $ctime );
 		$file->updateAccessTime();
 		$file->save();
 
 		return $response
 			->addHeader( 'Content-Disposition', "attachment; filename=\"{$file->getFilename()}\"" )
 			->addHeader( 'Last-Accessed', $file->getAccessTime() )
-			->addHeader( 'Creation-Time', $file->getChangedTime() )
 			->addHeader( 'File-Owner', $file->getOwner()->getName() )
 			->addHeader( 'File-Group', $file->getGroup()->getName() )
 			->addHeader( 'File-Type', array_search( $file->getFiletype(), self::$fileTypes ) );
