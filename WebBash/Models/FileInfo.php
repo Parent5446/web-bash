@@ -504,11 +504,22 @@ class FileInfo implements Model
 				"SELECT * FROM file WHERE parent IS NULL ORDER BY $orderBy"
 			);
 		}
+
+		$stmt->setFetchMode( \PDO::FETCH_CLASS, '\WebBash\Models\FileInfo', array( $this->deps ) );
 		$stmt->execute();
 
+		$thisPath = $this->getPathname();
 		for ( $row = $stmt->fetch(); $row; $row = $stmt->fetch() ) {
-			$this->children[] = $this->deps->fileCache->get( 'id', $row['id'] );
+			if ( $thisPath === '/' ) {
+				$row->path = $thisPath . $row->getFilename();
+			} else {
+				$row->path = $thisPath . '/' . $row->getFilename();
+			}
+
+			$this->deps->fileCache->update( $row, array( 'id' => $row->getId(), 'path' => $row->getPathname() ) );
+			$this->children[] = $row;
 		}
+
 		return $this->children;
 	}
 

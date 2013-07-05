@@ -101,12 +101,12 @@ abstract class ProcessCache
 	 * @param mixed &$obj Current updated object
 	 * @param array $info Mapping of identifier names to values
 	 */
-	public function update( &$obj, array $info ) {
+	public function update( \WebBash\Models\Model $obj, array $info ) {
 		foreach ( $info as $field => $value ) {
 			if ( isset( $this->cache[$field][$value] ) ) {
 				$obj->merge( $this->cache[$field][$value] );
 			}
-			$this->cache[$field][$value] = &$obj;
+			$this->cache[$field][$value] = $obj;
 		}
 	}
 
@@ -127,6 +127,10 @@ abstract class ProcessCache
 		}
 		$function = $factories[$field];
 
-		return call_user_func( array( $class, $function ), $this->deps, $value );
+		$obj = call_user_func( array( $class, $function ), $this->deps, $value );
+		if ( !$obj ) {
+			throw new \RuntimeException( 'Factory functions should always return objects' );
+		}
+		return $obj;
 	}
 }
