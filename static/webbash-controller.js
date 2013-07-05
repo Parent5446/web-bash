@@ -79,6 +79,10 @@ function WebBash( username ) {
 		var history = this.api.request( 'GET', '/users/' + this.username + '/history', {}, {}, false );
 
 		var homedir = info['responseJSON']['homedir'];
+		if ( !homedir ) {
+			homedir = '/';
+		}
+
 		this.environment['USER'] = this.username;
 		this.environment['HOME'] = homedir;
 		this.environment['PWD'] = homedir;
