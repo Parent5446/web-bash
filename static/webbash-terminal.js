@@ -63,6 +63,13 @@ function Terminal() {
 	this.hiddenMode = false;
 
 	/**
+	 * pattern for finding all newlines
+	 * @type {regex}
+	 * @private
+	 */
+	 this.pattern = /\n/g;
+
+	/**
 	 * toggles text hiding
 	 */
 	this.toggleTextVisibility = function () {
@@ -117,10 +124,9 @@ function Terminal() {
 	 */
 	this.appendOutput = function( txt ) {
 		var output = $( '<div class="system_output"></div>' );
-		var pattern = /\n/g;
 
 		output.text( txt );
-		output.html( output.html().replace( pattern, "<br>") );
+		output.html( output.html().replace( this.pattern, "<br>") );
 
 		$( "body > ul > li:last-child" ).append( output );
 
@@ -299,10 +305,12 @@ function Terminal() {
 			// Enter key: submit command
 			var children = $( '#cursor' ).parent().children( '.userinput' ).not( '.completed' );
 			var cmd = children.text();
+
 			cmd = $.trim( cmd.substr( 0, cmd.length - 1 ) );
 			children.addClass( 'completed' );
 
-			$( '#cursor' ).prev().append( $( '#cursor' ).text() + '<br >' );
+			$( '#cursor' ).prev().append( $( '#cursor' ).text() );
+			$( '#cursor' ).next().append( '<br>' );
 
 			if ( this.promise && this.promise.stdin ) {
 				this.promise.stdin.write( cmd );
