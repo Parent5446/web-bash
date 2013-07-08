@@ -66,6 +66,7 @@ function Terminal() {
 	 * pattern for finding all newlines
 	 * @type {regex}
 	 * @private
+	 * @const
 	 */
 	 this.pattern = /\n/g;
 
