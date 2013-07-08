@@ -309,8 +309,12 @@ function Terminal() {
 			cmd = $.trim( cmd.substr( 0, cmd.length - 1 ) );
 			children.addClass( 'completed' );
 
-			$( '#cursor' ).prev().append( $( '#cursor' ).text() );
-			$( '#cursor' ).next().append( '<br>' );
+			if ( $( '#cursor').next().length != 0 ) {
+				$( '#cursor' ).prev().append( $( '#cursor' ).text() );
+				$( '#cursor' ).next().append( '<br>' );
+			} else {
+				$( '#cursor' ).prev().append( $( '#cursor' ).text() + '<br>' );
+			}
 
 			if ( this.promise && this.promise.stdin ) {
 				this.promise.stdin.write( cmd );
