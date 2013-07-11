@@ -338,4 +338,142 @@
 		fds[1].write( format.join( "" ) );
 		return 0;
 	};
+	
+	/**
+	 * Format output for printing
+	 * @param {Array.<IoStream>} fds Input/output streams
+	 * @param {number} argc Number of arguments
+	 * @param {Array.<string>} argv Arguments passed to command
+	 * @param {Array.<string>} env Environment variables
+	 * @return {number} Retcode, 0 for success
+	 */
+	WebBash['commands']['printf'] = function( fds, argc, argv, env ) {
+		if ( argc <= 1 ) {
+			fds[2].write( 'error in usage: printf FORMAT [ARGS ...]' );
+			return 1;
+		}
+
+		var nextArg = 1;
+		var format = argv[1].split( "" );
+
+		for ( var i = format.indexOf( '%' ); i >= 0; i = format.indexOf( '%', i + 1 ) ) {
+			var value = '',
+				patLen = 1,
+				signVal = '',
+				padding = ' ',
+				align = 'right',
+				width = '0',
+				precision = null,
+				argNum,
+				tmpPos = format.indexOf( '$', i + patLen ),
+				tmpArg = format.slice( i + patLen, tmpPos );
+
+			if ( tmpPos !== -1 && !isNaN( tmpArg ) ) {
+				++patLen;
+				argNum = parseInt( tmpArg, 10 ) + 1;
+			} else {
+				argNum = nextArg++ + 1;
+			}
+
+			value = argNum < argc ? argv[argNum] : '';
+
+			dance:
+			while ( i + patLen < format.length ) {
+				switch ( format[i + patLen] ) {
+					case '+':
+						++patLen;
+						signVal = '+';
+						break;
+					case ' ':
+						++patLen;
+						signVal = ' ';
+						break;
+					case '-':
+						++patLen;
+						align = 'left';
+						break;
+					case '0':
+						++patLen;
+						padding = '0';
+						align = 'left';
+						break;
+					default:
+						break dance;
+				}
+			}
+
+			while ( !isNaN( format[i + patLen] ) ) {
+				width += format[i + patLen++];
+			}
+			width = parseInt( width, 10 );
+
+			if ( format[i + patLen] === '.' ) {
+				++patLen;
+				precision = '0';
+				while ( !isNaN( format[i + patLen] ) ) {
+					precision += format[i + patLen++];
+				}
+				precision = parseInt( precision, 10 );
+			}
+
+			switch ( format[i + patLen++] ) {
+				case 'd':
+				case 'i':
+					value = parseInt( argv[argNum], 10 );
+					break;
+				case 'u':
+					value = Math.abs( parseInt( argv[argNum], 10 ) );
+					break;
+				case 'f':
+				case 'F':
+				case 'g':
+				case 'G':
+					value = parseFloat( argv[argNum], 10 );
+					break;
+				case 'x':
+				case 'X':
+					value = parseInt( argv[argNum], 10 ).toString( 16 );
+					break;
+				case 'o':
+					value = parseInt( argv[argNum], 10 ).toString( 8 );
+					break;
+				case 's':
+					value = argv[argNum];
+					break;
+				case 'c':
+					value = argv[argNum].substr( 0, 1 );
+					break;
+				case 'n':
+					value = '';
+					break;
+				case '%':
+					width = 0;
+					precision = null;
+					value = '%';
+					break;
+			}
+
+			if ( precision !== null ) {
+				if ( $.type( value ) === 'number' ) {
+					if ( value < 0 ) {
+						signVal = '';
+					}
+					value = signVal + value.toFixed( precision ).toString();
+				} else {
+					value = value.substr( 0, precision );
+				}
+			} else if ( $.type( value ) === 'number' ) {
+				if ( value < 0 ) {
+					signVal = '';
+				}
+				value = signVal + value.toString();
+			}
+
+			value = $.pad( value, width, padding, align );
+			format.splice( i, patLen, value );
+		}
+
+		fds[1].write( format.join( "" ) );
+		return 0;
+	};
 } )( jQuery, WebBash );
