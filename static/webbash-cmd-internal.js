@@ -266,10 +266,10 @@
 					value = time.getDate();
 					break;
 				case 'H':
-					value = time.getHour();
+					value = time.getHours();
 					break;
 				case 'I':
-					value = time.getHour() % 12;
+					value = time.getHours() % 12;
 					break;
 				case 'm':
 					value = time.getMonth();
@@ -284,10 +284,10 @@
 					value = time.getMilliseconds() * 1000;
 					break;
 				case 'p':
-					value = time.getHour() >= 12 ? 'PM' : 'AM';
+					value = time.getHours() >= 12 ? 'PM' : 'AM';
 					break;
 				case 'P':
-					value = time.getHour() >= 12 ? 'pm' : 'am';
+					value = time.getHours() >= 12 ? 'pm' : 'am';
 					break;
 				case 's':
 					value = time.getTime() / 1000;
