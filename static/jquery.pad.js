@@ -42,7 +42,11 @@ jQuery.fn.pad = function( str, len, pad, dir ) {
 	if ( typeof( dir ) === "undefined" ) {
 		dir = 'left';
 	}
- 
+
+	if ( pad === '' ) {
+		return str;
+	}
+
 	if ( len + 1 >= str.length ) {
 		switch ( dir ){
 			case 'left':

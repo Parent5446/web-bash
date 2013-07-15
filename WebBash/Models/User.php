@@ -110,6 +110,16 @@ class User implements Model
 		}
 	}
 
+	function delete() {
+		$this->load();
+
+		$stmt = $this->deps->stmtCache->prepare(
+			'DELETE FROM user WHERE id = :id'
+		);
+		$stmt->bindParam( ':id', $this->id );
+		$stmt->execute();
+	}
+
 	function merge( Model $other ) {
 		if ( !$other instanceof self ) {
 			throw new \RuntimeException( 'Invalid object passed.' );
