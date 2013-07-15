@@ -421,7 +421,59 @@
 		}, false );
 
 		return 0;
-	}
+	};
+
+	/**
+	 * Add a new user
+	 * @param {Array.<IoStream>} fds Input/output streams
+	 * @param {number} argc Number of arguments
+	 * @param {Array.<string>} argv Arguments passed to command
+	 * @param {Array.<string>} env Environment variables
+	 * @return {number} Retcode, 0 for success
+	 */
+	WebBash['commands']['userdel'] = function( fds, argc, argv, env ) {
+		var info = $.getopt( argv, 'r' );
+		var opts = info[0];
+		argv = info[1];
+		argc = argv.length;
+
+		if ( argc < 2 ) {
+			fds[2].write( 'error in usage: userdel [OPTIONS] LOGIN' );
+			return 1;
+		} else if ( $.type( opts ) === 'string' ) {
+			fds[2].write( opts );
+			return 1;
+		}
+
+		var req;
+
+		if ( 'r' in opts ) {
+			req = api.request( 'GET', '/users/' + argv[1], '', {}, false );
+			if ( req['status'] === 404 ) {
+				fds[2].write( 'userdel: User ' + argv[1] + ' does not exist' );
+				return 1;
+			}
+			
+			var homedir = req['responseJSON']['homedir'];
+			req = api.request( 'DELETE', '/files' + homedir, '', {}, false );
+			if ( req['status'] === 403 ) {
+				fds[2].write( 'userdel: Cannot delete home directory ' + homedir + ': Permission denied' );
+				return 1;
+			}
+		}
+
+		req = api.request( 'DELETE', '/users/' + argv[1], '', {}, false );
+
+		if ( req['status'] === 404 ) {
+			fds[2].write( 'userdel: User ' + argv[1] + ' does not exist' );
+			return 1;
+		} else if ( req['status'] === 403 ) {
+			fds[2].write( 'userdel: cannot delete user: Permission denied' );
+			return 1;
+		}
+
+		return 0;
+	};
 
 	/**
 	 * Change the current user's password
