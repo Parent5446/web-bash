@@ -253,7 +253,7 @@
 				case 'h':
 					value = month[time.getMonth()];
 					break;
-				case 'C':
+				case 'B':
 					value = longMonth[time.getMonth()];
 					break;
 				case 'c':
