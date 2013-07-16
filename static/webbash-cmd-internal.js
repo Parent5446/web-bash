@@ -188,7 +188,7 @@
 	 */
 	WebBash['commands']['date'] = function( fds, argc, argv ) {
 		if ( argc <= 1 ) {
-			argv.push( '%a %c' );
+			argv.push( '%c' );
 			++argc;
 		}
 
