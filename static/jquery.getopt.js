@@ -53,7 +53,12 @@ $.getopt = function( argv, optstring ) {
 				if ( j === argv[i].length - 1 && argv[i + 1][0] !== '-' ) {
 					opts[opt] = argv[++i];
 				} else if ( optstring[index + 2] !== ':' ) {
-					return "Option -" + opt + " requires an argument";
+					if ( j + 1 < argv[i].length ) {
+						opts[opt] = argv[i].substr( j + 1 );
+						break;
+					} else {
+						return [ "Option -" + opt + " requires an argument", argv ];
+					}
 				} else {
 					opts[opt] = true;
 				}

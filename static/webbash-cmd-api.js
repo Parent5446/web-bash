@@ -350,15 +350,15 @@
 		argv = info[1];
 		argc = argv.length;
 
-		if ( argc < 2 ) {
+		if ( $.type( opts ) === 'string' ) {
+			fds[2].write( opts );
+			return 1;
+		} else if ( argc < 2 ) {
 			fds[2].write( 'error in usage: useradd [OPTIONS] LOGIN [EMAIL]' );
 			return 1;
 		} else if ( argc !== 3 ) {
 			argv.push( argv[1] + '@localhost' );
 			++argc;
-		} else if ( $.type( opts ) === 'string' ) {
-			fds[2].write( opts );
-			return 1;
 		}
 
 		var req = api.request( 'GET', '/users/' + argv[1], '', {}, false );
