@@ -188,7 +188,7 @@
 	 */
 	WebBash['commands']['date'] = function( fds, argc, argv ) {
 		if ( argc <= 1 ) {
-			argv.push( '%c' );
+			argv.push( '+%c' );
 			++argc;
 		}
 
@@ -201,6 +201,12 @@
 			"August", "September", "October", "November", "December" );
 
 		var format = argv[1].split( "" );
+		if ( format[0] !== '+' ) {
+			fds[2].write( 'date: invalid date format ' + argv[1] );
+			return 1;
+		}
+
+		format.shift();
 		for ( var i = format.indexOf( '%' ); i >= 0; i = format.indexOf( '%', i + 1 ) ) {
 			var value = '';
 			var padding = '0';
