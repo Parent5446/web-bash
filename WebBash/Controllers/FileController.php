@@ -362,11 +362,13 @@ class FileController
 			$mTime = true;
 		}
 
-		if ( $cTime ) {
-			$file->updateChangedTime();
-		}
 		if ( $mTime ) {
 			$file->updateModifiedTime();
+			$file->updateChangedTime();
+		} elseif ( $cTime ) {
+			$file->updateChangedTime();
+			$file->getParent()->updateChangedTime();
+			$file->getParent()->save();
 		}
 
 		$file->save();
