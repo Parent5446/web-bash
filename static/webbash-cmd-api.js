@@ -816,4 +816,44 @@
 		fds[1].write( output );
 		return 0;
 	};
+	
+	/**
+	 * Manipulate the user's command history
+	 * @param {Array.<IoStream>} fds Input/output streams
+	 * @param {number} argc Number of arguments
+	 * @param {Array.<string>} argv Arguments passed to command
+	 * @param {Object.<string, string>} env Environment variables
+	 * @return {number} Retcode, 0 for success
+	 */
+	WebBash['commands']['history'] = function( fds, argc, argv, env ) {
+		var info = $.getopt( argv, 'c' );
+		var opts = info[0];
+		argv = info[1];
+		argc = argv.length;
+		
+		var req;
+		if ( 'c' in opts ) {
+			req = api.request( 'DELETE', '/users/' + env['USER'] + '/history', '', {}, false );
+			
+			if ( req['status'] === 404 || req['status'] === 403 ) {
+				fds[2].write( 'history: invalid user in environment' );
+				return 2;
+			}
+		} else {
+			var offset = parseInt( opts['d'], 10 );
+			req = api.request( 'GET', '/users/' + env['USER'] + '/history', '', {}, false );
+
+			if ( req['status'] === 404 || req['status'] === 403 ) {
+				fds[2].write( 'history: invalid user in environment' );
+				return 2;
+			}
+			
+			var history = req['responseJSON'];
+			for ( var i = 0; i < history.length; ++i ) {
+				fds[1].write( "  " + i + "  " + history[i] + "\n" );
+			}
+		}
+		
+		return 0;
+	};
 } )( jQuery, WebBash );
